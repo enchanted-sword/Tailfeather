@@ -1,0 +1,187 @@
+/**
+ * Creates an HTML element from a string
+ * @param {String} str - Valid HTML string
+ * @return {Element|HTMLCollection} Parsed form of the string
+ */
+export const elemFromString = str => {
+  const template = document.createElement('template');
+  template.innerHTML = str;
+  return template.content.children;
+}
+
+/**
+ * Creates an HTML element with optional data
+ * @param {string} tag - Element type
+ * @param {object} [attributes] - Key-value pairs of HTML attributes ({ active: 'false' })
+ * @param {object} [events] - Key-value pairs of events and callbacks (e.g. { input: () => {} })
+ * @param {(Node[]|string[]|string)} [children] - Element children
+ * @returns {Element} HTML Element
+ */
+export const elem = (tag, attributes = {}, events = {}, children) => {
+  const element = attributes?.xmlns
+    ? document.createElementNS(attributes.xmlns, tag)
+    : document.createElement(tag);
+
+  if (attributes) Object.entries(attributes).forEach(([name, value]) => element.setAttribute(name, value));
+  if (events) Object.entries(events).forEach(([type, listener]) => element.addEventListener(type, listener));
+  if (children) {
+    if (typeof children === 'string') {
+      element.replaceChildren(...elemFromString(children));
+    } else {
+      element.replaceChildren(...children);
+      element.normalize();
+    }
+  }
+
+  return element;
+};
+
+/**
+ * Fetches items from the extension's local storage
+ * @param {string} keys - Array of strings corresponding to storage keys to fetch
+ * @returns {object} Object of key-value pairs ({ version: 'X' })
+ */
+export const getStorage = async (keys = []) => browser.storage.local.get().then(storage => {
+  const returnObj = {};
+  for (const key of keys) {
+    returnObj[key] = storage[key];
+  }
+  return returnObj;
+});
+
+/**
+ * Fetches feature options
+ * @param {string} feature - Feature name
+ * @returns {object} options
+ */
+export const getOptions = async (feature = '') => getStorage(['preferences']).then(({ preferences }) => preferences[feature]?.options);
+
+/**
+ * Recursively compares two objects; returns true if they are identical and false otherwise
+ * @param {object} x
+ * @param {object} y 
+ * @returns {boolean}
+ */
+export const deepEquals = (x, y) => {
+  const tx = typeof x, ty = typeof y;
+  return x && y && tx === 'object' && tx === ty ? (
+    Object.keys(x).length === Object.keys(y).length &&
+    Object.keys(x).every(key => deepEquals(x[key], y[key]))
+  ) : (x === y);
+};
+
+/**
+ * Delays inputs for a textarea or text input to reduce the amount of events processed by the event handler
+ * @param {Function} func - Event handler to debounce
+ */
+export function debounce(func, timeout = 500) {
+  let timeoutID;
+  return function (...args) {
+    clearTimeout(timeoutID);
+    timeoutID = setTimeout(function () { func(...args) }, timeout);
+  };
+}
+
+/**
+ * Reduces an array to unique entries 
+ * @param {Array} array
+ * @returns {Array}
+ */
+export const unique = array => array.filter((val, i, arr) => i === arr.indexOf(val));
+
+/**
+ * @param {string} name - Name of file
+ * @returns {object|null} data
+ */
+export const getJsonFile = async name => {
+  try {
+    const url = browser.runtime.getURL(`/scripts/${name}.json`);
+    const file = await fetch(url);
+    const json = await file.json();
+
+    return json;
+  } catch (e) {
+    console.error(name, e);
+    return null;
+  }
+};
+
+/**
+ * Fetches the list of installed features
+ * @returns {object[]} features
+ */
+export const importFeatures = async () => {
+  const installedFeatures = await getJsonFile('!features');
+  const features = {};
+
+  await Promise.all(installedFeatures.map(async name => {
+    const featureData = await getJsonFile(name);
+    if (featureData) features[name] = featureData;
+  }));
+
+  return features;
+};
+
+const transformPreferences = preferences => {
+  const returnObj = { enabled: preferences.enabled };
+  if ('options' in preferences) {
+    returnObj.options = {};
+    Object.keys(preferences.options).map(option => {
+      returnObj.options[option] = preferences.options[option].value;
+    });
+  }
+  return returnObj;
+};
+export const featureify = (installedFeatures, preferences) => {
+  if (typeof preferences !== 'undefined') {
+    Object.keys(installedFeatures).forEach(feature => { // push new features and options to existing preferences
+      if (typeof preferences[feature] === 'undefined') {
+        preferences[feature] = transformPreferences(installedFeatures[feature].preferences);
+        preferences[feature].new = true;
+      }
+      if ('options' in installedFeatures[feature].preferences) {
+        if (typeof preferences[feature].options === 'undefined') {
+          preferences[feature].options = {};
+          preferences[feature].new = true;
+        }
+        Object.keys(installedFeatures[feature].preferences.options).forEach(option => {
+          if (typeof preferences[feature].options[option] === 'undefined') {
+            console.log(feature, installedFeatures[feature].preferences.options[option]);
+            if ('inherit' in installedFeatures[feature].preferences.options[option]) {
+              const [inheritFeature, inheritOption] = installedFeatures[feature].preferences.options[option].inherit.inheritFrom.split('.');
+              if (typeof preferences[inheritFeature].options[inheritOption] !== 'undefined') {
+                preferences[feature].options[option] = preferences[inheritFeature].options[inheritOption];
+              }
+            } else preferences[feature].options[option] = installedFeatures[feature].preferences.options[option].value;
+            preferences[feature].new = true;
+          }
+        });
+      }
+    })
+    Object.keys(preferences).forEach(feature => { // delete removed features and options from existing preferences
+      if (!(feature in installedFeatures)) return delete preferences[feature];
+      if ('options' in preferences[feature]) {
+        if (!('options' in installedFeatures[feature].preferences)) return delete preferences[feature].options;
+        Object.keys(preferences[feature].options).forEach(option => {
+          if (!(option in installedFeatures[feature].preferences.options)) delete preferences[feature].options[option];
+        });
+      }
+    });
+  } else preferences = Object.fromEntries(Object.entries(installedFeatures).map(([name, feature]) => [name, transformPreferences(feature.preferences)]));
+
+  return preferences;
+};
+
+export const numFormat = num => {
+  let str = String(num);
+  if (str.length > 3) {
+    str = str.split('');
+    const str2 = [];
+    while (str.length > 3) {
+      str2.unshift(str.splice(-3, 3).join(''));
+    }
+    str2.unshift(str.join(''));
+    return str2.join(',');
+  }
+  return str;
+}

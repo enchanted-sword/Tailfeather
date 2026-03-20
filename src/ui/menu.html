@@ -1,0 +1,236 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Configure Tailfeather!</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=360, initial-scale=1" />
+        <script src="../lib/jquery.min.js"></script>
+        <script src="../lib/culori.min.js"></script>
+        <script src="../lib/poline.min.js"></script>
+        <link rel="stylesheet" href="menu.css" />
+        <link rel="stylesheet" href="picker.css" />
+        <link rel="icon" href="./resources/favicon.ico" />
+        <style id="ui-theme">
+            :root {
+                --white: 255 255 255;
+                --white: 250 245 255;
+                --primary: 0 25 53;
+                --accent: 0 148 255;
+                --black: 0 0 12;
+                --purple: 124 92 255;
+            }
+        </style>
+    </head>
+
+    <body>
+        <main id="ui-menu">
+            <nav id="ui-tabs" aria-role="menu">
+                <button
+                    class="ui-tab"
+                    target="features"
+                    active="true"
+                    aria-role="menuitem"
+                >
+                    Features
+                </button>
+                <button class="ui-tab" target="manage" aria-role="menuitem">
+                    Manage
+                </button>
+                <button class="ui-tab" target="about" aria-role="menuitem">
+                    About
+                </button>
+            </nav>
+            <section class="ui-section" id="ui-features" active="true">
+                <div class="ui-filterWidgets">
+                    <button
+                        class="ui-featureTab"
+                        target="search"
+                        aria-role="menuitem"
+                    >
+                        <input
+                            id="ui-featureSearch"
+                            type="text"
+                            placeholder="Search"
+                            aria-label="Search"
+                            aria-role="searchbox"
+                        />
+                    </button>
+                    <button
+                        id="ui-filterAlphabetical"
+                        title="Sort features in alphabetical order"
+                        data-state="active"
+                        aria-selected="true"
+                        aria-label="Sorts features in alphabetical order"
+                        aria-role="radio"
+                    >
+                        ABC
+                    </button>
+                    <button
+                        id="ui-filterReverseAlphabetical"
+                        title="Sort features in reverse alphabetical order"
+                        aria-label="Sorts features in reverse alphabetical order"
+                        aria-role="radio"
+                    >
+                        ZXY
+                    </button>
+                    <button
+                        id="ui-filterEnabled"
+                        title="Sort features enabled-first"
+                        aria-label="Sorts features by enabled-first"
+                        aria-role="radio"
+                    >
+                        ✅
+                    </button>
+                    <button
+                        id="ui-filterDisabled"
+                        title="Sort features disabled-first"
+                        aria-label="Sort features by disabled-first"
+                        aria-role="radio"
+                    >
+                        ❎
+                    </button>
+                </div>
+
+                <ul id="ui-featureContainer">
+                    <style id="ui-searchFilter"></style>
+                </ul>
+            </section>
+            <section class="ui-section" id="ui-manage">
+                <ul class="ui-card">
+                    <li id="version"></li>
+                    <li class="ui-preferenceIo">
+                        <div class="ui-importRow">
+                            <button id="ui-import">Import from file</button>
+                            <button id="ui-textImport">
+                                Import from textarea
+                            </button>
+                            <input
+                                id="ui-fileImport"
+                                type="file"
+                                name="fileImport"
+                                accept="application/json"
+                            />
+                            <button id="ui-export">Export preferences</button>
+                        </div>
+                        <textarea
+                            id="ui-preferenceText"
+                            class="ui-textInput"
+                            autocomplete="off"
+                            autocapitalize="off"
+                            autocorrect="off"
+                            spellcheck="false"
+                        ></textarea>
+                        <button id="ui-reset">Reset preferences</button>
+                    </li>
+                    <li>
+                        <b
+                            ><a target="_blank" href="menu.html"
+                                >Open menu in a separate tab</a
+                            ></b
+                        >
+                    </li>
+                </ul>
+            </section>
+            <section class="ui-section" id="ui-about">
+                <ul class="ui-card">
+                    <a
+                        href="https://noterook.net/book/dragongirlsnout/"
+                        target="_blank"
+                        class="ui-aboutLink"
+                        >Our Book</a
+                    >
+                    <div class="ui-aboutLink ui-changelog">
+                        <h1 style="text-align: center">v0.1.0</h1>
+                        <h2 style="text-align: center">General</h2>
+                        <ul>
+                            <li>Yay!</li>
+                        </ul>
+                    </div>
+                    <div class="ui-aboutLink">
+                        <h2 style="text-align: center; font-size: 1.5rem">
+                            Powered by:
+                        </h2>
+                        <div class="ui-poweredBy">
+                            <p>PawJob</p>
+                        </div>
+                    </div>
+                </ul>
+            </section>
+        </main>
+        <div id="ui-picker">
+            <section>
+                <figure id="display" width="320" height="128"></figure>
+                <input id="oklch" type="text" />
+                <input id="rgb" type="text" />
+            </section>
+            <section>
+                <header>
+                    <h1>lightness</h1>
+                    <input
+                        id="lightness-value"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                    />
+                </header>
+                <div class="range">
+                    <figure id="lightness-display"></figure>
+                    <input
+                        id="lightness"
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                    />
+                </div>
+            </section>
+            <section>
+                <header>
+                    <h1>chroma</h1>
+                    <input
+                        id="chroma-value"
+                        type="number"
+                        min="0"
+                        max="0.4"
+                        step="0.01"
+                    />
+                </header>
+                <div class="range">
+                    <figure id="chroma-display"></figure>
+                    <input
+                        id="chroma"
+                        type="range"
+                        min="0"
+                        max="0.4"
+                        step="0.0001"
+                    />
+                </div>
+            </section>
+            <section>
+                <header>
+                    <h1>hue</h1>
+                    <input
+                        id="hue-value"
+                        type="number"
+                        min="0"
+                        max="360"
+                        step="1"
+                    />
+                </header>
+                <div class="range">
+                    <figure id="hue-display"></figure>
+                    <input
+                        id="hue"
+                        type="range"
+                        min="0"
+                        max="360"
+                        step="0.01"
+                    />
+                </div>
+            </section>
+        </div>
+        <script src="menu.js"></script>
+        <script src="picker.js"></script>
+    </body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "name": "tailfeather",
+  "version": "0.1.0",
+  "description": "Utilities for Noterook",
+  "scripts": {
+    "test": "web-ext lint",
+    "posttest": "eslint ./",
+    "build": "web-ext build",
+    "start:dev": "web-ext run --firefox=deved -t=firefox-desktop",
+    "start:adb": "web-ext run -t=firefox-android --adb-device=[] --firefox-apk=org.mozilla.fenix"
+  },
+  "author": "Cassiopeia Lunarii",
+  "license": "GPL-3.0-only",
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "web-ext": "^10.0.0"
+  },
+  "dependencies": {
+    "dompurify": "^3.0.9",
+    "marked": "^14.1.2",
+    "prismjs": "^1.29.0"
+  },
+  "webExt": {
+    "sourceDir": "src/",
+    "build": {
+      "overwriteDest": true
+    },
+    "run": {
+      "firefox": "deved"
+    }
+  }
+}
