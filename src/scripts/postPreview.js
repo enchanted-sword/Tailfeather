@@ -1,6 +1,6 @@
 import { mutationManager } from './utils/mutation.js';
 import { noact } from './utils/noact.js';
-import { MarkdownProcessor } from './utils/markdown.js';
+import { getProcessor } from './utils/markdown.js';
 import { userInfo } from './utils/user.js';
 import { debounce } from './utils/jsTools.js';
 
@@ -11,7 +11,6 @@ const editorSelector = `#composer-mount:not([${customAttribute}])`;
 let bodySelector = '#composer-body';
 const tagInputSelector = '#composer-tags';
 
-const parseMd = new MarkdownProcessor();
 
 const previewWindow = (body, tagInput) => {
   const text = body?.value || '';
@@ -46,7 +45,7 @@ const previewWindow = (body, tagInput) => {
           {
             id: 'postPreview-body',
             className: 'post-body post-body-collapsible',
-            children: parseMd.renderToElement(text)
+            children: getProcessor().renderToElement(text)
           }
         ]
       },
@@ -63,7 +62,7 @@ const formatTags = tags => tags.split(',').filter(t => !!t).map(t => t.toLowerCa
 
 function updateBody({ target }) {
   const text = target.value || '';
-  document.getElementById('postPreview-body').replaceChildren(parseMd.renderToElement(text));
+  document.getElementById('postPreview-body').replaceChildren(getProcessor().renderToElement(text));
 }
 function updateTags({ target }) {
   document.getElementById('postPreview-tags').replaceChildren(...noact(formatTags(target.value)));
