@@ -40,13 +40,31 @@ const COLOR_MAP = {
 // =========================================================================
 
 export class MarkdownProcessor {
-  constructor(options = {}) {
+  constructor() {
     this._trustedImageHosts = new Set();
     this._trustedStylesheetHosts = [];  // Array for wildcard matching
     this._configured = false;
 
     // Load trusted hosts from data attributes on <body>
     this._loadTrustedHosts();
+  }
+
+  static _hasCustomHTML(text) {
+    if (!text) return false;
+    return (
+      /<style[\s>]/i.test(text) ||
+      /<link[\s>]/i.test(text) ||
+      /<div[\s>]/i.test(text) ||
+      /<section[\s>]/i.test(text) ||
+      /<article[\s>]/i.test(text) ||
+      /<header[\s>]/i.test(text) ||
+      /<footer[\s>]/i.test(text) ||
+      /<marquee[\s>]/i.test(text) ||
+      /class\s*=/i.test(text) ||
+      /\{color:/i.test(text) ||
+      /^:::/m.test(text) ||
+      /@import/i.test(text)
+    );
   }
 
   _loadTrustedHosts() {
@@ -118,7 +136,12 @@ export class MarkdownProcessor {
 
   renderToElement(text, tag = 'div', options = {}) {
     const e = Object.assign(document.createElement(tag), options);
-    return this.renderToShadow(text, e);
+    if (MarkdownProcessor._hasCustomHTML(text)) {
+      return this.renderToShadow(text, e);
+    } else {
+      e.innerHTML = this.renderStrict(text); // render inline - cheaper
+      return e;
+    }
   }
 
   // =====================================================================

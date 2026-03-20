@@ -1,25 +1,54 @@
 @font-face {
-  font-family: "Favorit";
-  src: url("./resources/Favorit.ttf") format("truetype");
+  font-family: "Inter";
+  src: url("/resources/Inter.ttf") format("truetype");
+  font-weight: 300 700;
+  font-stretch: 75% 125%;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("./resources/Inter-Italic.ttf") format("truetype");
+  font-weight: 300 700;
+  font-stretch: 75% 125%;
+  font-style: italic;
 }
 
 :root {
-  --white: 250, 245, 255;
-  --navy: 0, 25, 53;
-  --black: 0, 0, 12;
-  --accent: 0, 148, 255;
-  --red: 255, 56, 80;
-  --text: var(--black);
-  --white-on-dark: 250, 245, 255;
+  --bg: #1a1d2e;
+  --bg-surface: #1e2235;
+  --bg-elevated: #2a2d4a;
+  --bg-input: #12141f;
+  --text: #e0e2e8;
+  --text-muted: #8a8f9e;
+  --text-dim: #5a5f72;
+  --accent: #6b7094;
+  --accent-hover: #8388a8;
+  --accent-dim: rgba(107, 112, 148, 0.15);
+  --border: #2e3148;
+  --border-light: #252838;
+  --error: #e74c3c;
+  --success: #2ecc71;
+  --warning: #f39c12;
+  --radius: .5rem;
+  --radius-sm: 4px;
+  --max-width: 680px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --border-radius-sm: 3px;
+}
+
+* {
+  color: inherit;
+  transition: .3s;
 }
 
 body {
-  background-color: rgb(var(--navy));
-  font-family: "Favorit, Helvetica", sans-serif;
+  background-color: var(--bg);
+  font-family: var(--font);
   line-height: 1.5;
   margin: 0;
   padding: 0;
-  color: rgb(var(--text));
+  color: var(--text);
 }
 
 dialog {
@@ -30,24 +59,33 @@ dialog {
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
+  background: none;
+  border: 1px solid var(--border);
 }
 
-h1 { margin: 16px 0 8px; }
-a { text-decoration: none; }
-svg { width: 115px }
+h1 {
+  margin: 16px 0 8px;
+}
 
 div {
   display: flex;
   justify-content: space-between;
   margin-bottom: 24px;
 }
-h2 { margin: 8px 0; }
+
+h2 {
+  margin: 8px 0;
+}
+
 ul {
   margin: 0;
   padding: 0;
 
-  &:last-of-type { margin-left: 40px; }
+  &:last-of-type {
+    margin-left: 40px;
+  }
 }
+
 li {
   font-size: 18px;
   margin-left: 18px;
@@ -56,15 +94,16 @@ li {
 #grantPermissions {
   width: 40%;
   font-size: 20px;
-  background-color: rgb(var(--accent));
-  transition: background-color .3s;
-  border: none;
+  background: none;
   border-radius: 3px;
+  border: 1px solid var(--border);
   padding: 8px;
   font-weight: bold;
   cursor: pointer;
 
-  &:hover { background-color: color-mix(in srgb, rgb(var(--accent)), rgb(var(--navy)) 10%); }
+  &:hover {
+    border-color: var(--success);
+  }
 }
 
 figure {
@@ -74,6 +113,7 @@ figure {
   margin-bottom: 0;
   padding-left: 8px;
 }
+
 input {
   position: absolute;
   width: 0;
@@ -81,20 +121,20 @@ input {
   visibility: hidden;
   margin: 0;
 }
-input + label {
+
+input+label {
   opacity: .8;
   cursor: pointer;
   font-size: 18px;
   text-indent: -9999px;
   width: 40px;
   height: 20px;
-  background: rgba(var(--navy), .4);
+  background: var(--bg-input);
   transition: 0.3s;
   display: block;
   border-radius: 20px;
   position: relative;
 
-  &:hover { background: rgba(var(--navy), .5); }
   &:before {
     z-index: 3;
     content: "";
@@ -103,10 +143,11 @@ input + label {
     left: 2px;
     width: 16px;
     height: 16px;
-    background: rgb(var(--white));
+    background: var(--text);
     border-radius: 8px;
     transition: 0.3s;
   }
+
   &:after {
     z-index: 2;
     text-indent: 0;
@@ -115,32 +156,43 @@ input + label {
     position: absolute;
     top: 1px;
     right: 2px;
-    color: rgba(var(--text), .32);
+    color: var(--text);
     width: 16px;
     height: 16px;
     line-height: 16px;
     transition: 0.3s;
   }
-  &:active:before { width: 20px; }
-  &:active:after { right: 0; }
-}
-input:checked + label {
-  background: rgb(var(--accent));
 
-  &:hover { background-color: color-mix(in srgb, rgb(var(--accent)), rgb(var(--navy)) 10%); }
+  &:active:before {
+    width: 20px;
+  }
+
+  &:active:after {
+    right: 0;
+  }
+}
+
+input:checked+label {
+  background: var(--success);
+
   &:before {
     left: calc(100% - 2px);
     transform: translateX(-100%);
-    background: rgb(var(--white));
+    background: var(--text);
   }
+
   &:after {
     content: "";
     right: calc(100% - 2px);
     transform: translateX(100%);
   }
-  &:active:after { right: calc(100% + 2px); }
+
+  &:active:after {
+    right: calc(100% + 2px);
+  }
 }
+
 h3 {
   margin: 0 8px;
-  opacity: .8;
+  color: var(--text-muted)
 }

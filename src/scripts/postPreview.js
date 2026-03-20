@@ -89,5 +89,5 @@ export const main = async () => {
 
 export const clean = async () => {
   document.querySelectorAll(`[${customAttribute}]`).forEach(s => s.removeAttribute(customAttribute));
-  document.querySelectorAll(`.${customClass}`).map(s => s.remove());
+  document.querySelectorAll(`.${customClass}`).forEach(s => s.remove());
 };
