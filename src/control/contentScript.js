@@ -123,8 +123,6 @@
 
         const { oldValue = {}, newValue = {} } = preferences;
 
-        console.info(preferences);
-
         const newlyEnabled = Object.keys(newValue).filter(feature => !oldValue[feature]?.enabled && newValue[feature]?.enabled);
         const newlyDisabled = Object.keys(oldValue).filter(feature => oldValue[feature]?.enabled && !newValue[feature]?.enabled);
 

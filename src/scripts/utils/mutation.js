@@ -6,15 +6,16 @@ class MutationManager {
   updateQueued = false;
   timerId;
   root;
+  options;
   listeners = new Map();
 
-  #funcManager(testNodes) {
+  _funcManager(testNodes) {
     for (const [func, selector] of this.listeners) {
       if (func.length === 0) {
         const shouldRun = testNodes.some(testNode => testNode.matches(selector) || testNode.querySelector(selector) !== null);
         if (shouldRun) {
           try {
-            func();
+            func(this);
           } catch (e) {
             console.error(e);
           }
@@ -29,7 +30,7 @@ class MutationManager {
 
       if (matchingElements.length !== 0) {
         try {
-          func(matchingElements);
+          func(matchingElements, this);
         } catch (e) {
           console.error(e);
         }
@@ -37,14 +38,14 @@ class MutationManager {
     }
   }
 
-  #nodeManager() {
+  _nodeManager() {
     this.updateQueued = false;
 
     const addedNodes = this.addedNodesQueue
       .splice(0)
       .filter(addedNode => addedNode.isConnected);
 
-    if (addedNodes.length > 0) this.#funcManager(addedNodes);
+    if (addedNodes.length > 0) this._funcManager(addedNodes);
   };
 
   /**
@@ -73,22 +74,49 @@ class MutationManager {
    */
   trigger(func) {
     let selector;
+    if (!this.root) return;
     if (this.listeners.has(func)) selector = this.listeners.get(func);
     else if (this.targetListeners.has(func)) selector = this.targetListeners.get(func);
     else return;
 
     if (func.length === 0) {
       const shouldRun = this.root.querySelector(selector) !== null;
-      if (shouldRun) func();
+      if (shouldRun) func(this);
       return;
     }
 
     const matchingElements = [...this.root.querySelectorAll(selector)];
     if (matchingElements.length !== 0) {
-      func(matchingElements);
+      func(matchingElements, this);
     }
   }
 
+  /**
+   * Starts the mutation manager
+   * @param {HTMLElement|null} root - Root to observe
+   * @param {object?} options - Observer options
+   */
+
+  observe(root, options = { childList: true, subtree: true }) {
+    this.root = root || document.body || document.documentElement;// fallback for some early loads
+    this.options = options;
+    this.observer = new MutationObserver(mutations => {
+      const addedNodes = mutations
+        .flatMap(({ addedNodes }) => [...addedNodes])
+        .filter(addedNode => addedNode instanceof Element);
+
+      this.addedNodesQueue.push(...addedNodes);
+
+      requestAnimationFrame(this._nodeManager.bind(this)); // JS is the best OOP ever
+
+      if (this.updateQueued === false) {
+        this.timerId = requestAnimationFrame(this._nodeManager.bind(this));
+        this.updateQueued = true;
+      }
+    });
+
+    this.observer.observe(this.root, this.options);
+  }
   /**
    * Disconnects and deletes the mutation manager
    */
@@ -98,7 +126,15 @@ class MutationManager {
   }
 
   constructor(root) {
-    this.root = root || document.body || document.documentElement;// fallback for some early loads
+    if (root) this.observe();
+  }
+}
+
+export const mutationManager = new MutationManager(document.body);
+
+export class ShadowManager extends MutationManager {
+
+  _observe() {
     this.observer = new MutationObserver(mutations => {
       const addedNodes = mutations
         .flatMap(({ addedNodes }) => [...addedNodes])
@@ -106,25 +142,35 @@ class MutationManager {
 
       this.addedNodesQueue.push(...addedNodes);
 
-      requestAnimationFrame(this.#nodeManager.bind(this)); // JS is the best OOP ever
+      requestAnimationFrame(this._nodeManager.bind(this)); // JS is the best OOP ever
 
       if (this.updateQueued === false) {
-        this.timerId = requestAnimationFrame(this.#nodeManager.bind(this));
+        this.timerId = requestAnimationFrame(this._nodeManager.bind(this));
         this.updateQueued = true;
       }
     });
 
-    this.observer.observe(this.root, { childList: true, subtree: true });
-
-    console.log(this.observer)
+    this.observer.observe(this.root, this.options);
   }
-}
 
-export const mutationManager = new MutationManager();
+  observe(shadowHost, options = { childList: true, subtree: true }) {
+    this.options = options;
+    if (shadowHost.shadowRoot) {
+      this.root = shadowHost.shadowRoot;
+      this._observe();
+    } else {
+      const shadowObserver = new MutationObserver(() => {
+        shadowObserver.disconnect();
+        this.root = shadowHost.shadowRoot;
+        this._observe();
+      });
+      shadowObserver.observe(shadowHost, { childList: true, subtree: true });
+    }
+  }
 
-export class ShadowManager extends MutationManager {
   constructor(shadowHost) {
-    super(shadowHost.shadowRoot);
+    super();
+    if (shadowHost) this.observe(shadowHost);
   }
 }
 

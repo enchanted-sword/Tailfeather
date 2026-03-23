@@ -1,0 +1,16 @@
+#tailfeather-iconContainer {
+  display: none;
+}
+
+.tf-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.tailfeather-icons .post-action-btn {
+  padding: unset;
+}
+
+.post-action-pinned .tailfeather-icons {
+  fill: currentColor;
+}

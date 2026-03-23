@@ -15,7 +15,6 @@ const tagInputSelector = '#composer-tags';
 const previewWindow = (body, tagInput) => {
   const text = body?.value || '';
   const tags = tagInput?.value || '';
-  console.log(browser.storage)
 
   return noact({
     className: `${customClass} post-card`,
@@ -61,8 +60,10 @@ const previewWindow = (body, tagInput) => {
 const formatTags = tags => tags.split(',').filter(t => !!t).map(t => t.toLowerCase().replace('/#/g', '')).map(t => ({ className: 'post-tag', href: `/search/?q=${t}`, children: `#${t}` }));
 
 function updateBody({ target }) {
-  const text = target.value || '';
-  document.getElementById('postPreview-body').replaceChildren(getProcessor().renderToElement(text));
+  requestAnimationFrame(() => {
+    const text = target.value || '';
+    document.getElementById('postPreview-body').replaceChildren(getProcessor().renderToElement(text));
+  });
 }
 function updateTags({ target }) {
   document.getElementById('postPreview-tags').replaceChildren(...noact(formatTags(target.value)));

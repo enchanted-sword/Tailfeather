@@ -1,0 +1,10 @@
+{
+  "name": "icons",
+  "title": "Custom Icons",
+  "description": "Replaces text buttons with icons",
+  "preferences": {
+    "enabled": false
+  },
+  "js": true,
+  "css": true
+}

@@ -1,9 +1,0 @@
-{
-  "name": "testPostFeature",
-  "title": "Test",
-  "description": "Test",
-  "preferences": {
-    "enabled": false
-  },
-  "js": true
-}
