@@ -20,33 +20,28 @@ const previewWindow = (body, tagInput) => {
     className: `${customClass} post-card`,
     children: [
       {
-        className: 'chain-original',
+        className: 'post-author',
         children: [
           {
-            className: 'post-author',
-            children: [
-              {
-                className: 'post-author-avatar',
-                src: userInfo.avatarUrl
-              },
-              {
-                tag: 'span',
-                className: 'post-author-name chain-author-link',
-                children: userInfo.displayName
-              },
-              {
-                tag: 'span',
-                className: 'post-timestamp',
-                children: 'now'
-              }
-            ]
+            className: 'post-author-avatar',
+            src: userInfo.avatarUrl
           },
           {
-            id: 'postPreview-body',
-            className: 'post-body post-body-collapsible',
-            children: getProcessor().renderToElement(text)
+            tag: 'span',
+            className: 'post-author-name chain-author-link',
+            children: userInfo.displayName
+          },
+          {
+            tag: 'span',
+            className: 'post-timestamp',
+            children: 'just now'
           }
         ]
+      },
+      {
+        id: 'postPreview-body',
+        className: 'post-body post-body-collapsible',
+        children: getProcessor().renderToElement(text)
       },
       {
         id: 'postPreview-tags',
@@ -77,7 +72,7 @@ const addPreview = async editors => {
     body.addEventListener('input', debounce(updateBody, 300));
 
     const tagInput = editor.querySelector(tagInputSelector);
-    tagInput.addEventListener('input', updateTags)
+    tagInput.addEventListener('input', updateTags);
 
     editor.append(previewWindow(editor, body));
   }

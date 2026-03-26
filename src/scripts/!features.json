@@ -1,4 +1,7 @@
 [
   "postPreview",
-  "icons"
+  "customIcons",
+  "appNav",
+  "feedTweaks",
+  "editor"
 ]

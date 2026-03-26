@@ -266,10 +266,6 @@ button:has(#ui-featureSearch:focus-within) {
   color: var(--text);
 }
 
-#ui-featureContainer>li:hover {
-  background: var(--bg-elevated);
-}
-
 #ui-featureContainer>li[data-new="true"] {
   background: rgb(var(--purple) / 0.16) !important;
   border: 1px solid rgb(var(--purple) / 0.8) !important;
@@ -383,7 +379,7 @@ input.ui-toggle+label:after {
 }
 
 input.ui-toggle+label:active {
-  background: var(--white-primary-30);
+  background: var(--white);
 }
 
 input.ui-toggle+label:active:before {
@@ -425,8 +421,8 @@ input.ui-toggle:checked+label:active:after {
   position: relative;
   background: none;
   padding: .25rem .5rem;
-  border-bottom: var(--border-thickness-sm) solid var(--white-primary-20);
   border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border);
 }
 
 .ui-inputWrapper:not(:last-of-type) {
@@ -469,15 +465,16 @@ input.ui-toggle:checked+label:active:after {
   vertical-align: middle;
   background-origin: border-box;
   user-select: none;
-  border: var(--border-thickness-sm) solid rgba(var(--black) / 0.26);
+  border: 1px solid var(--border);
   border-radius: .5rem;
-  color: rgb(var(--accent));
+  background-color: var(--bg-input);
+  color: var(--success);
   height: 24px;
   width: 24px;
 }
 
 .ui-checkbox:checked {
-  border-color: rgb(var(--accent));
+  border-color: var(--success);
   background-image: url("data:image/svg+xml,%3csvg viewBox=%270 0 16 16%27 fill=%27white%27 xmlns=%27http://www.w3.org/2000/svg%27%3e%3cpath d=%27M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z%27/%3e%3c/svg%3e");
   background-size: 100% 100%;
   background-color: currentColor;
@@ -722,9 +719,10 @@ input.ui-listSelect:checked+label:hover {
   bottom: .5rem;
   left: -8px;
   padding: .5rem;
-  background-color: rgb(var(--white));
-  border: var(--border-thickness-sm) solid rgb(var(--accent));
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
   border-radius: var(--border-radius-sm);
+  color: var(--text);
   z-index: 100;
 }
 
@@ -733,7 +731,7 @@ input.ui-listSelect:checked+label:hover {
   left: calc(50% - 16px);
   bottom: -17px;
   position: absolute;
-  border: 16px solid rgb(var(--accent));
+  border: 16px solid var(--border);
   border-top-color: transparent;
   border-left-color: transparent;
   border-radius: var(--border-radius-sm);

@@ -1,4 +1,5 @@
 import { necromancePosts } from './necromancy.js';
+import { postSelector } from './document.js';
 
 class MutationManager {
   addedNodesQueue = [];
@@ -17,7 +18,7 @@ class MutationManager {
           try {
             func(this);
           } catch (e) {
-            console.error(e);
+            console.error('[MutationManager] Failed to execute mutation callback:', e);
           }
         }
         continue;
@@ -32,7 +33,7 @@ class MutationManager {
         try {
           func(matchingElements, this);
         } catch (e) {
-          console.error(e);
+          console.error('[MutationManager] Failed to execute mutation callback:', e);
         }
       }
     }
@@ -174,7 +175,7 @@ export class ShadowManager extends MutationManager {
   }
 }
 
-const postSelector = 'article[data-post-id]';
+
 const bookHostId = 'book-shadow-host';
 let pfShadowManager;
 

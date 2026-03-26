@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" href="./editorInner.css" />
+  </head>
+  <body
+    data-trusted-image-hosts='["imgur.com", "catbox.moe", "postimg.cc", "imgbb.com", "i.ibb.co", "gyazo.com", "imgchest.com", "lensdump.com", "cdn.discordapp.com", "media.discordapp.net", "i.redd.it", "preview.redd.it", "cdn.bsky.app", "64.media.tumblr.com", "pbs.twimg.com", "f-list.net", "squidge.org", "file.garden", "toyhou.se", "e621.net", "rule34.xxx", "gelbooru.com", "raw.githubusercontent.com", "gist.githubusercontent.com", "soldierexclipse.art", "upload.wikimedia.org"]'
+    data-trusted-stylesheet-hosts='["fonts.googleapis.com", "fonts.gstatic.com", "fonts.bunny.net", "cdn.jsdelivr.net", "unpkg.com", "cdnjs.cloudflare.com", "cdn.discordapp.com", "file.garden", "*.github.io"]'
+  >
+    <main>
+      <header></header>
+      <div class="composer-wrapper">
+        <div id="composer" style="width: 100%; height: 100%"></div>
+      </div>
+      <footer class="composer-controls">
+        <input
+          id="composer-tags"
+          type="text"
+          class="composer-tags-input"
+          placeholder="Tags (comma-separated)"
+          maxlength="500"
+        />
+        <div class="composer-options">
+          <label class="composer-checkbox-label">
+            <input type="checkbox" id="composer-hide-search" />
+            Book only
+          </label>
+        </div>
+        <div class="composer-buttons">
+          <button
+            type="button"
+            id="composer-submit"
+            class="btn-primary composer-btn"
+          >
+            Post
+          </button>
+          <div class="composer-char-count" id="composer-char-count">
+            0 / 100,000
+          </div>
+        </div>
+      </footer>
+    </main>
+    <aside id="tf-preview"></aside>
+    <script src="../lib/marked.min.js"></script>
+    <script src="../lib/purify.min.js"></script>
+    <script src="../lib/vs/loader.js"></script>
+    <script type="module" src="./editorConfig.js"></script>
+  </body>
+</html>

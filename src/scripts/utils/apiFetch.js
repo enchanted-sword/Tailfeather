@@ -1,4 +1,15 @@
 
+const getCSRFToken = () => {
+  const cookies = document.cookie.split(';');
+  for (const cookie of cookies) {
+    const trimmed = cookie.trim();
+    if (trimmed.startsWith('csrftoken=')) {
+      return trimmed.substring('csrftoken='.length);
+    }
+  }
+  return '';
+}
+
 const defaultOptions = {
   baseUrl: 'https://noterook.net/api',
   method: 'GET',
@@ -6,6 +17,7 @@ const defaultOptions = {
   headers: {
     Accept: '*/*',
     'X-Version': 'Tailfeather',
+    'X-CSRFToken': getCSRFToken()
   },
   queryParams: {},
 };

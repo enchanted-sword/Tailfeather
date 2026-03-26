@@ -25,7 +25,7 @@ export const openDatabase = async () => new Promise((resolve, reject) => {
   const request = window.indexedDB.open('tailfeather', DB_VERSION);
 
   request.onerror = event => {
-    console.error(`failed to open database version ${DB_VERSION}`, event);
+    console.error(`[FDB] Failed to open database version ${DB_VERSION}`, event);
     reject(event);
   };
 
@@ -49,7 +49,7 @@ export const openDatabase = async () => new Promise((resolve, reject) => {
       conditionalCreateIndex(userStore, 'displayName', 'displayName', { unique: false });
       conditionalCreateIndex(userStore, 'storedAt', 'storedAt', { unique: false });
 
-      console.info(`Updated database from v${event.oldVersion} to v${event.newVersion}`)
+      console.info(`[FDB] Updated database from v${event.oldVersion} to v${event.newVersion}`)
     };
   };
 
@@ -86,9 +86,9 @@ const newTransactionError = (tx, i) => new Promise((resolve, reject) => {
   tx.oncomplete = resolve;
   tx.onerror = e => {
     try {
-      console.error(`Database cache transaction error originating from module ${import.meta.url}: `, e, 'Relevant info: ', i);
+      console.error(`[FDB] Database cache transaction error originating from module ${import.meta.url}: `, e, 'Relevant info: ', i);
     } catch { // in the case we ever copy this module verbatim to a non-module environment and get annoyed when error logging breaks
-      console.error('Database cache transaction error: ', e, 'Relevant info: ', i);
+      console.error('[FDB] Database cache transaction error: ', e, 'Relevant info: ', i);
     }
     reject(e);
   };
@@ -161,7 +161,7 @@ export const getData = async (dataObj, options = null) => {
     storeOptions?.index && (index = store.index(storeOptions.index));
     const storeData = await Promise.all([dataObj[dataStore]].flat().map(async key => {
       if (!key) {
-        console.warn('getData: key is undefined');
+        console.warn('[FDB] getData: key is undefined');
         return void 0;
       }
       if (index) return promisifyIDBRequest(index.get(key));
@@ -209,7 +209,7 @@ export const clearData = (dataObj, options = null) => {
     storeOptions && ('index' in storeOptions) && (index = store.index(storeOptions.index));
     return [dataObj[dataStore]].flat().map(async key => {
       if (!key) {
-        console.warn('clearData: key is undefined');
+        console.warn('[FDB] clearData: key is undefined');
         return;
       }
       if (index) return promisifyIDBRequest(index.openCursor(key)).then(cursor => promisifyIDBRequest(cursor.delete()));
@@ -236,7 +236,7 @@ export const getIndexedResources = async (store, keys, options = null) => {
 
   if (!resourceQueue.has(mapKey)) {
     const indexedResources = await getData(Object.fromEntries([[store, keys]]), Object.fromEntries([[store, options]]));
-    if (!indexedResources[store]) console.log(store, Object.entries(indexedResources), indexedResources[store]);
+    if (!indexedResources[store]) console.warn(`[FDB] No indexed resources found in store '${store}':`, Object.entries(indexedResources));
     const data = isArray ? indexedResources[store] : indexedResources[store][0];
 
     resourceQueue.set(mapKey, data);

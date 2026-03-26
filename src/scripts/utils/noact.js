@@ -31,7 +31,7 @@ export const noact = (obj = {}, allowArrowFn = false) => {
 
   try {
     if ('className' in obj && typeof obj.className !== 'string') {
-      console.error('noact: className is not a string', obj);
+      console.error('[Noact] className is not a string:', obj);
       return null;
     }
     if ('tag' in obj && (validTags.includes(obj.tag) || svgNs.includes(obj.tag))) tag = obj.tag;
@@ -70,7 +70,7 @@ export const noact = (obj = {}, allowArrowFn = false) => {
               }
             })
           } else if (typeof prop === 'function' && isArrow(prop) && !allowArrowFn) {
-            console.error(`noact: illegal arrow function on property ${key}`, el, prop);
+            console.error(`[Noact] Illegal arrow function on property ${key}`, el, prop);
             return;
           } else if (key === 'for') el.setAttribute(key, prop);
           else el[key] = prop;
@@ -86,7 +86,7 @@ export const noact = (obj = {}, allowArrowFn = false) => {
         else el.append(document.createTextNode(child));
       });
     }
-  } catch (e) { console.error('noact:', e, obj) }
+  } catch (e) { console.error('[Noact] Generic:', e, obj) }
 
   return el;
 };

@@ -13,9 +13,9 @@ const darkWorld = async username => {
         response.text().then(docText => {
           const doc = parser.parseFromString(docText, 'text/html');
           if (doc.head.childElementCount) return doc;
-          else throw `Failed to retrieve book https://noterook.net/${username}`;
+          else throw `[DarkWorld] Failed to retrieve book https://noterook.net/${username}`;
         })).catch(e => {
-          console.error(`DarkWorld error: Your machinations are too evil,`, e);
+          console.error(`[DarkWorld] Your machinations are too evil:`, e);
           return Promise.reject();
         });
 
@@ -37,7 +37,7 @@ const getUserSlow = async username => {
     updateData({ userStore: user });
     return user;
   } catch (e) {
-    console.error(`Unable to parse book "${username}"`, e);
+    console.error(`[DarkWorld] Unable to parse book '${username}':`, e);
     return undefined;
   }
 };
@@ -57,9 +57,9 @@ const getOwnUser = async () => {
           if (doc.head.childElementCount) {
             return JSON.parse(doc.getElementById('search-container').dataset.user);
           }
-          else throw 'Failed to retrieve user data';
+          else throw '[DarkWorld] Failed to retrieve user data';
         })).catch(e => {
-          console.error(`DarkWorld error: Your machinations are too evil,`, e);
+          console.error(`[DarkWorld] Your machinations are too evil:`, e);
           return Promise.reject();
         });
     ownUserName = partialUser.username;

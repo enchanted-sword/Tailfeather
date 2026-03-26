@@ -1,0 +1,1 @@
+export const postSelector = 'article[data-post-id]';

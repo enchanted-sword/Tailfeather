@@ -101,7 +101,7 @@ export const getJsonFile = async name => {
 
     return json;
   } catch (e) {
-    console.error(name, e);
+    console.error(`[jsTools] Failed to open JSON file '${name}.json'`, e);
     return null;
   }
 };
@@ -146,7 +146,6 @@ export const featureify = (installedFeatures, preferences) => {
         }
         Object.keys(installedFeatures[feature].preferences.options).forEach(option => {
           if (typeof preferences[feature].options[option] === 'undefined') {
-            console.log(feature, installedFeatures[feature].preferences.options[option]);
             if ('inherit' in installedFeatures[feature].preferences.options[option]) {
               const [inheritFeature, inheritOption] = installedFeatures[feature].preferences.options[option].inherit.inheritFrom.split('.');
               if (typeof preferences[inheritFeature].options[inheritOption] !== 'undefined') {

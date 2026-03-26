@@ -14,7 +14,7 @@
   },
   "permissions": [
     "storage",
-    "declarativeNetRequestWithHostAccess"
+    "scripting"
   ],
   "host_permissions": [
     "*://*.noterook.net/"
@@ -26,7 +26,8 @@
         "*.js",
         "*.json",
         "*.css",
-        "*.svg"
+        "*.svg",
+        "*.html"
       ],
       "matches": [
         "*://*.noterook.net/*"
@@ -43,7 +44,7 @@
         "control/contentScript.js",
         "lib/marked.min.js",
         "lib/purify.min.js",
-        "lib/prism.js"
+        "lib/noble-ed25519.min.js"
       ]
     }
   ],

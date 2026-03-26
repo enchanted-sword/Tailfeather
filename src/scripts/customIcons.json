@@ -1,0 +1,24 @@
+{
+  "name": "customIcons",
+  "title": "Custom Icons",
+  "description": "Replaces text buttons with icons",
+  "preferences": {
+    "enabled": false,
+    "options": {
+      "navIcons": {
+        "value": true,
+        "type": "toggle",
+        "name": "Navbar icons",
+        "tooltip": "Replaces navbar links with icons"
+      },
+      "postIcons": {
+        "value": true,
+        "type": "toggle",
+        "name": "Post footer icons",
+        "tooltip": "Replaces post actions with icons"
+      }
+    }
+  },
+  "js": true,
+  "css": true
+}

@@ -1,7 +1,7 @@
 'use strict';
 
 {
-  console.info('Initialising PawJob...');
+  console.info('[PawJob-Core] Initialising...');
 
   const { getURL } = browser.runtime;
   const urlPrefix = getURL('');
@@ -16,7 +16,7 @@
     });
 
     document.documentElement.append(style);
-    console.info(`Preloaded stylesheets in ${Date.now() - t0}ms`);
+    console.info(`[PawJob-Preload] Preloaded stylesheets in ${Date.now() - t0}ms`);
   };
   preloadStyles();
 
@@ -27,7 +27,7 @@
         try {
           return Array.from(sheet.cssRules)
         } catch (e) {
-          console.error(e, sheet);
+          console.error('[PawJob-Cache] Failed to cache extension stylesheet:', e, sheet);
           return void 0;
         }
       })
@@ -73,7 +73,7 @@
           if (feature.js) {
             const { main, clean, update } = await import(browser.runtime.getURL(`/scripts/${name}.js`)); // browser.runtime.getURL is only a valid escape when written in full
 
-            window.requestAnimationFrame(() => main().catch(console.error));
+            window.requestAnimationFrame(() => main().catch(e => console.error(`[PawJob-Core] Error executing module '${name}':`, e)));
 
             preferenceListeners[name] = (changes, areaName) => {
               const { preferences } = changes;
@@ -94,7 +94,7 @@
 
             browser.storage.onChanged.addListener(preferenceListeners[name]);
           }
-        } catch (e) { console.error(`Failed to execute feature ${name}`, e, 'IF THIS IS A "FAILED TO IMPORT DYNAMIC MODULE" ERROR, ENABLE WARNINGS IN THE BROWSER CONSOLE TO DISPLAY IMPORT PATH ERRORS'); }
+        } catch (e) { console.error(`[PawJob-Core] Failed to execute feature ${name}:`, e, 'IF THIS IS A "FAILED TO IMPORT DYNAMIC MODULE" ERROR, ENABLE WARNINGS IN THE BROWSER CONSOLE TO DISPLAY IMPORT PATH ERRORS'); }
       };
       const destroyFeature = async name => {
         const feature = installedFeatures[name];
@@ -104,7 +104,7 @@
           if (feature.js) {
             const { clean } = await import(browser.runtime.getURL(`/scripts/${name}.js`)); // browser.runtime.getURL is only a valid escape when written in full
 
-            window.requestAnimationFrame(() => clean().catch(console.error));
+            window.requestAnimationFrame(() => clean().catch(e => console.error(`[PawJob-Core] Error cleaning module '${name}':`, e)));
 
             if (browser.storage.onChanged.hasListener(preferenceListeners[name])) browser.storage.onChanged.removeListener(preferenceListeners[name]);
             delete preferenceListeners[name];
@@ -112,7 +112,7 @@
 
           resizeListeners = resizeListeners.filter(val => val !== name);
           enabledFeatures = enabledFeatures.filter(val => val !== name);
-        } catch (e) { console.error(`Failed to destroy feature ${name}`, e); }
+        } catch (e) { console.error(`[PawJob-Core] Failed to destroy feature ${name}:`, e); }
 
         return void 0;
       };
@@ -166,12 +166,11 @@
 
         window.addEventListener('resize', debounce(onResized));
 
-        console.info(`Running ${enabledFeatures.length} of ${Object.keys(installedFeatures).length} features`);
+        console.info(`[PawJob-Core] Running ${enabledFeatures.length} of ${Object.keys(installedFeatures).length} features`);
       };
 
       initFeatures();
 
-      console.info('Loaded!');
-      console.info(browser.storage.local.get());
+      console.info('[PawJob-Core] Loaded!');
     }))();
 }
