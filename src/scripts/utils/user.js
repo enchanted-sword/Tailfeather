@@ -8,7 +8,7 @@ const worlds = new Map();
 
 const darkWorld = async username => {
   if (!worlds.has(username)) {
-    const world = await fetch(`https://noterook.net/book/${username}`)
+    const world = await fetch(`https://noterook.net/book/${encodeURIComponent(username)}`)
       .then(response =>
         response.text().then(docText => {
           const doc = parser.parseFromString(docText, 'text/html');

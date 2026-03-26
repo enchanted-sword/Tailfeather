@@ -1,3 +1,10 @@
+#tf-nav-new-post {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: 0.2rem 0.9rem;
+}
+
 #tf-editor-dialogue {
   z-index: 200;
   position: fixed;

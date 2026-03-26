@@ -13,7 +13,13 @@ const listener = event => {
   }
   else if (typeof event.data === 'object' && 'composerContent' in event.data) {
     const { composerContent, hideFromSearch, tagString } = event.data;
-    createPost(composerContent, tagString, userInfo, { hideFromSearch });
+    createPost(composerContent, tagString, userInfo, { hideFromSearch }).then(post => {
+      console.log(`[TF-Editor] Successfully created post ${post.post_id}`);
+      closeEditor({ type: 'click' });
+    }, e => {
+      console.error('[TF-Editor] Failed to create post:', e, event.data);
+      window.alert('Failed to create post :/');
+    });
   }
 };
 
@@ -52,6 +58,15 @@ function openEditor(event) {
 
 export const main = async () => {
   window.addEventListener('message', listener);
+  document.getElementById('nav-new-post').insertAdjacentElement('afterend', noact({
+    id: 'tf-nav-new-post',
+    className: 'btn-primary-sm',
+    title: 'Write a new post using the custom editor',
+    children: [
+      svgIcon('code', 24, 24),
+      'New Post'
+    ]
+  }))
   document.getElementById('nav-new-post').addEventListener('click', openEditor);
 };
 export const clean = async () => {
