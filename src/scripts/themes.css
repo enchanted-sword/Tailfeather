@@ -1,0 +1,24 @@
+[tf-theme="preset-trueblue"] {
+  --bg: #001935;
+  --text: #000;
+  --white-on-dark: #fff;
+  --bg-surface: #fff;
+  --border: rgba(255, 255, 255, 0.13);
+  --accent: #00b8ff;
+  --accent-hover: #33c6ff;
+  --accent-dim: rgba(0, 184, 255, 0.15);
+}
+
+[tf-theme="preset-trueblue"] .site-header {
+  background-color: var(--bg);
+}
+
+[tf-theme="preset-trueblue"] :is(.nav-links a, .nav-logout):hover,
+[tf-theme="preset-trueblue"] .logo,
+[tf-theme="preset-trueblue"] .book-header {
+  color: var(--white-on-dark);
+}
+
+[tf-theme="preset-trueblue"] .post-body {
+  color: var(--text) !important;
+}

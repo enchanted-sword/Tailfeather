@@ -60,7 +60,7 @@ const handleColumns = cols => {
 
 const run = ({ fixPostGaps, autoBreakpoint, expandedMasonry }) => {
   columnCount = expandedMasonry;
-  mutationManager.start(`:not(${customAttribute})>${columnSelector}`, handleColumns);
+  //mutationManager.start(`:not(${customAttribute})>${columnSelector}`, handleColumns);
   let styleText = '';
 
   if (fixPostGaps) styleText += `@media (max-width: 768px) {
@@ -77,6 +77,23 @@ const run = ({ fixPostGaps, autoBreakpoint, expandedMasonry }) => {
     children: styleText
   }));
 };
+
+/* "autoBreakpoint": {
+        "value": true,
+        "type": "toggle",
+        "name": "Automatic masonry breakpoint",
+        "tooltip": "Automatically switches from masonry to single-column on narrow displays"
+      },
+      "expandedMasonry": {
+        "title": "Expanded masonry columns",
+        "tooltip": "Sets the max number of masonry columns",
+        "type": "range",
+        "min": 2,
+        "max": 8,
+        "value": 2,
+        "step": 1,
+        "unit": ""
+      } */
 
 export const update = async options => run(options);
 

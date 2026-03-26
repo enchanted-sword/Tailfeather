@@ -641,12 +641,8 @@ input.ui-listSelect:checked+label:hover {
   border-radius: 20px;
   padding: 0 4px;
   margin: 0;
-  background-color: var(--white-primary-10);
+  background-color: transparent;
   cursor: pointer;
-}
-
-.ui-rangeInput:hover {
-  background-color: var(--white-primary-10);
 }
 
 .ui-rangeInput:focus {
@@ -655,14 +651,9 @@ input.ui-listSelect:checked+label:hover {
 
 .ui-rangeInput::-webkit-slider-runnable-track,
 .ui-rangeInput::-moz-range-track {
-  background-color: var(--white-primary-30);
+  background-color: var(--bg-input);
   border-radius: .5rem;
   height: .5rem;
-}
-
-.ui-rangeInput:hover::-webkit-slider-runnable-track,
-.ui-rangeInput:hover::-moz-range-track {
-  background-color: var(--white-primary-40);
 }
 
 .ui-rangeInput::-webkit-slider-thumb,
@@ -670,16 +661,16 @@ input.ui-listSelect:checked+label:hover {
   -webkit-appearance: none;
   appearance: none;
   border: none;
-  background-color: rgb(var(--accent));
+  background-color: var(--text);
   border-radius: 50%;
   box-sizing: border-box;
-  height: 1.5rem;
-  width: 1.5rem;
+  height: 1.25rem;
+  width: 1.25rem;
 }
 
 .ui-rangeInput:is(:active, :focus)::-webkit-slider-thumb,
 .ui-rangeInput:is(:active, :focus)::-moz-range-thumb {
-  border: 2px solid rgb(var(--white));
+  border: 2px solid var(--success);
 }
 
 .ui-colors {

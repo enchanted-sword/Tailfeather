@@ -42,9 +42,10 @@
       "run_at": "document_end",
       "js": [
         "control/contentScript.js",
+        "lib/culori.min.js",
         "lib/marked.min.js",
-        "lib/purify.min.js",
-        "lib/noble-ed25519.min.js"
+        "lib/noble-ed25519.min.js",
+        "lib/purify.min.js"
       ]
     }
   ],

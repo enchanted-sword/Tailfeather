@@ -192,7 +192,7 @@
           }
 
           if ('options' in preference) {
-            const optionsWrapper = $('<div class="ui-options"><h2>options</h2></div>');
+            const optionsWrapper = $('<div class="ui-options"><h2>Options</h2></div>');
 
             Object.keys(feature.preferences.options).forEach(key => {
               const option = feature.preferences.options[key];
