@@ -1,8 +1,10 @@
 [tf-theme="preset-trueblue"] {
   --bg: #001935;
+  --bg-surface: #fff;
+  --bg-elevated: #e5e5ee;
+  --bg-input: #031227;
   --text: #000;
   --white-on-dark: #fff;
-  --bg-surface: #fff;
   --border: rgba(255, 255, 255, 0.13);
   --accent: #00b8ff;
   --accent-hover: #33c6ff;
@@ -20,5 +22,113 @@
 }
 
 [tf-theme="preset-trueblue"] .post-body {
-  color: var(--text) !important;
+  color: var(--text);
+}
+
+[tf-theme="preset-trueblue"] .post-author-name {
+  color: var(--text-dim);
+}
+
+[tf-theme="preset-lcc"] {
+  --bg: #1a2735;
+  --bg-input: #2d3d5b;
+  --bg-surface: #263b53;
+  --bg-elevated: #394b63;
+  --text: #bfbfbf;
+  --border: rgba(191, 191, 191, 0.13);
+  --accent: #00b8ff;
+  --accent-hover: #33c6ff;
+  --accent-dim: rgba(0, 184, 255, 0.15);
+}
+
+[tf-theme="preset-lcc"] .site-header {
+  background-color: var(--bg);
+}
+
+[tf-theme="preset-lcc"] .post-author-name {
+  color: var(--text);
+}
+
+[tf-theme="preset-gm9"] {
+  --bg: #000;
+  --bg-surface: #1a1a1a;
+  --bg-input: #131c0c;
+  --bg-elevated: ##2f3a2b;
+  --text: #67ff38;
+  --text-muted: #82997b;
+  --text-dim: #6b8268;
+  --border: rgba(0, 207, 53, 0.13);
+  --accent: #01cf35;
+  --accent-hover: #34d95d;
+  --accent-dim: rgb(1, 207, 53, 0.15);
+}
+
+[tf-theme="preset-gm9"] .site-header {
+  background-color: var(--bg);
+}
+
+[tf-theme="preset-gm9"] .post-author-name {
+  color: var(--text);
+}
+
+[tf-theme="preset-abyss"] {
+  --bg: #00060c;
+  --bg-surface: #000c18;
+  --bg-elevated: #0d1729;
+  --bg-input: #0d1334;
+  --text: #6688cc;
+  --text-muted: #4e689c;
+  --text-dim: #485c82;
+  --border: rgba(102, 136, 204, 0.15);
+  --accent: #2277f1;
+  --accent-hover: #1965d3;
+  --accent-dim: rgb(24, 119, 241, 0.15);
+}
+
+[tf-theme="preset-abyss"] .site-header {
+  background-color: var(--bg);
+}
+
+[tf-theme="preset-abyss"] .post-author-name {
+  color: var(--text);
+}
+
+[tf-theme="preset-fruit"] {
+  --bg: #fff9f2;
+  --bg-surface: #fff;
+  --bg-cherry: #83254f;
+  --bg-input: #ffd8a8;
+  --not-white: #fff9f2;
+  --text: #191919;
+  --text-muted: #827f7c;
+  --text-dim: #4e4d4b;
+  --white-on-dark: #fff9f2;
+  --border: rgba(102, 136, 204, 0.15);
+  --border-light: #ded9d3;
+  --accent: #ffab5c;
+  --accent-hover: #ce8540;
+  --accent-dim: rgb(255, 171, 92, 0.15);
+}
+
+[tf-theme="preset-fruit"] .site-header {
+  background-color: var(--bg-cherry);
+}
+
+[tf-theme="preset-fruit"] :is(.nav-links a, .nav-logout),
+[tf-theme="preset-fruit"] .logo,
+[tf-theme="preset-fruit"] .book-header {
+  color: var(--white-on-dark);
+}
+
+[tf-theme="preset-fruit"] :is(.nav-links a, .nav-logout):hover {
+  color: var(--accent);
+}
+
+[tf-theme="preset-abyss"] .post-card {
+  color: var(--not-black);
+  background-color: var(--bg-post);
+}
+
+[tf-theme="preset-fruit"] .post-author-name {
+  color: var(--not-black);
 }
