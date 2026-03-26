@@ -1,8 +1,7 @@
 #tf-nav-new-post {
   display: inline-flex;
   align-items: center;
-  gap: .5rem;
-  padding: 0.2rem 0.9rem;
+  padding: 0.25rem 0.9rem;
 }
 
 #tf-editor-dialogue {

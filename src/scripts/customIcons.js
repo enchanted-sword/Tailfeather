@@ -28,6 +28,7 @@ const run = ({ postIcons, navIcons }) => {
     navLinks.querySelector('[href*="/book/"]')?.replaceChildren(svgIcon('book', 24, 24, customClass));
     navLinks.querySelector('[href="/following/"]')?.replaceChildren(svgIcon('users', 24, 24, customClass));
     navLinks.querySelector('[href="/accounts/profile/edit/"]')?.replaceChildren(svgIcon('wrench', 24, 24, customClass));
+    navLinks.querySelector('#nav-new-post')?.replaceChildren(svgIcon('brush', 24, 24, customClass));
   }
 };
 

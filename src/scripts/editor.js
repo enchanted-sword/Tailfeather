@@ -62,10 +62,7 @@ export const main = async () => {
     id: 'tf-nav-new-post',
     className: 'btn-primary-sm',
     title: 'Write a new post using the custom editor',
-    children: [
-      svgIcon('code', 24, 24),
-      'New Post'
-    ]
+    children: svgIcon('code', 24, 24)
   }))
   document.getElementById('nav-new-post').addEventListener('click', openEditor);
 };

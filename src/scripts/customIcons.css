@@ -18,3 +18,9 @@
 .nav-links a:has(.tailfeather-icons) {
   display: flex;
 }
+
+#nav-new-post {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.9rem;
+}
