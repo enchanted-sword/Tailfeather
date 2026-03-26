@@ -26,7 +26,7 @@ const injectFunction = async ({ hash, files }, target) => {
   const iResults = await browser.scripting.executeScript({ files, target, world: 'MAIN' });
   console.log('[InjectFunction] Results:', iResults);
   connectionPort.postMessage({ hash, results: iResults.map(({ result }) => result) });
-};
+}; // Can't return Function objects, but it's worth looking into using browser.runtime.getBackgroundPage() for higher-level communication if the need arises
 
 const connected = p => {
   connectionPort = p;
