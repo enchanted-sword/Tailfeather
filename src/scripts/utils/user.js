@@ -1,7 +1,5 @@
 import { getIndexedUsers, updateData } from './database.js';
-import { local } from './storage.js';
-
-let ownUserName = await local.get('username');
+import { inject } from './inject.js';
 
 const parser = new DOMParser();
 const worlds = new Map();
@@ -48,25 +46,4 @@ export const getUser = async (username = '') => {
   else return getUserSlow(username);
 };
 
-const getOwnUser = async () => {
-  if (!ownUserName) {
-    const partialUser = await fetch('https://noterook.net/search/')
-      .then(response =>
-        response.text().then(async docText => {
-          const doc = parser.parseFromString(docText, 'text/html');
-          if (doc.head.childElementCount) {
-            return JSON.parse(doc.getElementById('search-container').dataset.user);
-          }
-          else throw '[DarkWorld] Failed to retrieve user data';
-        })).catch(e => {
-          console.error(`[DarkWorld] Your machinations are too evil:`, e);
-          return Promise.reject();
-        });
-    ownUserName = partialUser.username;
-    local.set({ username: ownUserName });
-  }
-  const doc = await darkWorld(ownUserName);
-  return JSON.parse(doc.getElementById('book-container').dataset.user)
-}
-
-export const userInfo = await getOwnUser();
+export const [{ user: userInfo }] = await inject('../scripts/inject/app.js');
