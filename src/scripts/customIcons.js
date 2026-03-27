@@ -1,4 +1,4 @@
-import { mutationManager, postFunction } from './utils/mutation.js';
+import { mutationManager, ShadowManager } from './utils/mutation.js';
 import { svgIcon } from './utils/icons.js';
 import { getOptions } from './utils/jsTools.js';
 import { postSelector } from './utils/document.js';
@@ -6,6 +6,8 @@ import { postSelector } from './utils/document.js';
 const customClass = 'tailfeather-icons';
 const customAttribute = 'data-tf-icons';
 const iconSelector = `.post-action-btn:not([${customAttribute}])`;
+
+let sManager;
 
 const iconMap = {
   'post-permalink': 'link',
@@ -15,19 +17,10 @@ const iconMap = {
   'clear-stickers': 'scissors',
   'toggle-pin': 'pin',
   'edit-tags': 'tag',
-  'post-action-delete': 'trash'
+  'delete': 'trash'
 };
 
 const handleIcons = icons => icons.forEach(icon => {
-  /* post.querySelector('.post-permalink')?.replaceChildren(svgIcon('link', 24, 24, customClass));
-  post.querySelector('[data-action="staple"]')?.replaceChildren(svgIcon('stapler', 24, 24, customClass));
-  post.querySelector('[data-action="add-to"]')?.replaceChildren(svgIcon('add', 24, 24, customClass));
-  post.querySelector('[data-action="sticker"]')?.replaceChildren(svgIcon('star', 24, 24, customClass));
-  post.querySelector('[data-action="clear-stickers"]')?.replaceChildren(svgIcon('scissors', 24, 24, customClass));
-  post.querySelector('[data-action="toggle-pin"]')?.replaceChildren(svgIcon('pin', 24, 24, customClass));
-  post.querySelector('[data-action="edit-tags"]')?.replaceChildren(svgIcon('tag', 24, 24, customClass));
-  post.querySelector('.post-action-delete')?.replaceChildren(svgIcon('trash', 24, 24, customClass));
-  post.setAttribute(customAttribute, ''); */
   let identifier;
   if ('action' in icon.dataset) identifier = icon.dataset.action;
   else identifier = Array.from(icon.classList.values()).find(className => className !== 'post-action-btn');
@@ -37,25 +30,15 @@ const handleIcons = icons => icons.forEach(icon => {
   icon.setAttribute(customAttribute, '');
 });
 
-function reIconifyStaple({ target }) {
-  setTimeout(() => target.closest(postSelector)?.querySelector('[data-action="staple"]')?.replaceChildren(svgIcon('stapler', 24, 24, customClass)), 2500); // post-actions.js waits 2000ms
-}
-
-function reIconifyAdd({ target }) {
-  setTimeout(() => target.closest(postSelector)?.querySelector('[data-action="add-to"]')?.replaceChildren(svgIcon('stapler', 24, 24, customClass)), 2500); // post-actions.js waits 2000ms
-}
-
-const onStapleHandler = forms => forms.forEach(form => {
-  form.querySelector('[data-action="submit-staple"]').addEventListener('click', reIconifyStaple);
-  form.setAttribute(customAttribute, '');
-});
-
 const run = ({ postIcons, navIcons }) => {
   if (postIcons) {
+    if (!sManager && document.getElementById('book-shadow-host')) sManager = new ShadowManager(document.getElementById('book-shadow-host'));
     mutationManager.start(iconSelector, handleIcons);
+    sManager?.start(iconSelector, handleIcons);
   }
   else {
     mutationManager.stop(handleIcons);
+    sManager?.stop(handleIcons);
   }
 
   if (navIcons) {
@@ -76,5 +59,6 @@ export const main = async () => getOptions('customIcons').then(run);
 
 export const clean = async () => {
   mutationManager.stop(handleIcons);
+  sManager?.disconnect();
   // document.querySelectorAll(`[${customAttribute}]`).forEach(s => s.removeAttribute(customAttribute));
 };
