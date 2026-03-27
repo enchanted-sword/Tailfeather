@@ -1,3 +1,4 @@
+import { dynamicStyle } from './utils/document.js';
 import { getOptions } from './utils/jsTools.js';
 import { noact } from './utils/noact.js';
 
@@ -94,7 +95,7 @@ const bgColours = {
 };
 
 const customClass = 'tailfeather-themes';
-let style;
+const style = dynamicStyle(customClass);
 
 const lumShift = (arr, lum = 0) => arr.map(([colour, { mode, l, c, h }]) => [colour, { mode, l: Math.max(Math.min(l + lum, 1), 0), c, h }]);
 const hueShift = (arr, deg = 0) => arr.map(([colour, { mode, l, c, h }]) => [colour, { mode, l, c, h: (h + deg) % 360 }]);
@@ -103,13 +104,6 @@ const cssStr = colourArr => colourArr.map(([colour, oklch]) => `--${colour}: ${c
 
 const run = ({ mode, hueshift, fgl, bgl, preset }) => {
   document.documentElement.setAttribute('tf-theme', `${mode}-${preset}`);
-  if (!style) {
-    style = noact({
-      tag: 'style',
-      className: customClass,
-    });
-    document.body.append(style);
-  }
   if (mode === 'hue') {
     let entries;
     if (fgl || bgl) {

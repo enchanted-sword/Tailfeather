@@ -1,0 +1,10 @@
+{
+  "name": "usernames",
+  "title": "Show Usernames",
+  "description": "Displays usernames beside display names",
+  "preferences": {
+    "enabled": false
+  },
+  "js": true,
+  "css": true
+}
