@@ -24,6 +24,7 @@
   width: 70vw;
   height: 90vh;
   border: none;
+  border-radius: .5rem;
 }
 
 .tf-editor-close {

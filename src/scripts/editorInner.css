@@ -44,6 +44,7 @@ main {
   background-color: var(--bg-surface);
   border-radius: .5rem;
   border: 1px solid var(--border);
+  height: fit-content;
 }
 
 header,
@@ -51,9 +52,8 @@ footer {
   padding: 1.25rem;
 }
 
-div,
-input,
-label {
+.composer-controls,
+.post-card {
   font-family: var(--font);
 }
 

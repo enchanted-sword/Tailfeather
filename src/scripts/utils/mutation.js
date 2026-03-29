@@ -66,7 +66,6 @@ class MutationManager {
    */
   stop(func) {
     if (this.listeners.has(func)) this.listeners.delete(func);
-    if (this.targetListeners.has(func)) this.listeners.delete(func);
   }
 
   /**

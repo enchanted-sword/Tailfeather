@@ -24,12 +24,12 @@ const previewWindow = (body, tagInput) => {
         children: [
           {
             className: 'post-author-avatar',
-            src: userInfo.avatarUrl
+            src: userInfo.avatar_url
           },
           {
             tag: 'span',
             className: 'post-author-name chain-author-link',
-            children: userInfo.displayName
+            children: userInfo.display_name
           },
           {
             tag: 'span',

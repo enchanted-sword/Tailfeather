@@ -1,0 +1,22 @@
+.masonry-col {
+  margin-left: 5.25rem;
+}
+
+.tailfeather-floatingAvatars {
+  position: absolute;
+  left: -5.25rem;
+  top: 0;
+  height: 100%;
+}
+
+.tailfeather-floatingAvatars .post-author-avatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius);
+  position: sticky;
+  top: 4.5rem;
+}
+
+[data-tf-floating-avatars] .post-author .post-author-avatar {
+  display: none;
+}

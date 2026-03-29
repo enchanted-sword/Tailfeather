@@ -1,0 +1,10 @@
+{
+  "name": "floatingAvatars",
+  "title": "Floating Avatars",
+  "description": "Make post author avatars larger, displayed to the left of posts, and scrolled with the timeline",
+  "preferences": {
+    "enabled": false
+  },
+  "js": true,
+  "css": true
+}

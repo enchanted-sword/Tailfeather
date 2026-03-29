@@ -4,5 +4,8 @@
   "feedTweaks",
   "editor",
   "themes",
-  "usernames"
+  "usernames",
+  "floatingAvatars",
+  "autoReadmore",
+  "safeScroll"
 ]

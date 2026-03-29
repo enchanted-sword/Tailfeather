@@ -13,8 +13,10 @@ function updateTags({ target }) {
 // monaco config
 require.config({ paths: { vs: '../lib/vs' } });
 require(['vs/editor/editor.main'], function () {
+  console.log('monaco loaded!',);
+
   editor = monaco.editor.create(document.getElementById('composer'), {
-    value: ['<p>', '\tgo ahead, make a post', '</p>'].join('\n'),
+    value: '<!-- Write the post your heart desires! -->',
     language: 'text/html',
     theme: 'vs-dark'
   });
@@ -31,12 +33,12 @@ require(['vs/editor/editor.main'], function () {
         children: [
           {
             className: 'post-author-avatar',
-            src: userInfo.avatarUrl
+            src: userInfo.avatar_url
           },
           {
             tag: 'span',
             className: 'post-author-name',
-            children: userInfo.displayName
+            children: userInfo.display_name
           },
           {
             tag: 'span',
@@ -48,6 +50,10 @@ require(['vs/editor/editor.main'], function () {
       {
         id: 'postPreview-body',
         className: 'post-body',
+        children: {
+          tag: 'code',
+          children: '<!-- Start writing a post to have it preview here! -->'
+        }
       },
       {
         id: 'postPreview-tags',
@@ -57,7 +63,7 @@ require(['vs/editor/editor.main'], function () {
   }));
 
   document.getElementById('composer-submit').addEventListener('click', function () {
-    const composerContent = editor.getModel().getValue()
+    const composerContent = editor.getModel().getValue();
     const hideFromSearch = document.getElementById('composer-hide-search').checked;
     const tagString = document.getElementById('composer-tags').value;
     window.parent.postMessage({ composerContent, hideFromSearch, tagString }, uri);
@@ -69,7 +75,14 @@ require(['vs/editor/editor.main'], function () {
   function updateBody() {
     requestAnimationFrame(() => {
       const text = editor.getModel().getValue();
-      document.getElementById('postPreview-body').replaceChildren(getProcessor().renderToElement(text));
+      let rendered = getProcessor().renderToElement(text);
+      console.log(rendered);
+      if (!rendered.textContent) rendered = noact({
+        tag: 'span',
+        style: 'font-style: italic',
+        children: 'Nothing to preview'
+      });
+      document.getElementById('postPreview-body').replaceChildren(rendered);
     });
   }
 

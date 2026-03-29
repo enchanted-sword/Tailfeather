@@ -1,0 +1,163 @@
+[data-tf-safescroll-hidden].post-author-avatar {
+  filter: blur(8px);
+  transition: filter 0.3s;
+}
+
+[data-tf-safescroll-hidden].post-author-avatar:hover {
+  filter: none;
+}
+
+p[data-tf-safescroll-hidden] {
+  position: relative;
+}
+
+[data-tf-safescroll-hidden="blur"]:is(p, img, :empty):after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, rgba(0, 184, 255, .2), rgba(255, 97, 206, .2));
+  content: "";
+  backdrop-filter: blur(20px);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s;
+  border-radius: var(--radius-sm);
+}
+
+[data-tf-safescroll-hidden="blur"].post-body-collapsed,
+.post-body-collapsed:has([data-tf-safescroll-hidden="blur"]) {
+  mask-image: none;
+}
+
+[data-tf-safescroll-hidden="blur"]:is(p, img, :empty):hover:after {
+  opacity: 0;
+}
+
+:is([data-tf-safescroll-hidden="blur"].post-body-collapsed,
+  .post-body-collapsed:has([data-tf-safescroll-hidden="blur"])):hover {
+  mask-image: linear-gradient(rgb(0, 0, 0) 60%, transparent 100%);
+}
+
+[data-tf-safescroll-hidden="cover"]:is(p, img, :empty):after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-surface);
+  line-height: 1.5;
+  font-weight: bold;
+  color: var(--text);
+  content: "Filtered by SafeScroll";
+  text-align: center;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+[data-tf-safescroll-hidden="cover"].post-body-collapsed,
+.post-body-collapsed:has([data-tf-safescroll-hidden="cover"]) {
+  mask-image: none;
+}
+
+[data-tf-safescroll-hidden="cover"]:is(p, img, :empty):hover:after {
+  opacity: 0;
+}
+
+:is([data-tf-safescroll-hidden="cover"].post-body-collapsed,
+  .post-body-collapsed:has([data-tf-safescroll-hidden="cover"])):hover {
+  mask-image: linear-gradient(rgb(0, 0, 0) 60%, transparent 100%);
+}
+
+[data-tf-safescroll-hidden="collapse"]:is(p, img, :empty) {
+  position: relative;
+  transition: height .3s;
+}
+
+[data-tf-safescroll-hidden="collapse"]:is(p, img, :empty):not(:hover) {
+  height: 1.5rem;
+  overflow: hidden;
+}
+
+[data-tf-safescroll-hidden="collapse"]:is(p, img, :empty):after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-surface);
+  line-height: 1.5;
+  font-weight: bold;
+  color: var(--text);
+  content: "Filtered by SafeScroll";
+  text-align: center;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+[data-tf-safescroll-hidden="collapse"].post-body-collapsed,
+.post-body-collapsed:has([data-tf-safescroll-hidden="collapse"]) {
+  mask-image: none;
+}
+
+[data-tf-safescroll-hidden="collapse"]:is(p, img, :empty):hover:after {
+  opacity: 0;
+}
+
+:is([data-tf-safescroll-hidden="collapse"].post-body-collapsed,
+  .post-body-collapsed:has([data-tf-safescroll-hidden="collapse"])):hover {
+  mask-image: linear-gradient(rgb(0, 0, 0) 60%, transparent 100%);
+}
+
+[data-tf-safescroll-hidden="hidePost"] {
+  position: relative;
+  transition: height .3s;
+}
+
+[data-tf-safescroll-hidden="hidePost"]:not(:hover) {
+  height: 3rem;
+  overflow: hidden;
+}
+
+[data-tf-safescroll-hidden="hidePost"]:not(:hover)>* {
+  display: none !important;
+}
+
+[data-tf-safescroll-hidden="hidePost"]:after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-surface);
+  line-height: 1.5;
+  font-weight: bold;
+  color: var(--text);
+  content: "Filtered by SafeScroll";
+  text-align: center;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+[data-tf-safescroll-hidden="hidePost"]:hover:after {
+  opacity: 0;
+}

@@ -1,0 +1,9 @@
+{
+  "name": "autoReadmore",
+  "title": "Auto-Expand Readmores",
+  "description": "Automatically expands collapsed posts",
+  "preferences": {
+    "enabled": false
+  },
+  "js": true
+}

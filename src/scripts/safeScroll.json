@@ -1,0 +1,109 @@
+{
+  "name": "safeScroll",
+  "title": "SafeScroll LX",
+  "description": "Allows blurring or hiding of media and text from certain users or posts with certain tags",
+  "category": [
+    "posts",
+    "utility"
+  ],
+  "preferences": {
+    "enabled": false,
+    "options": {
+      "blogAvatars": {
+        "name": "Blur or hide avatars in filtered posts",
+        "type": "toggle",
+        "value": "disable"
+      },
+      "media": {
+        "value": true,
+        "name": "Blur or hide media in filtered posts",
+        "type": "toggle"
+      },
+      "text": {
+        "value": false,
+        "name": "Blur or hide text in filtered posts",
+        "type": "toggle"
+      },
+      "shadowContent": {
+        "value": true,
+        "name": "Blur or hide sandboxed HTML posts",
+        "tooltip": "Individual content elements within HTML posts cannot be filtered separately, due to how the HTML sandboxing functions.",
+        "type": "toggle"
+      },
+      "filterBlogs": {
+        "name": "User list filter style",
+        "type": "multiSelect",
+        "value": {
+          "parent": false,
+          "root": false,
+          "trail": false
+        },
+        "options": {
+          "parent": {
+            "name": "Filter posts from listed users"
+          },
+          "root": {
+            "name": "Filter posts where the root user is a listed user"
+          },
+          "trail": {
+            "name": "Filter posts containing listed users in the staple trail"
+          }
+        }
+      },
+      "blogList": {
+        "value": "",
+        "name": "Filtered users",
+        "type": "text",
+        "tooltip": "Filter posts containing specified users",
+        "placeholder": "Comma-separated list of users (username, not display name)"
+      },
+      "tagList": {
+        "value": "",
+        "name": "Filtered tags",
+        "type": "text",
+        "tooltip": "Filter posts containing specified tags",
+        "placeholder": "Comma-separated list of tags. Case-insensitive, partial matches are supported."
+      },
+      "hideStyle": {
+        "name": "Content filtering style",
+        "type": "select",
+        "value": "blur",
+        "options": [
+          {
+            "value": "blur",
+            "name": "Blur"
+          },
+          {
+            "value": "cover",
+            "name": "Cover"
+          },
+          {
+            "value": "collapse",
+            "name": "Collapse"
+          },
+          {
+            "value": "hidePost",
+            "name": "Hide entire post"
+          }
+        ]
+      },
+      "dispelStyle": {
+        "name": "Behaviour when showing filtered content",
+        "type": "select",
+        "value": "hover",
+        "options": [
+          {
+            "value": "hover",
+            "name": "Hover to show content"
+          },
+          {
+            "value": "click",
+            "name": "Hover to show content, click to dispel filter"
+          }
+        ]
+      }
+    }
+  },
+  "js": true,
+  "css": true
+}
