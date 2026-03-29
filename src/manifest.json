@@ -45,6 +45,7 @@
         "lib/culori.min.js",
         "lib/marked.min.js",
         "lib/noble-ed25519.min.js",
+        "lib/prism.js",
         "lib/purify.min.js"
       ]
     }

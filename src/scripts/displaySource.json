@@ -1,0 +1,38 @@
+{
+  "name": "displaySource",
+  "title": "Display Post Source Code",
+  "description": "Adds a toggle to view the source html/markdown for posts",
+  "preferences": {
+    "enabled": false,
+    "options": {
+      "theme": {
+        "value": "abyss",
+        "type": "select",
+        "name": "Syntax highlighting theme",
+        "tooltip": "Colour theme for syntax highlighting.",
+        "options": [
+          {
+            "value": "abyss",
+            "name": "Abyss"
+          },
+          {
+            "value": "fruit",
+            "name": "Fruit"
+          },
+          {
+            "value": "reef",
+            "name": "Reef"
+          }
+        ]
+      },
+      "showBoth": {
+        "value": false,
+        "type": "toggle",
+        "name": "Compare mode",
+        "tooltip": "Displays the source view below the post content, instead of replacing it"
+      }
+    }
+  },
+  "js": true,
+  "css": true
+}

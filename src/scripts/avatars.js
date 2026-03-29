@@ -1,7 +1,7 @@
 import { getIndexedUsers } from './utils/database.js';
 import { getOptions } from './utils/jsTools.js';
 import { postFunction } from './utils/mutation.js';
-import { necromancePost } from './utils/necromancy.js';
+import { necromancePostShallow } from './utils/necromancy.js';
 import { noact } from './utils/noact.js';
 
 const customClass = 'tailfeather-avatars';
@@ -10,7 +10,7 @@ const customAttribute = 'data-tf-avatars';
 let staplerAvatars, floatingAvatars, additionAvatars;
 
 const avatarise = async posts => {
-  const shallowData = posts.map(necromancePost);
+  const shallowData = posts.map(necromancePostShallow);
   const postUsers = shallowData.flatMap(({ author, originalAuthor, chain }) => [author, originalAuthor, ...chain.map(({ author }) => author)]).filter(u => !!u);
   const avatarMap = new Map();
   await getIndexedUsers(postUsers).then(users => users.filter(u => !!u).forEach(({ username, avatar_url }) => avatarMap.set(username, avatar_url)));

@@ -23,8 +23,6 @@ const userObject = ({ author_username, author_name, author_avatar, updated_at })
   updated_at
 });
 
-const opacity = obj => Object.values(obj).filter(v => !!v).length;
-
 const storeBlobData = async usernames => {
   const unwrappedPosts = (await Promise.all(usernames.map(username => fetchBlobCached(username)
     .then(unwrapBlob)
@@ -48,7 +46,7 @@ const storeBlobData = async usernames => {
 
 const thrallCache = new WeakMap();
 
-export const necromancePost = post => { // Shallow, non-IDB-cached data for simple syncronous applications where the full post data isn't needed
+export const necromancePostShallow = post => { // Shallow, non-IDB-cached data for simple syncronous applications where the full post data isn't needed
   if (!thrallCache.has(post)) {
     const { postId, author, originalAuthor, chainTip } = post.dataset;
     const tags = unwrapTags(post.querySelector('.post-tags'));
@@ -74,7 +72,7 @@ export const necromancePost = post => { // Shallow, non-IDB-cached data for simp
 };
 
 export const necromancePosts = articles => {
-  const shallowData = articles.map(necromancePost);
+  const shallowData = articles.map(necromancePostShallow);
 
   storeBlobData(shallowData
     .flatMap(({ author, originalAuthor, chain }) => [author, originalAuthor, ...chain.map(({ author: chainAuthor }) => chainAuthor)])
