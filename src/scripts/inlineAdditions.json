@@ -1,0 +1,9 @@
+{
+  "name": "inlineAdditions",
+  "title": "Unindented Additions",
+  "description": "Unindents additions",
+  "preferences": {
+    "enabled": false
+  },
+  "css": true
+}
