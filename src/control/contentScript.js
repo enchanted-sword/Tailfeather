@@ -73,7 +73,7 @@
           if (feature.js) {
             const { main, clean, update } = await import(browser.runtime.getURL(`/scripts/${name}.js`)); // browser.runtime.getURL is only a valid escape when written in full
 
-            window.requestAnimationFrame(() => main().catch(e => console.error(`[PawJob-Core] Error executing module '${name}':`, e)));
+            window.requestAnimationFrame(() => clean().then(main).catch(e => console.error(`[PawJob-Core] Error executing module '${name}':`, e)));
 
             preferenceListeners[name] = (changes, areaName) => {
               const { preferences } = changes;
