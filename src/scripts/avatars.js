@@ -29,28 +29,35 @@ const avatarise = async posts => {
       loading: 'lazy'
     }));
 
-    if (authorAvatar && floatingAvatars) post.append(noact({
+    if (floatingAvatars) post.append(noact({
       className: `${customClass} ${customClass}-scrollContainer`,
       children: {
         href: `/book/${author}`,
-        children: {
+        children: authorAvatar ? {
           className: 'post-author-avatar',
           src: authorAvatar,
           width: 64,
           height: 64,
           loading: 'lazy'
+        } : {
+          className: 'post-author-avatar post-avatar-placeholder',
+          children: author[0]
         }
       }
     }));
 
-    if (_additionAvatars.length && additionAvatars) post.querySelectorAll('.chain-addition-header').forEach((header, i) =>
-      header.prepend(noact({
+    if (additionAuthors.length && additionAvatars) post.querySelectorAll('.chain-addition-header').forEach((header, i) => {
+      if (typeof additionAuthors[i] !== 'undefined') header.prepend(noact(_additionAvatars[i] ? {
         className: `${customClass} post-author-avatar`,
         src: _additionAvatars[i],
         height: 32,
         width: 32,
         loading: 'lazy'
-      })));
+      } : {
+        className: 'post-author-avatar post-avatar-placeholder',
+        children: additionAuthors[i][0]
+      }));
+    });
 
     post.setAttribute(customAttribute, '');
   });

@@ -5,7 +5,7 @@ import { uniqueFn } from './jsTools.js';
 const unwrapTags = tagsElement => tagsElement ? Array.from(tagsElement.querySelectorAll('.post-tag')).map(tag => tag.textContent.slice(1)) : ([]);
 
 const modifyPostObjects = (bookAuthor, posts) => posts.map(post => {
-  post.stapledBy = bookAuthor === post.author ? '' : bookAuthor;
+  post.stapled_by = bookAuthor === post.author ? '' : bookAuthor;
   return post;
 });
 
@@ -16,10 +16,11 @@ const unwrapBlob = blob => {
   return modifyPostObjects(author, posts);
 };
 
-const userObject = ({ author_username, author_name, author_avatar }) => ({
+const userObject = ({ author_username, author_name, author_avatar, updated_at }) => ({
   username: author_username || author_name,
   display_name: author_name,
-  avatar_url: author_avatar
+  avatar_url: author_avatar,
+  updated_at
 });
 
 const opacity = obj => Object.values(obj).filter(v => !!v).length;
@@ -34,9 +35,9 @@ const storeBlobData = async usernames => {
   const shallowUsers = unwrappedPosts.map(userObject);
   const shallowUsersFiltered = new Map();
 
-  shallowUsers.forEach(user => { // Manual deduplication to prioritise objects with more info
-    const username = { user };
-    if (!shallowUsersFiltered.has(username) || opacity(user) > opacity(shallowUsersFiltered.get(username))) shallowUsersFiltered.set(username, user);
+  shallowUsers.forEach(user => { // Manual deduplication to prioritise newer data
+    const { username } = user;
+    if (!shallowUsersFiltered.has(username) || Date.parse(user.updated_at) > Date.parse(shallowUsersFiltered.get(username).updated_at)) shallowUsersFiltered.set(username, user);
   });
 
   updateData({
@@ -45,25 +46,31 @@ const storeBlobData = async usernames => {
   });
 };
 
-export const necromancePost = post => { // Shallow, non-IDB-cached data for simple syncronous applications where the full post data isn't needed
-  const { postId, author, originalAuthor, chainTip } = post.dataset;
-  const tags = unwrapTags(post.querySelector('.post-tags'));
-  let chain = [];
+const thrallCache = new WeakMap();
 
-  const chainContent = post.querySelectorAll('.chain-addition');
-  if (chainContent) {
-    chainContent.forEach(chainAddition => {
-      chain.push({
-        additionId: chainAddition.dataset.additionId,
-        stickerKey: chainAddition.dataset.stickerKey,
-        author: chainAddition.querySelector('.chain-addition-author')?.href?.split('/').pop(),
-        tags: unwrapTags(chainAddition.querySelector('.chain-addition-tags'))
+export const necromancePost = post => { // Shallow, non-IDB-cached data for simple syncronous applications where the full post data isn't needed
+  if (!thrallCache.has(post)) {
+    const { postId, author, originalAuthor, chainTip } = post.dataset;
+    const tags = unwrapTags(post.querySelector('.post-tags'));
+    let chain = [];
+
+    const chainContent = post.querySelectorAll('.chain-addition');
+    if (chainContent) {
+      chainContent.forEach(chainAddition => {
+        chain.push({
+          additionId: chainAddition.dataset.additionId,
+          stickerKey: chainAddition.dataset.stickerKey,
+          author: chainAddition.querySelector('.chain-addition-author')?.href?.split('/').pop(),
+          tags: unwrapTags(chainAddition.querySelector('.chain-addition-tags'))
+        });
       });
-    });
+    }
+
+    const isTransparentStaple = ![originalAuthor, ...chain.map(({ author }) => author)].includes(author);
+    thrallCache.set(post, { postId, author, originalAuthor, chainTip, chain, tags, isTransparentStaple });
   }
 
-  const isTransparentStaple = ![originalAuthor, ...chain.map(({ author }) => author)].includes(author);
-  return { postId, author, originalAuthor, chainTip, chain, tags, isTransparentStaple };
+  return thrallCache.get(post);
 };
 
 export const necromancePosts = articles => {
