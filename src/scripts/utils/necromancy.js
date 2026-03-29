@@ -45,7 +45,7 @@ const storeBlobData = async usernames => {
   });
 };
 
-export const necromancePost = post => {
+export const necromancePost = post => { // Shallow, non-IDB-cached data for simple syncronous applications where the full post data isn't needed
   const { postId, author, originalAuthor, chainTip } = post.dataset;
   const tags = unwrapTags(post.querySelector('.post-tags'));
   let chain = [];
@@ -61,7 +61,9 @@ export const necromancePost = post => {
       });
     });
   }
-  return { postId, author, originalAuthor, chainTip, chain, tags };
+
+  const isTransparentStaple = ![originalAuthor, ...chain.map(({ author }) => author)].includes(author);
+  return { postId, author, originalAuthor, chainTip, chain, tags, isTransparentStaple };
 };
 
 export const necromancePosts = articles => {

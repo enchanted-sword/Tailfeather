@@ -7,7 +7,7 @@ import { noact } from './utils/noact.js';
 const customClass = 'tailfeather-avatars';
 const customAttribute = 'data-tf-avatars';
 
-let floatingAvatars, additionAvatars;
+let staplerAvatars, floatingAvatars, additionAvatars;
 
 const avatarise = async posts => {
   const shallowData = posts.map(necromancePost);
@@ -20,6 +20,14 @@ const avatarise = async posts => {
     const authorAvatar = avatarMap.get(author);
     const additionAuthors = shallowData[i].chain.map(({ author }) => author);
     const _additionAvatars = additionAuthors.map(aa => avatarMap.get(aa));
+
+    if (shallowData[i].isTransparentStaple && staplerAvatars) post.querySelector('.post-staple-attribution')?.prepend(noact({
+      className: `${customClass} post-author-avatar`,
+      src: authorAvatar,
+      height: 32,
+      width: 32,
+      loading: 'lazy'
+    }));
 
     if (authorAvatar && floatingAvatars) post.append(noact({
       className: `${customClass} ${customClass}-scrollContainer`,
@@ -49,7 +57,7 @@ const avatarise = async posts => {
 };
 
 const run = options => {
-  ({ floatingAvatars, additionAvatars } = options);
+  ({ staplerAvatars, floatingAvatars, additionAvatars } = options);
 
   document.querySelectorAll(`.${customClass}`).forEach(s => s.remove());
   document.querySelectorAll(`[${customAttribute}]`).forEach(s => s.removeAttribute(customAttribute));

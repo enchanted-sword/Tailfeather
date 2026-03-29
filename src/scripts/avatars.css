@@ -2,6 +2,12 @@
   margin-left: 5.25rem;
 }
 
+.post-staple-attribution {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+}
+
 .tailfeather-avatars-scrollContainer {
   position: absolute;
   left: -5.25rem;
@@ -17,6 +23,6 @@
   top: 4.5rem;
 }
 
-[data-tf-avatars]:has(.tailfeather-avatars-scrollContainer) .post-author .post-author-avatar {
+.post-card:has(.tailfeather-avatars-scrollContainer) .post-staple-attribution .post-author-avatar {
   display: none;
 }

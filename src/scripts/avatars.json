@@ -5,16 +5,22 @@
   "preferences": {
     "enabled": false,
     "options": {
-      "floatingAvatars": {
+      "staplerAvatars": {
         "value": false,
-        "name": "Floating author avatars",
-        "tooltip": "Makes post author avatars larger, displayed to the left of posts, and scrolled with the timeline. Will display the stapler if the post is a staple.",
+        "name": "Staple author avatars",
+        "tooltip": "Shows the avatar of the user that stapled a post.",
         "type": "toggle"
       },
       "additionAvatars": {
         "value": true,
         "name": "Addition author avatars",
         "tooltip": "Shows avatars on additions.",
+        "type": "toggle"
+      },
+      "floatingAvatars": {
+        "value": false,
+        "name": "Floating author avatars",
+        "tooltip": "Makes post author avatars larger, displayed to the left of posts, and scrolled with the timeline. Will display the stapler if the post is a staple.",
         "type": "toggle"
       }
     }
