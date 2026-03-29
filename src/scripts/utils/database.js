@@ -1,4 +1,4 @@
-const DB_VERSION = 1; // database version
+const DB_VERSION = 2; // database version
 const EXPIRY_TIME = 86400000; // period after which data is considered expired
 export const txOptions = { durability: 'relaxed' }; // more performant
 
@@ -33,21 +33,20 @@ export const openDatabase = async () => new Promise((resolve, reject) => {
     const db = event.target.result;
     const tx = event.target.transaction;
 
-    conditionalCreateStore(db, 'postStore', { keyPath: 'postId' });
+    conditionalCreateStore(db, 'postStore', { keyPath: 'post_id' });
     conditionalCreateStore(db, 'userStore', { keyPath: 'username' });
 
     tx.oncomplete = () => { // upgrade transaction must finish before we can open a transaction to access objectStores and open indices
       const indextx = db.transaction(['postStore', 'userStore']);
       const postStore = indextx.objectStore('postStore');
-      conditionalCreateIndex(postStore, 'postId', 'postId', { unique: true });
-      conditionalCreateIndex(postStore, 'date', 'date', { unique: false });
-      conditionalCreateIndex(postStore, 'storedAt', 'storedAt', { unique: false });
-      conditionalDeleteIndex(postStore, 'quickInfo');
+      conditionalCreateIndex(postStore, 'post_id', 'post_id', { unique: true });
+      conditionalCreateIndex(postStore, 'created_at', 'created_at', { unique: false });
+      conditionalCreateIndex(postStore, 'stored_at', 'stored_at', { unique: false });
 
       const userStore = indextx.objectStore('userStore');
       conditionalCreateIndex(userStore, 'username', 'username', { unique: true });
-      conditionalCreateIndex(userStore, 'displayName', 'displayName', { unique: false });
-      conditionalCreateIndex(userStore, 'storedAt', 'storedAt', { unique: false });
+      conditionalCreateIndex(userStore, 'display_name', 'display_name', { unique: false });
+      conditionalCreateIndex(userStore, 'stored_at', 'stored_at', { unique: false });
 
       console.info(`[FDB] Updated database from v${event.oldVersion} to v${event.newVersion}`)
     };
@@ -58,7 +57,7 @@ export const openDatabase = async () => new Promise((resolve, reject) => {
 
 const db = await openDatabase();
 
-export const updateNeeded = data => (Date.now() - data.storedAt) > EXPIRY_TIME;
+export const updateNeeded = data => (Date.now() - data.stored_at) > EXPIRY_TIME;
 
 const smartGetData = async (store, data) => {
   let val;
@@ -82,7 +81,7 @@ const dispatchUpdate = (type, targets) => {
   window.dispatchEvent(event);
 };
 
-const newTransactionError = (tx, i) => new Promise((resolve, reject) => {
+const postTransactionHandler = (tx, i) => new Promise((resolve, reject) => {
   tx.oncomplete = resolve;
   tx.onerror = e => {
     try {
@@ -104,12 +103,16 @@ export const cacheData = async dataObj => {
   dataStores.map(dataStore => {
     const store = tx.objectStore(dataStore);
     [dataObj[dataStore]].flat().map(data => {
-      data.storedAt = Date.now();
-      store.put(data);
+      data.stored_at = Date.now();
+      try {
+        store.put(updateData);
+      } catch (e) {
+        console.error(`[FDB] Failed to cache data in store '${dataStore}':`, data, e);
+      }
     });
   });
   dispatchUpdate('cache', dataObj);
-  return newTransactionError(tx, dataObj);
+  return postTransactionHandler(tx, dataObj);
 };
 
 /** updates cached data in stores. stores data by default if it doesn't already exist
@@ -134,13 +137,17 @@ export const updateData = (dataObj, options = null) => {
       if (storeOptions?.updateStrict && typeof existingData === 'undefined') return;
       else if (typeof existingData === 'object') updateData = Object.assign(structuredClone(existingData), data);
       else updateData = data;
-      updateData.storedAt = Date.now();
-      store.put(updateData);
+      updateData.stored_at = Date.now();
+      try {
+        store.put(updateData);
+      } catch (e) {
+        console.error(`[FDB] Failed to update data in store '${dataStore}':`, data, e);
+      }
     });
   });
 
   dispatchUpdate('update', dataObj);
-  return newTransactionError(tx, dataObj);
+  return postTransactionHandler(tx, dataObj);
 };
 
 /**
@@ -159,15 +166,21 @@ export const getData = async (dataObj, options = null) => {
     options && (storeOptions = options[dataStore]);
     const store = tx.objectStore(dataStore);
     storeOptions?.index && (index = store.index(storeOptions.index));
-    const storeData = await Promise.all([dataObj[dataStore]].flat().map(async key => {
+    const stored_ata = await Promise.all([dataObj[dataStore]].flat().map(async key => {
       if (!key) {
         console.warn('[FDB] getData: key is undefined');
         return void 0;
       }
-      if (index) return promisifyIDBRequest(index.get(key));
-      else return promisifyIDBRequest(store.get(key));
+
+      try {
+        if (index) return promisifyIDBRequest(index.get(key));
+        else return promisifyIDBRequest(store.get(key));
+      } catch (e) {
+        console.error(`[FDB] Failed to get key '${key}' from store '${dataStore}':`, e);
+        return null;
+      }
     }));
-    returnObj[dataStore] = storeData.map(data => typeof data === 'object' ? structuredClone(Object.assign(data, { expired: updateNeeded(data) })) : structuredClone(data));
+    returnObj[dataStore] = stored_ata.map(data => typeof data === 'object' ? structuredClone(Object.assign(data, { expired: updateNeeded(data) })) : structuredClone(data));
   }));
 
   //await tx.done;
@@ -217,7 +230,7 @@ export const clearData = (dataObj, options = null) => {
     });
   })).then(() => dispatchUpdate('clear', dataObj));
 
-  return newTransactionError(tx, dataObj);
+  return postTransactionHandler(tx, dataObj);
 };
 
 const resourceQueue = new WeakMap();
@@ -247,12 +260,12 @@ export const getIndexedResources = async (store, keys, options = null) => {
 
 /**
  * @param {Number|Number[]} keys - single id or array of ids to fetch from the database
- * @returns {object|object[]} post(s) - type of return matches type of input
+ * @returns {Promise <object|object[]>}} post(s) - type of return matches type of input
  */
-export const getIndexedPosts = keys => getIndexedResources('postStore', keys);
+export const getIndexedPosts = async keys => getIndexedResources('postStore', keys);
 
 /**
  * @param {Number|Number[]} keys - single key (handle or projectId) or array of indices to fetch from the database
  * @returns {Promise <object|object[]>} project(s) - type of return matches type of input
  */
-export const getIndexedUsers = keys => getIndexedResources('userStore', keys);
+export const getIndexedUsers = async keys => getIndexedResources('userStore', keys);

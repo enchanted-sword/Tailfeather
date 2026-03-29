@@ -45,11 +45,18 @@ export function debounce(func, timeout = 500) {
 }
 
 /**
+ * Used to reduce an array to unique entries 
+ * @param {Array} array
+ * @returns {Array}
+ */
+export const uniqueFn = (val, i, arr) => i === arr.indexOf(val)
+
+/**
  * Reduces an array to unique entries 
  * @param {Array} array
  * @returns {Array}
  */
-export const unique = array => array.filter((val, i, arr) => i === arr.indexOf(val));
+export const unique = array => array.filter(uniqueFn);
 
 /**
  * @param {string} name - Name of file

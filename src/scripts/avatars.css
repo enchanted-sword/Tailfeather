@@ -1,0 +1,22 @@
+.masonry-col:has(.tailfeather-avatars-scrollContainer) {
+  margin-left: 5.25rem;
+}
+
+.tailfeather-avatars-scrollContainer {
+  position: absolute;
+  left: -5.25rem;
+  top: 0;
+  height: 100%;
+}
+
+.tailfeather-avatars-scrollContainer .post-author-avatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius);
+  position: sticky;
+  top: 4.5rem;
+}
+
+[data-tf-avatars]:has(.tailfeather-avatars-scrollContainer) .post-author .post-author-avatar {
+  display: none;
+}

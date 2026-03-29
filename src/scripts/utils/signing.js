@@ -155,7 +155,7 @@ export function storeKeys(privateKey, publicKey) {
       localStorage.setItem(STORAGE_KEY_LEGACY, existingPriv);
       const expiry = Date.now() + (LEGACY_KEY_TTL_DAYS * 24 * 60 * 60 * 1000);
       localStorage.setItem(STORAGE_KEY_LEGACY_EXPIRY, String(expiry));
-      console.debug('[Signing] Old key preserved as legacy (30-day TTL)');
+      console.debug('[TF-Signing] Old key preserved as legacy (30-day TTL)');
     }
   }
 
@@ -231,13 +231,13 @@ export function setupFormInterception() {
         const privateKey = await deriveSigningKey(password);
         const publicKey = await getPublicKey(privateKey);
         storeKeys(privateKey, publicKey);
-        console.debug('[Signing] Keys derived and stored');
+        console.debug('[TF-Signing] Keys derived and stored');
         // Publish immediately — don't wait for the next page load.
         // Best-effort: if this fails, ensurePublicKeyPublished()
         // retries after the redirect lands.
         publishPublicKey(uint8ToBase64(publicKey)).catch(() => { });
       } catch (err) {
-        console.error('[Signing] Key derivation failed:', err);
+        console.error('[TF-Signing] Key derivation failed:', err);
         // Don't block form submission - keys can be derived on next login
       }
 
@@ -256,12 +256,12 @@ export async function publishPublicKey(publicKeyBase64) {
   try {
     const response = await apiFetch('/v1/keys/publish/', { method: 'POST', body: JSON.stringify({ public_key: publicKeyBase64 }) });
     if (response.ok) {
-      console.debug('[Signing] Public key published to server');
+      console.debug('[TF-Signing] Public key published to server');
     } else {
-      console.warn('[Signing] Failed to publish key:', response.status);
+      console.warn('[TF-Signing] Failed to publish key:', response.status);
     }
   } catch (err) {
-    console.warn('[Signing] Key publish network error:', err);
+    console.warn('[TF-Signing] Key publish network error:', err);
   }
 }
 
@@ -297,7 +297,7 @@ export async function ensurePublicKeyPublished() {
             // server. Local is likely stale (password changed on
             // another device, etc.). Clear so posts aren't signed
             // with a bad key. User gets fresh keys on next login.
-            console.warn('[Signing] Local key does not match server - clearing stale keys');
+            console.warn('[TF-Signing] Local key does not match server - clearing stale keys');
             localStorage.removeItem(STORAGE_KEY_PRIVATE);
             localStorage.removeItem(STORAGE_KEY_PUBLIC);
             _notifySigningDegraded('Key mismatch — re-login to restore signing');
