@@ -134,12 +134,12 @@ export class MarkdownProcessor {
     return this._mountShadow(html, hostElement);
   }
 
-  renderToElement(text, tag = 'div', options = {}) {
-    const e = Object.assign(document.createElement(tag), options);
+  renderToElement(text, hostElement) {
     if (MarkdownProcessor._hasCustomHTML(text)) {
-      return this.renderToShadow(text, e);
+      return this.renderToShadow(text, hostElement);
     } else {
-      e.innerHTML = this.renderStrict(text); // render inline - cheaper
+      const e = this.renderStrict(text); // render inline - cheaper
+      hostElement.innerHTML = e;
       return e;
     }
   }
@@ -462,6 +462,24 @@ export class MarkdownProcessor {
   // Shadow DOM mounting
   // =====================================================================
 
+  static _shadowEventHandler(e) {
+    const link = e.target.closest('a');
+    if (!link) return;
+
+    const href = link.getAttribute('href');
+    if (!href) return;
+
+    e.preventDefault();
+
+    if (href.startsWith('/') || href.startsWith(window.location.origin)) {
+      // Internal link — navigate normally
+      window.location.href = href;
+    } else {
+      // External link — open in new tab
+      window.open(href, '_blank', 'noopener,noreferrer');
+    }
+  }
+
   _mountShadow(html, hostElement) {
     const shadow = hostElement.attachShadow({ mode: 'closed' });
 
@@ -485,23 +503,7 @@ export class MarkdownProcessor {
     shadow.appendChild(content);
 
     // Handle link clicks inside closed shadow DOM
-    shadow.addEventListener('click', (e) => {
-      const link = e.target.closest('a');
-      if (!link) return;
-
-      const href = link.getAttribute('href');
-      if (!href) return;
-
-      e.preventDefault();
-
-      if (href.startsWith('/') || href.startsWith(window.location.origin)) {
-        // Internal link — navigate normally
-        window.location.href = href;
-      } else {
-        // External link — open in new tab
-        window.open(href, '_blank', 'noopener,noreferrer');
-      }
-    });
+    shadow.addEventListener('click', MarkdownProcessor._shadowEventHandler);
 
     return shadow;
   }
