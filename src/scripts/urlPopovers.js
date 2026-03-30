@@ -108,6 +108,7 @@ const urlPopover = async userBook => {
         {
           className: k('avatar'),
           children: {
+            className: 'book-avatar',
             width: 64,
             height: 64,
             src: avatar_url
