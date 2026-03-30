@@ -1,6 +1,7 @@
 import { getIndexedPosts, updateData } from './database.js';
 import { fetchBlobCached } from './blobManager.js';
 import { uniqueFn } from './jsTools.js';
+import { extractUserFromHref } from './user.js';
 
 const unwrapTags = tagsElement => tagsElement ? Array.from(tagsElement.querySelectorAll('.post-tag')).map(tag => tag.textContent.slice(1)) : ([]);
 
@@ -58,7 +59,7 @@ export const necromancePostShallow = post => { // Shallow, non-IDB-cached data f
         chain.push({
           additionId: chainAddition.dataset.additionId,
           stickerKey: chainAddition.dataset.stickerKey,
-          author: chainAddition.querySelector('.chain-addition-author')?.href?.split('/').pop(),
+          author: extractUserFromHref(chainAddition.querySelector('.chain-addition-author')?.href),
           tags: unwrapTags(chainAddition.querySelector('.chain-addition-tags'))
         });
       });

@@ -1,4 +1,4 @@
-const DB_VERSION = 2; // database version
+const DB_VERSION = 3; // database version
 const EXPIRY_TIME = 86400000; // period after which data is considered expired
 export const txOptions = { durability: 'relaxed' }; // more performant
 
@@ -35,6 +35,7 @@ export const openDatabase = async () => new Promise((resolve, reject) => {
 
     conditionalCreateStore(db, 'postStore', { keyPath: 'post_id' });
     conditionalCreateStore(db, 'userStore', { keyPath: 'username' });
+    conditionalCreateStore(db, 'userBookStore', { keyPath: 'username' });
 
     tx.oncomplete = () => { // upgrade transaction must finish before we can open a transaction to access objectStores and open indices
       const indextx = db.transaction(['postStore', 'userStore']);
@@ -47,6 +48,11 @@ export const openDatabase = async () => new Promise((resolve, reject) => {
       conditionalCreateIndex(userStore, 'username', 'username', { unique: true });
       conditionalCreateIndex(userStore, 'display_name', 'display_name', { unique: false });
       conditionalCreateIndex(userStore, 'stored_at', 'stored_at', { unique: false });
+
+      const userBookStore = indextx.objectStore('userBookStore');
+      conditionalCreateIndex(userBookStore, 'username', 'username', { unique: true });
+      conditionalCreateIndex(userBookStore, 'display_name', 'display_name', { unique: false });
+      conditionalCreateIndex(userBookStore, 'stored_at', 'stored_at', { unique: false });
 
       console.info(`[FDB] Updated database from v${event.oldVersion} to v${event.newVersion}`)
     };
@@ -265,7 +271,13 @@ export const getIndexedResources = async (store, keys, options = null) => {
 export const getIndexedPosts = async keys => getIndexedResources('postStore', keys);
 
 /**
- * @param {Number|Number[]} keys - single key (handle or projectId) or array of indices to fetch from the database
- * @returns {Promise <object|object[]>} project(s) - type of return matches type of input
+ * @param {Number|Number[]} keys - single username or array of usernames to fetch from the database
+ * @returns {Promise <object|object[]>} shallow user(s) - type of return matches type of input
  */
 export const getIndexedUsers = async keys => getIndexedResources('userStore', keys);
+
+/**
+ * @param {Number|Number[]} keys - single username or array of usernames to fetch from the database
+ * @returns {Promise <object|object[]>} user book(s) - type of return matches type of input
+ */
+export const getIndexedUserBooks = async keys => getIndexedResources('userBookStore', keys);

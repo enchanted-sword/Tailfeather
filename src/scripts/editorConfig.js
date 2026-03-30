@@ -75,14 +75,13 @@ require(['vs/editor/editor.main'], function () {
   function updateBody() {
     requestAnimationFrame(() => {
       const text = editor.getModel().getValue();
-      let rendered = getProcessor().renderToElement(text);
-      console.log(rendered);
-      if (!rendered.textContent) rendered = noact({
+      const preview = document.getElementById('postPreview-body');
+      getProcessor().renderToElement(text, preview);
+      if (!preview.textContent) preview.textContent = noact({
         tag: 'span',
         style: 'font-style: italic',
         children: 'Nothing to preview'
       });
-      document.getElementById('postPreview-body').replaceChildren(rendered);
     });
   }
 

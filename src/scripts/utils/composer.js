@@ -46,7 +46,7 @@ export async function sendPostEvent(post, eventType = 'new_post') {
       chain_version: post.chain_version || 0,
       event_type: eventType,
     }
-  }).catch(e => console.warn('[TF-]: SSE relay failed (non-fatal):', e));
+  }).catch(e => console.warn('[TF-Composer]: SSE relay failed (non-fatal):', e));
 };
 
 export async function createPost(body, tagsInput, user, options = {}) {

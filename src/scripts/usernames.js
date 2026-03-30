@@ -1,5 +1,6 @@
 import { postFunction } from './utils/mutation.js';
 import { noact } from './utils/noact.js';
+import { extractUserFromHref } from './utils/user.js';
 
 const customClass = 'tailfeather-usernames';
 const customAttribute = 'data-tf-usernames';
@@ -11,9 +12,7 @@ const userLabel = username => noact({
 
 const addUsernames = posts => posts.forEach(post => {
   [...Array.from(post.querySelectorAll('.post-author-name')), ...Array.from(post.querySelectorAll('.chain-addition-author'))].map(userLink => {
-    const hrefArr = userLink.href.split('/');
-    let [username] = hrefArr.splice(-1);
-    if (!username) ([username] = hrefArr.splice(-1));
+    const username = extractUserFromHref(userLink.href);
     if (username === userLink.textContent) return;
     userLink.insertAdjacentElement('afterend', userLabel(username));
   });

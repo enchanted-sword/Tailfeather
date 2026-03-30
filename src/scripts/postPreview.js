@@ -41,7 +41,7 @@ const previewWindow = (body, tagInput) => {
       {
         id: 'postPreview-body',
         className: 'post-body post-body-collapsible',
-        children: getProcessor().renderToElement(text)
+        //children: getProcessor().renderToElement(text) BROKEN
       },
       {
         id: 'postPreview-tags',
