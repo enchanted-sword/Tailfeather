@@ -284,7 +284,7 @@ export class MarkdownProcessor {
       });
     }
 
-    // Strict mode — no style tags, no class/id
+    // Strict mode - no style tags, no class/id
     return DOMPurify.sanitize(html, {
       ALLOWED_TAGS: [
         'p', 'br', 'strong', 'em', 'u', 's', 'del', 'code', 'pre',
@@ -323,7 +323,7 @@ export class MarkdownProcessor {
     const temp = document.createElement('div');
     temp.innerHTML = html;
 
-    // Process images — validate trust, add privacy attrs
+    // Process images - validate trust, add privacy attrs
     const images = temp.querySelectorAll('img');
     for (const img of images) {
       const src = img.getAttribute('src') || '';
@@ -331,7 +331,7 @@ export class MarkdownProcessor {
         img.setAttribute('referrerpolicy', 'no-referrer');
         img.setAttribute('loading', 'lazy');
       } else if (src && !src.startsWith('data:')) {
-        // Untrusted image — replace with warning
+        // Untrusted image - replace with warning
         const warning = document.createElement('span');
         warning.className = 'untrusted-image-warning';
         warning.textContent = `[Image blocked: untrusted host]`;
@@ -340,7 +340,7 @@ export class MarkdownProcessor {
       }
     }
 
-    // Process links — add rel attrs for external links
+    // Process links - add rel attrs for external links
     const links = temp.querySelectorAll('a[href]');
     for (const link of links) {
       const href = link.getAttribute('href') || '';
@@ -350,7 +350,7 @@ export class MarkdownProcessor {
       }
     }
 
-    // Process <link> tags (shadow mode only) — validate stylesheet hosts
+    // Process <link> tags (shadow mode only) - validate stylesheet hosts
     if (shadowMode) {
       const linkTags = temp.querySelectorAll('link');
       for (const link of linkTags) {
@@ -399,7 +399,10 @@ export class MarkdownProcessor {
 
   _isImageTrusted(src) {
     if (!src) return false;
-    if (src.startsWith('data:image/')) return true;
+    // Allow raster data URIs (png, jpeg, gif, webp, avif, bmp).
+    // Block data:image/svg+xml - SVGs can reference external resources
+    // or contain scripts in non-img contexts. Defense in depth.
+    if (src.startsWith('data:image/') && !src.startsWith('data:image/svg')) return true;
     if (src.startsWith('/')) return true; // Same-origin
 
     try {
