@@ -409,7 +409,7 @@
                   wrapper.append(label);
                   wrapper.append(textInput);
 
-                  textInput.on('change', debounce(onTextInput));
+                  textInput.on('input', debounce(onTextInput));
                   break;
                 } case 'color': {
                   wrapper = $('<div>', { class: 'ui-inputWrapper' });
