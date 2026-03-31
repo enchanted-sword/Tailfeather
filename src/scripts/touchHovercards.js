@@ -1,7 +1,6 @@
 import { onLongPress } from './utils/touch.js';
 
 let off = () => null;
-let ticking = false;
 
 function _matchLink(el) {
   if (!el || el.nodeType !== 1) return null;
