@@ -31,9 +31,9 @@ function triggerHoverCard({ target }) {
 export const main = async () => {
   off = onLongPress(document.documentElement, triggerHoverCard);
   document.addEventListener('touchstart', touchOut);
-}
+};
 
 export const clean = async () => {
   off();
   document.removeEventListener('touchstart', touchOut);
-}
+};
