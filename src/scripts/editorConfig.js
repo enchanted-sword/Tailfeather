@@ -81,11 +81,11 @@ require(['vs/editor/editor.main'], function () {
       const text = editor.getModel().getValue();
       const preview = document.getElementById('postPreview-body');
       getProcessor().renderToElement(text, preview);
-      if (!preview.textContent) preview.textContent = noact({
+      if (preview.matches(':empty')) preview.append(noact({
         tag: 'span',
         style: 'font-style: italic',
         children: 'Nothing to preview'
-      });
+      }));
     });
   }
 
