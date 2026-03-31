@@ -569,13 +569,13 @@ input.ui-listSelect:checked+label:hover {
 .ui-textInput {
   resize: none;
   width: 100%;
-  border: var(--border-thickness-sm) solid var(--white-primary-60);
-  border-radius: var(--border-radius-sm);
+  border: none;
+  border-radius: var(--radius-sm);
   outline: none;
   padding: 4px;
   font-size: 14px;
   box-sizing: border-box;
-  background: var(--white-primary-5);
+  background: var(--bg-input);
 }
 
 .ui-textInput::placeholder {
@@ -587,8 +587,7 @@ input.ui-listSelect:checked+label:hover {
 }
 
 .ui-textInput:focus {
-  border-color: rgb(var(--accent));
-  background: rgb(var(--white));
+  border: none;
 }
 
 .ui-colorInput {
