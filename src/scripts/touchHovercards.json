@@ -1,0 +1,9 @@
+{
+  "name": "touchHovercards",
+  "title": "Touch Hovercards",
+  "description": "Enables long-pressing to display user hovercards on devices without fine pointing capabilities.",
+  "preferences": {
+    "enabled": false
+  },
+  "js": true
+}

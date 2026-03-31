@@ -153,3 +153,5 @@ export const numFormat = num => {
   }
   return str;
 }
+
+export const hasMouse = () => matchMedia('(pointer:fine)').matches;

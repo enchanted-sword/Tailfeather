@@ -6,14 +6,24 @@ export const onLongPress = (elem, func) => {
 
   elem.dataset.longpressEvent = true;
 
-  elem.addEventListener('touchstart', e => {
+  function onTouchStart(e) {
     timeoutId = setTimeout(() => {
       timeoutId = null;
       e.stopPropagation();
       func(e);
     }, longPressDelay);
-  });
-  elem.addEventListener('contextmenu', e => e.preventDefault());
-  elem.addEventListener('touchend', () => timeoutId && clearTimeout(timeoutId));
-  elem.addEventListener('touchmove', () => timeoutId && clearTimeout(timeoutId));
+  }
+  function onTouchCancel() {
+    timeoutId && clearTimeout(timeoutId)
+  }
+
+  elem.addEventListener('touchstart', onTouchStart);
+  elem.addEventListener('touchend', onTouchCancel);
+  elem.addEventListener('touchmove', onTouchCancel);
+
+  return () => {
+    elem.removeEventListener('touchstart', onTouchStart);
+    elem.removeEventListener('touchend', onTouchCancel);
+    elem.removeEventListener('touchmove', onTouchCancel);
+  };
 };

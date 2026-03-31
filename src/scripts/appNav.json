@@ -255,5 +255,5 @@
   },
   "js": true,
   "css": true,
-  "mobile": true
+  "mobileOnly": true
 }
