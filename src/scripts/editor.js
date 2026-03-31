@@ -2,14 +2,17 @@ import { svgIcon } from './utils/icons.js';
 import { noact } from './utils/noact.js';
 import { userInfo } from './utils/user.js';
 import { createPost } from './utils/composer.js';
+import { getOptions } from './utils/jsTools.js';
 
 const customClass = 'tailfeather-editor';
 const uri = browser.runtime.getURL('');
 
+let defaultContent;
+
 const listener = event => {
   if (event.origin + '/' !== uri) return;
   if (event.data === 'frameInit') {
-    event.source.postMessage({ userInfo }, uri);
+    event.source.postMessage({ userInfo, defaultContent }, uri);
   }
   else if (typeof event.data === 'object' && 'composerContent' in event.data) {
     const { composerContent, hideFromSearch, tagString } = event.data;
@@ -56,7 +59,10 @@ function openEditor(event) {
   window.addEventListener('keydown', closeEditor);
 }
 
+export const update = options => ({ defaultContent } = options);
+
 export const main = async () => {
+  ({ defaultContent } = await getOptions('editor'));
   window.addEventListener('message', listener);
   document.getElementById('nav-new-post').insertAdjacentElement('afterend', noact({
     id: 'tf-nav-new-post',
@@ -66,6 +72,7 @@ export const main = async () => {
     children: svgIcon('code', 24, 24)
   }));
 };
+
 export const clean = async () => {
   window.removeEventListener('message', listener);
   document.querySelectorAll(`.${customClass}`).forEach(s => s.remove());

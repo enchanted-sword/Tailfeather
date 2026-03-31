@@ -3,7 +3,17 @@
   "title": "Post Editor",
   "description": "VS-style post editor",
   "preferences": {
-    "enabled": false
+    "enabled": false,
+    "options": {
+      "defaultContent": {
+        "value": "",
+        "name": "Default editor content",
+        "type": "text",
+        "textarea": true,
+        "tooltip": "Default text to load into the editor, e.g. a standard HTML template for posts.",
+        "placeholder": "Plaintext, Markdown, or HTML"
+      }
+    }
   },
   "js": true,
   "css": true
