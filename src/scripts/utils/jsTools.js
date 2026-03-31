@@ -1,7 +1,7 @@
 /**
  * Fetches items from the extension's local storage
  * @param {string} keys - Array of strings corresponding to storage keys to fetch
- * @returns {object} Object of key-value pairs ({ version: 'X' })
+ * @returns {Promise<object>} Object of key-value pairs ({ version: 'X' })
  */
 export const getStorage = async (keys = []) => browser.storage.local.get().then(storage => {
   const returnObj = {};
@@ -14,7 +14,7 @@ export const getStorage = async (keys = []) => browser.storage.local.get().then(
 /**
  * Fetches feature options
  * @param {string} feature - Feature name
- * @returns {object} options
+ * @returns {Promise<object>} options
  */
 export const getOptions = async (feature = '') => getStorage(['preferences']).then(({ preferences }) => preferences[feature]?.options);
 
@@ -60,7 +60,7 @@ export const unique = array => array.filter(uniqueFn);
 
 /**
  * @param {string} name - Name of file
- * @returns {object|null} data
+ * @returns {Promise<object|null>} data
  */
 export const getJsonFile = async name => {
   try {
@@ -77,7 +77,7 @@ export const getJsonFile = async name => {
 
 /**
  * Fetches the list of installed features
- * @returns {object[]} features
+ * @returns {Promise<object[]>} features
  */
 export const importFeatures = async () => {
   const installedFeatures = await getJsonFile('!features');
