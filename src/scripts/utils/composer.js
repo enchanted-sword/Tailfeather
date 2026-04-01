@@ -32,6 +32,7 @@ export async function sendPostEvent(post, eventType = 'new_post') {
   apiFetch('/v1/posts/send/', {
     method: 'POST', body: {
       post_id: post.post_id,
+      author: post.author, // Fix from the vanilla composer, which doesn't supply the `author` field
       author_name: post.author_name || '',
       author_username: post.author_username || post.author || '',
       author_avatar: post.author_avatar || '',
@@ -83,6 +84,7 @@ export async function createPost(body, tagsInput, user, options = {}) {
   const post = {
     post_id: postId,
     author_id: user.id,
+    author: user.username, // Fix from the vanilla composer, which doesn't supply the `author` field
     author_name: user.displayName || user.display_name || user.username,
     author_username: user.username,
     author_avatar: user.avatarUrl || user.avatar_url || '',
@@ -101,6 +103,8 @@ export async function createPost(body, tagsInput, user, options = {}) {
     pinned_at: null,
     hide_from_search: options.hideFromSearch ? 1 : 0,
   };
+
+  console.log(post);
 
   // Store to IndexedDB (Single Gateway)
   await BookStore.openDatabase(user.id).then(() => BookStore.storePost(post));
