@@ -5,6 +5,7 @@ import { getProcessor } from './utils/markdown.js';
 const uri = 'https://noterook.net';
 const DEFAULT_CONTENT = '<!-- Write the post your heart desires! -->';
 const DEFAULT_PREVIEW = '<!-- Start writing a post to have it preview here! -->';
+const MAX_LENGTH = 100000;
 let editor, userInfo, defaultContent;
 
 const formatTags = tags => tags.split(',').filter(t => !!t).map(t => t.toLowerCase().replace('/#/g', '')).map(t => ({ className: 'post-tag', children: `#${t}` }));
@@ -65,6 +66,7 @@ require(['vs/editor/editor.main'], function () {
   }));
 
   const preview = document.getElementById('postPreview-body');
+  const charCount = document.getElementById('composer-char-count');
 
   if (defaultContent) updateBody();
 
@@ -82,12 +84,14 @@ require(['vs/editor/editor.main'], function () {
     requestAnimationFrame(() => {
       const text = editor.getModel().getValue();
 
-      let content = preview.querySelector(':scope > .shadow-content');
+      let content = preview.querySelector(':scope > .shadow-wrapper');
       if (content) preview.removeChild(content);
 
-      content = noact({ className: 'shadow-content' });
+      content = noact({ className: 'shadow-wrapper' });
       preview.replaceChildren(content);
       getProcessor().renderToElement(text, content);
+
+      charCount.textContent = `${text.length.toLocaleString()} / ${MAX_LENGTH.toLocaleString()}`;
 
       if (content.matches(':empty')) content.append(noact({
         tag: 'span',
