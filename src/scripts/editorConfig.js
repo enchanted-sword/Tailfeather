@@ -64,6 +64,8 @@ require(['vs/editor/editor.main'], function () {
     ]
   }));
 
+  const preview = document.getElementById('postPreview-body');
+
   if (defaultContent) updateBody();
 
   document.getElementById('composer-submit').addEventListener('click', function () {
@@ -79,9 +81,15 @@ require(['vs/editor/editor.main'], function () {
   function updateBody() {
     requestAnimationFrame(() => {
       const text = editor.getModel().getValue();
-      const preview = document.getElementById('postPreview-body');
-      getProcessor().renderToElement(text, preview);
-      if (preview.matches(':empty')) preview.append(noact({
+
+      let content = preview.querySelector(':scope > .shadow-content');
+      if (content) preview.removeChild(content);
+
+      content = noact({ className: 'shadow-content' });
+      preview.replaceChildren(content);
+      getProcessor().renderToElement(text, content);
+
+      if (content.matches(':empty')) content.append(noact({
         tag: 'span',
         style: 'font-style: italic',
         children: 'Nothing to preview'
