@@ -1,4 +1,4 @@
-import { getIndexedUsers } from './utils/database.js';
+import { getUsersShallow } from './utils/user.js';
 import { getOptions } from './utils/jsTools.js';
 import { postFunction } from './utils/mutation.js';
 import { necromancePostShallow } from './utils/necromancy.js';
@@ -13,7 +13,7 @@ const avatarise = async posts => {
   const shallowData = posts.map(necromancePostShallow);
   const postUsers = shallowData.flatMap(({ author, originalAuthor, chain }) => [author, originalAuthor, ...chain.map(({ author }) => author)]).filter(u => !!u);
   const avatarMap = new Map();
-  await getIndexedUsers(postUsers).then(users => users.filter(u => !!u).forEach(({ username, avatar_url }) => avatarMap.set(username, avatar_url)));
+  await getUsersShallow(postUsers).then(users => users.filter(u => !!u).forEach(({ username, avatar_url }) => avatarMap.set(username, avatar_url)));
 
   posts.forEach((post, i) => {
     const author = shallowData[i].author;

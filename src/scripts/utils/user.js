@@ -1,3 +1,4 @@
+import { apiFetch } from './apiFetch.js';
 import { getIndexedUserBooks, getIndexedUsers, updateData } from './database.js';
 import { inject } from './inject.js';
 
@@ -25,28 +26,13 @@ const darkWorld = async username => {
   return worlds.get(username);
 };
 
-const _getUserBook = async username => {
-  try {
-    const user = { username };
-    const doc = await darkWorld(username);
-    user.bio = doc.getElementById('book-container')?.dataset.bio || '';
-    const template = doc.getElementById('book-shadow-template').content
-    user.avatar_url = template.querySelector('img.book-avatar')?.src || '';
-    user.following = template.getElementById('btn-follow')?.dataset.following === 'true' ? true : false;
-    user.display_name = template.querySelector('.book-author h2')?.textContent.split('\'s')[0] || null; // awful
-    updateData({ userStore: user });
-    return user;
-  } catch (e) {
-    console.error(`[DarkWorld] Unable to parse book '${username}':`, e);
-    return undefined;
-  }
-};
+const fetchUserInfo = async username => apiFetch(`/api/v1/profiles/${username}/`);
 
-export const getUserBook = async username => {
+export const getUser = async username => {
   let user = await getIndexedUserBooks(username);
   if (typeof user !== 'undefined') return user;
 
-  user = await _getUserBook(username);
+  user = await fetchUserInfo(username);
   if (typeof user !== 'undefined') {
     updateData({ userBookStore: user });
     return user;
@@ -54,25 +40,37 @@ export const getUserBook = async username => {
 };
 
 // batched to minimise transactions
-export const getUserBooks = async usernames => {
+export const getUsers = async usernames => {
   let users = await getIndexedUserBooks(usernames);
   const emptyIndices = [];
   users = await Promise.all(users.map(async (user, i) => {
     if (typeof user === 'undefined') {
-      user = await _getUserBook(usernames[i]);
+      user = await fetchUserInfo(usernames[i]);
       emptyIndices.push(user);
     }
     return user;
   }));
   updateData({ userBookStore: emptyIndices });
   return users;
-}
+};
 
 export const getUserShallow = async (username = '') => {
   let user = await getIndexedUsers(username);
   if (typeof user !== 'undefined') return user;
-  else return _getUserBook(username); // return full user if shallow one not found
+  else return fetchUserInfo(username); // return full user if shallow one not found
 };
+
+// Batched to minimise transactions
+export const getUsersShallow = async usernames => {
+  let users = await getIndexedUsers(usernames);
+  const emptyIndices = [];
+  users = await Promise.all(users.map(async (user, i) => {
+    if (typeof user === 'undefined') user = await fetchUserInfo(usernames[i]); // Return full user if shallow one not found
+    return user;
+  }));
+  return users;
+};
+
 const usernameRegex = /\/book\/([\w\d-]+)(?:\/)?/;
 
 export const extractUserFromHref = href => usernameRegex.exec(href)[1];
