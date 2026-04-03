@@ -69,7 +69,7 @@ export const main = async () => {
     className: 'btn-primary-sm',
     title: 'Write a new post using the custom editor',
     onclick: openEditor,
-    children: svgIcon('code', 24, 24)
+    children: svgIcon('commandline', 24, 24)
   }));
 };
 
