@@ -27,6 +27,12 @@ module.exports = {
     "marked": "readonly",
     "DOMPurify": "readonly",
     "Prism": "readonly",
+    "require": "readonly",
+    "monaco": "readonly",
+    "culori": "readonly",
+    "poline": "readonly",
+    "nobleEd25519": "readonly",
+    "$": "readonly"
   },
   "rules": {
     "no-case-declarations": "off",

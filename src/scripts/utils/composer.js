@@ -17,12 +17,12 @@ export function generatePostId() {
   const random = crypto.getRandomValues(new Uint8Array(8));
   const hex = Array.from(random, b => b.toString(16).padStart(2, '0')).join('');
   return `${timestamp}-${hex}`;
-};
+}
 
 export async function registerTags(postId, tags) {
   if (!tags.length) return;
   apiFetch('/v1/posts/register/', { method: 'POST', body: { post_id: postId, tags } }).catch(e => console.error('[TF-Composer] Tag registration failed', e));
-};
+}
 
 export async function sendPostEvent(post, eventType = 'new_post') {
   if (!post?.post_id) {
@@ -48,7 +48,7 @@ export async function sendPostEvent(post, eventType = 'new_post') {
       event_type: eventType,
     }
   }).catch(e => console.warn('[TF-Composer]: SSE relay failed (non-fatal):', e));
-};
+}
 
 export async function createPost(body, tagsInput, user, options = {}) {
   if (!body.trim()) throw new Error('[TF-Composer] Post body cannot be empty');
@@ -120,4 +120,4 @@ export async function createPost(body, tagsInput, user, options = {}) {
   }
 
   return post;
-};
+}

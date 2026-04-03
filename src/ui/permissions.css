@@ -59,7 +59,7 @@ dialog {
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
-  background: none;
+  background: var(--bg-surface);
   border: 1px solid var(--border);
 }
 

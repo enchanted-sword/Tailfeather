@@ -20,7 +20,7 @@ function removeOnClick(event) {
   event.stopPropagation();
   this.removeAttribute(filteredAttribute);
   this.removeEventListener('click', removeOnClick);
-};
+}
 const filterPosts = posts => posts.forEach(post => {
   const { author, originalAuthor, tags, chain } = necromancePostShallow(post);
   const chainAuthors = chain.map(({ author }) => author);

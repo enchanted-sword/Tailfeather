@@ -439,10 +439,6 @@
                     let { preferences } = await browser.storage.local.get('preferences');
                     preferences[name].options[key] = option.value;
                     browser.storage.local.set({ preferences });
-
-                    if (preferences.customColors.enabled && preferences.customColors.options.menuTheme) {
-                      updateTheme(preferences.customColors.options);
-                    }
                   });
 
                   wrapper.append(colorButton);

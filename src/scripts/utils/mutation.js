@@ -47,7 +47,7 @@ class MutationManager {
       .filter(addedNode => addedNode.isConnected);
 
     if (addedNodes.length > 0) this._funcManager(addedNodes);
-  };
+  }
 
   /**
    * Start a mutation callback

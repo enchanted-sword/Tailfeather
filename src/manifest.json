@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Tailfeather",
   "short_name": "TF",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Utilities for Noterook",
   "icons": {
     "48": "icons/icon.svg",
@@ -10,7 +10,7 @@
   },
   "developer": {
     "name": "Cassiopeia Lunarii",
-    "url": "https://.noterook.net/book/dragongirlsnout/"
+    "url": "https://noterook.net/book/dragongirlsnout/"
   },
   "permissions": [
     "storage",
@@ -70,7 +70,12 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "tf-cblunarii@proton.me",
-      "strict_min_version": "121.0"
+      "strict_min_version": "121.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     },
     "gecko_android": {}
   }
