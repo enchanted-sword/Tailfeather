@@ -4,28 +4,40 @@ import { getProcessor } from './utils/markdown.js';
 
 const uri = 'https://noterook.net';
 const DEFAULT_CONTENT = '<!-- Write the post your heart desires! -->';
+const DEFAULT_CSS = '/* You can write CSS here */';
 const DEFAULT_PREVIEW = '<!-- Start writing a post to have it preview here! -->';
 const MAX_LENGTH = 100000;
-let editor, userInfo, defaultContent;
 
+const handleTheme = theme => theme === 'abyss' ? ({ cssClass: 'abyss-theme', isDark: true }) : `ace/theme/${theme}`;
 const formatTags = tags => tags.split(',').filter(t => !!t).map(t => t.toLowerCase().replace('/#/g', '')).map(t => ({ className: 'post-tag', children: `#${t}` }));
 function updateTags({ target }) {
   document.getElementById('postPreview-tags').replaceChildren(...noact(formatTags(target.value)));
 }
 
-// monaco config
-require.config({ paths: { vs: '../lib/vs' } });
-require(['vs/editor/editor.main'], function () {
-  console.debug('[EditorConfig] Monaco loaded', userInfo, defaultContent);
+const transformStyle = cssText => `\n<style>\n${cssText}\n</style>`;
 
-  editor = monaco.editor.create(document.getElementById('composer'), {
+const initEditor = ({ userInfo, defaultContent, defaultCss, theme, keybinding }) => {
+  console.debug('[EditorConfig] Ace loaded', userInfo, defaultContent, defaultCss, theme, keybinding);
+
+  const editor = ace.edit('composer', {
+    mode: 'ace/mode/markdown',
     value: defaultContent || DEFAULT_CONTENT,
-    language: 'text/html',
-    theme: 'vs-dark'
+    wrap: 'free',
+    theme: handleTheme(theme),
+    keyboardHandler: `ace/keyboard/${keybinding}`
+  });
+
+  const cssEditor = ace.edit('css-composer', {
+    mode: 'ace/mode/css',
+    value: defaultCss || DEFAULT_CSS,
+    wrap: 'free',
+    theme: handleTheme(theme),
+    keyboardHandler: `ace/keyboard/${keybinding}`
   });
 
   window.onresize = function () {
-    editor.layout();
+    editor.resize();
+    cssEditor.resize();
   };
 
   document.getElementById('tf-preview').append(noact({
@@ -65,13 +77,15 @@ require(['vs/editor/editor.main'], function () {
     ]
   }));
 
+  const getFullText = () => editor.session.getValue() + transformStyle(cssEditor.session.getValue());
+
   const preview = document.getElementById('postPreview-body');
   const charCount = document.getElementById('composer-char-count');
 
   if (defaultContent) updateBody();
 
   document.getElementById('composer-submit').addEventListener('click', function () {
-    const composerContent = editor.getModel().getValue();
+    const composerContent = getFullText();
     const hideFromSearch = document.getElementById('composer-hide-search').checked;
     const tagString = document.getElementById('composer-tags').value;
     window.parent.postMessage({ composerContent, hideFromSearch, tagString }, uri);
@@ -82,16 +96,16 @@ require(['vs/editor/editor.main'], function () {
 
   function updateBody() {
     requestAnimationFrame(() => {
-      const text = editor.getModel().getValue();
+      const fullText = getFullText()
 
       let content = preview.querySelector(':scope > .shadow-wrapper');
       if (content) preview.removeChild(content);
 
       content = noact({ className: 'shadow-wrapper' });
       preview.replaceChildren(content);
-      getProcessor().renderToElement(text, content);
+      getProcessor().renderToElement(fullText, content);
 
-      charCount.textContent = `${text.length.toLocaleString()} / ${MAX_LENGTH.toLocaleString()}`;
+      charCount.textContent = `${fullText.length.toLocaleString()} / ${MAX_LENGTH.toLocaleString()}`;
 
       if (content.matches(':empty')) content.append(noact({
         tag: 'span',
@@ -101,16 +115,15 @@ require(['vs/editor/editor.main'], function () {
     });
   }
 
-  editor.getModel().onDidChangeContent(debounce(updateBody, 300));
-});
+  editor.on('change', debounce(updateBody, 300));
+  cssEditor.on('change', debounce(updateBody, 300));
+};
 
 window.parent.postMessage('frameInit', uri);
 
 const listener = event => {
   if (event.origin !== uri) return;
-  if (typeof event.data === 'object' && 'userInfo' in event.data) {
-    ({ userInfo, defaultContent } = event.data);
-  }
+  if (typeof event.data === 'object' && 'userInfo' in event.data) initEditor(event.data);
 };
 
 window.addEventListener('message', listener);

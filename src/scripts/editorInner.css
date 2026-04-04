@@ -38,8 +38,14 @@ body {
   justify-content: space-between;
   gap: 2rem;
   width: 100%;
-  height: fit-content;
+  height: 100%;
   scrollbar-gutter: stable;
+  font-family: var(--font);
+  color: var(--text);
+}
+
+h2 {
+  margin: 0;
 }
 
 @media (max-width: 717px) {
@@ -50,10 +56,12 @@ body {
 
 main {
   flex: initial;
+  display: flex;
+  flex-direction: column;
   background-color: var(--bg-surface);
   border-radius: .5rem;
   border: 1px solid var(--border);
-  height: fit-content;
+  height: 100%;
 }
 
 header,
@@ -65,13 +73,26 @@ aside {
   flex: initial;
 }
 
-.composer-controls,
-.post-card {
-  font-family: var(--font);
+.composer-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.composer-wrapper {
-  height: 32rem;
+.composer {
+  height: 50%;
+  display: flex;
+  flex-direction: column;
+}
+
+.composer-header {
+  margin: 0 .5rem .5rem;
+  font-size: 1rem;
+}
+
+.composer .ace_editor {
+  flex: 1;
 }
 
 .composer-controls {
@@ -194,4 +215,178 @@ aside {
   border-radius: 999px;
   text-decoration: none;
   cursor: pointer;
+}
+
+.abyss-theme {
+  background-color: #000c18;
+  /* Overall background color */
+  color: #6688cc;
+  /* Overall foreground color */
+}
+
+.abyss-theme .ace_gutter {
+  /* Editor gutter contains of line numbers and annotation marks. */
+  background: #000c18;
+  /* Background color of the editor gutter.*/
+  color: #406385
+    /* Color of line numbers */
+}
+
+.abyss-theme .ace_print-margin {
+  /* Print margin line */
+  width: 1px;
+  background: #002952
+}
+
+.abyss-theme .ace_cursor {
+  color: #ddbb88
+    /* Color of the editor cursor */
+}
+
+.abyss-theme .ace_marker-layer .ace_selection {
+  background: #770811
+    /* Color of the editor selection */
+}
+
+.abyss-theme.ace_multiselect .ace_selection.ace_start {
+  /* Ace multi selections */
+  background: #4d4144
+}
+
+.abyss-theme .ace_marker-layer .ace_step {
+  /* Debugger line */
+  background: rgb(198, 219, 174)
+}
+
+.abyss-theme .ace_marker-layer .ace_active-line {
+  background: #082050
+    /* Background color of active editor's line */
+}
+
+.abyss-theme .ace_gutter-active-line {
+  color: #3681c2
+    /* C color of gutter active line */
+}
+
+.abyss-theme .ace_marker-layer .ace_selected-word {
+  /* Style of selected words. Try it by double clicking on any word in Result tab*/
+  background: #4d4144
+}
+
+.abyss-theme .ace_fold {
+  /* Fold widget */
+  color: #806a4d;
+  /* Color of fold widget */
+  background: none;
+}
+
+/* Start: different token styles */
+.abyss-theme .ace_keyword {
+  color: #225588
+}
+
+.abyss-theme .ace_constant.ace_language {
+  color: #F280D0
+}
+
+.abyss-theme .ace_constant.ace_numeric {
+  color: #F280D0
+}
+
+.abyss-theme .ace_constant.ace_character,
+.abyss-theme .ace_constant.ace_other {
+  color: #F280D0
+}
+
+.abyss-theme .ace_constant.ace_character.ace_escape {
+  color: #EC827D
+}
+
+.abyss-theme .ace_support.ace_function {
+  color: #9966B8
+}
+
+.abyss-theme .ace_support.ace_constant {
+  color: #9966B8
+}
+
+.abyss-theme .ace_support.ace_class,
+.abyss-theme .ace_support.ace_type {
+  font-style: italic;
+  color: #9966B8
+}
+
+.abyss-theme .ace_storage {
+  color: #225588
+}
+
+.abyss-theme .ace_storage.ace_type {
+  font-style: italic;
+  color: #9966B8
+}
+
+.abyss-theme .ace_invalid {
+  color: #A22D44;
+}
+
+.abyss-theme .ace_invalid.ace_deprecated {
+  color: #A22D44
+}
+
+.abyss-theme .ace_string {
+  color: #22AA44;
+}
+
+.abyss-theme .ace_comment {
+  color: #384887
+}
+
+.abyss-theme .ace_variable {
+  color: #6688cc;
+}
+
+.abyss-theme .ace_variable.ace_parameter {
+  font-style: italic;
+  color: #2277FF
+}
+
+.abyss-theme .ace_entity.ace_other.ace_attribute-name {
+  color: #DDBB88
+}
+
+.abyss-theme .ace_entity.ace_other.ace_inherited-class {
+  color: #DDBB88;
+  text-decoration: underline;
+  font-style: italic;
+}
+
+.abyss-theme .ace_entity.ace_name.ace_type,
+.abyss-theme .ace_entity.ace_name.ace_class,
+.abyss-theme .ace_entity.ace_name.namespace {
+  color: #FFEEBB;
+  text-decoration: underline;
+}
+
+.abyss-theme .ace_entity.ace_name.ace_function {
+  color: #DDBB88
+}
+
+.abyss-theme .ace_entity.ace_name.ace_tag {
+  color: #225588
+}
+
+.abyss-theme .ace_invisible {
+  color: #626680;
+}
+
+/* End: different token styles */
+
+.abyss-theme .ace_indent-guide {
+  /* Indent guide style */
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAEklEQVQImWNgYGBgYHB3d/8PAAOIAdULw8qMAAAAAElFTkSuQmCC) right repeat-y
+}
+
+.abyss-theme .ace_indent-guide-active {
+  /* Active indent guide style */
+  background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACAQMAAACjTyRkAAAABlBMVEUAAADCwsK76u2xAAAAAXRSTlMAQObYZgAAAAxJREFUCNdjYGBoAAAAhACBGFbxzQAAAABJRU5ErkJggg==") right repeat-y;
 }

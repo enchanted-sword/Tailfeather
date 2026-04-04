@@ -5,13 +5,232 @@
   "preferences": {
     "enabled": false,
     "options": {
+      "theme": {
+        "value": "abyss",
+        "type": "select",
+        "name": "Syntax highlighting theme",
+        "tooltip": "Colour theme for syntax highlighting.",
+        "options": [
+          {
+            "value": "abyss",
+            "name": "Abyss"
+          },
+          {
+            "value": "chrome",
+            "name": "Chrome"
+          },
+          {
+            "value": "clouds",
+            "name": "Clouds"
+          },
+          {
+            "value": "crimson_editor",
+            "name": "Crimson Editor"
+          },
+          {
+            "value": "dawn",
+            "name": "Dawn"
+          },
+          {
+            "value": "dreamweaver",
+            "name": "Dreamweaver"
+          },
+          {
+            "value": "eclipse",
+            "name": "Eclipse"
+          },
+          {
+            "value": "github_light_default",
+            "name": "GitHub Light Default"
+          },
+          {
+            "value": "github",
+            "name": "GitHub (Legacy)"
+          },
+          {
+            "value": "iplastic",
+            "name": "IPlastic"
+          },
+          {
+            "value": "solarized_light",
+            "name": "Solarized Light"
+          },
+          {
+            "value": "textmate",
+            "name": "TextMate"
+          },
+          {
+            "value": "tomorrow",
+            "name": "Tomorrow"
+          },
+          {
+            "value": "xcode",
+            "name": "XCode"
+          },
+          {
+            "value": "kuroir",
+            "name": "Kuroir"
+          },
+          {
+            "value": "katzenmilch",
+            "name": "KatzenMilch"
+          },
+          {
+            "value": "sqlserver",
+            "name": "SQL Server"
+          },
+          {
+            "value": "cloud_editor",
+            "name": "CloudEditor"
+          },
+          {
+            "value": "ambiance",
+            "name": "Ambiance"
+          },
+          {
+            "value": "chaos",
+            "name": "Chaos"
+          },
+          {
+            "value": "clouds_midnight",
+            "name": "Clouds Midnight"
+          },
+          {
+            "value": "dracula",
+            "name": "Dracula"
+          },
+          {
+            "value": "cobalt",
+            "name": "Cobalt"
+          },
+          {
+            "value": "gruvbox",
+            "name": "Gruvbox"
+          },
+          {
+            "value": "gob",
+            "name": "Green on Black"
+          },
+          {
+            "value": "idle_fingers",
+            "name": "idle Fingers"
+          },
+          {
+            "value": "kr_theme",
+            "name": "krTheme"
+          },
+          {
+            "value": "merbivore",
+            "name": "Merbivore"
+          },
+          {
+            "value": "merbivore_soft",
+            "name": "Merbivore Soft"
+          },
+          {
+            "value": "mono_industrial",
+            "name": "Mono Industrial"
+          },
+          {
+            "value": "monokai",
+            "name": "Monokai"
+          },
+          {
+            "value": "nord_dark",
+            "name": "Nord Dark"
+          },
+          {
+            "value": "one_dark",
+            "name": "One Dark"
+          },
+          {
+            "value": "pastel_on_dark",
+            "name": "Pastel on dark"
+          },
+          {
+            "value": "solarized_dark",
+            "name": "Solarized Dark"
+          },
+          {
+            "value": "terminal",
+            "name": "Terminal"
+          },
+          {
+            "value": "tomorrow_night",
+            "name": "Tomorrow Night"
+          },
+          {
+            "value": "tomorrow_night_blue",
+            "name": "Tomorrow Night Blue"
+          },
+          {
+            "value": "tomorrow_night_bright",
+            "name": "Tomorrow Night Bright"
+          },
+          {
+            "value": "tomorrow_night_eighties",
+            "name": "Tomorrow Night 80s"
+          },
+          {
+            "value": "twilight",
+            "name": "Twilight"
+          },
+          {
+            "value": "vibrant_ink",
+            "name": "Vibrant Ink"
+          },
+          {
+            "value": "github_dark",
+            "name": "GitHub Dark"
+          },
+          {
+            "value": "cloud_editor_dark",
+            "name": "CloudEditor Dark"
+          }
+        ]
+      },
+      "keybinding": {
+        "value": "vscode",
+        "name": "Keybinding",
+        "type": "select",
+        "options": [
+          {
+            "name": "Ace",
+            "value": "ace"
+          },
+          {
+            "name": "Vim",
+            "value": "vim"
+          },
+          {
+            "name": "Emacs",
+            "value": "emacs"
+          },
+          {
+            "name": "Sublime",
+            "value": "sublime"
+          },
+          {
+            "name": "VSCode",
+            "value": "vscode"
+          }
+        ]
+      },
       "defaultContent": {
         "value": "",
-        "name": "Default editor content",
+        "name": "Default markdown content",
         "type": "text",
         "textarea": true,
-        "tooltip": "Default text to load into the editor, e.g. a standard HTML template for posts.",
+        "tooltip": "Default markdown to load into the editor, e.g. a standard HTML template for posts.",
         "placeholder": "Plaintext, Markdown, or HTML"
+      },
+      "defaultCss": {
+        "value": "",
+        "name": "Default CSS",
+        "type": "text",
+        "textarea": true,
+        "tooltip": "Default CSS to load into the CSS editor, e.g. a standard stylesheet for posts.",
+        "placeholder": "CSS"
       }
     }
   },

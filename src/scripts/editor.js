@@ -7,12 +7,12 @@ import { getOptions } from './utils/jsTools.js';
 const customClass = 'tailfeather-editor';
 const uri = browser.runtime.getURL('');
 
-let defaultContent;
+let defaultContent, defaultCss, theme, keybinding;
 
 const listener = event => {
   if (event.origin + '/' !== uri) return;
   if (event.data === 'frameInit') {
-    event.source.postMessage({ userInfo, defaultContent }, uri);
+    event.source.postMessage({ userInfo, defaultContent, defaultCss, theme, keybinding }, uri);
   }
   else if (typeof event.data === 'object' && 'composerContent' in event.data) {
     const { composerContent, hideFromSearch, tagString } = event.data;
@@ -62,7 +62,7 @@ function openEditor(event) {
 export const update = options => ({ defaultContent } = options);
 
 export const main = async () => {
-  ({ defaultContent } = await getOptions('editor'));
+  ({ defaultContent, defaultCss, theme, keybinding } = await getOptions('editor'));
   window.addEventListener('message', listener);
   document.getElementById('nav-new-post').insertAdjacentElement('afterend', noact({
     id: 'tf-nav-new-post',

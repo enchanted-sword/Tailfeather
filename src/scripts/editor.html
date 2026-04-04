@@ -11,7 +11,18 @@
     <main>
       <header></header>
       <div class="composer-wrapper">
-        <div id="composer" style="width: 100%; height: 100%"></div>
+        <div class="composer">
+          <div class="composer-header">
+            <h2>Markdown</h2>
+          </div>
+          <div id="composer"></div>
+        </div>
+        <div class="composer">
+          <div class="composer-header">
+            <h2>CSS</h2>
+          </div>
+          <div id="css-composer"></div>
+        </div>
       </div>
       <footer class="composer-controls">
         <input
@@ -44,7 +55,7 @@
     <aside id="tf-preview"></aside>
     <script src="../lib/marked.min.js"></script>
     <script src="../lib/purify.min.js"></script>
-    <script src="../lib/vs/loader.js"></script>
+    <script src="../lib/src-min-noconflict/ace.js"></script>
     <script type="module" src="./editorConfig.js"></script>
   </body>
 </html>
