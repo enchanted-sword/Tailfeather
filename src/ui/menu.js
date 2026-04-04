@@ -607,7 +607,7 @@
           const mm = (date.getMonth() + 1).toString(); // zero-based
           const dd = date.getDate().toString();
           exportLink.href = url;
-          exportLink.download = `dashboard plus preference export ${mm}-${dd}-${yy}`;
+          exportLink.download = `Tailfeather Preference Export ${mm}-${dd}-${yy}`;
 
           document.documentElement.append(exportLink);
           exportLink.click();
