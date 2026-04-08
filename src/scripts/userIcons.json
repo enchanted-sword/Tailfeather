@@ -1,0 +1,10 @@
+{
+  "name": "userIcons",
+  "title": "Mutual Icons",
+  "description": "Shows icons next to your mutuals' usernames",
+  "preferences": {
+    "enabled": false
+  },
+  "js": true,
+  "css": true
+}

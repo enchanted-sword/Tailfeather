@@ -1,0 +1,11 @@
+a:has(.tailfeather-userIcons) {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+svg.tailfeather-userIcons {
+  width: 1rem;
+  height: 1rem;
+  fill: var(--accent);
+}

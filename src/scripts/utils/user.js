@@ -74,3 +74,6 @@ export const getUsersShallow = async usernames => {
 const usernameRegex = /\/book\/([\w\d-]+)(?:\/)?/;
 
 export const extractUserFromHref = href => usernameRegex.exec(href)[1];
+
+export const isUserFollowing = username => JSON.parse(localStorage.getItem('noterook_following') || '[]').includes(username);
+export const isFollowingUser = username => JSON.parse(localStorage.getItem('noterook_followers') || '[]').includes(username);
