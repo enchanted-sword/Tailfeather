@@ -1,6 +1,6 @@
 import { getOptions } from './utils/jsTools.js';
 import { noact } from './utils/noact.js';
-import { postSelector } from './utils/document.js';
+import { postSelector, dynamicStyle } from './utils/document.js';
 import { mutationManager, postFunction } from './utils/mutation.js';
 
 const customClass = 'tailfeather-feedTweaks';
@@ -16,6 +16,8 @@ let columnCount = 2;
 let columnIndex = 0;
 let masonryCols = [];
 let posts = new Set();
+
+const style = dynamicStyle(customClass);
 
 const reflowMasonry = () => {
   document.querySelector(feedSelector).replaceChildren(...masonryCols);
@@ -59,23 +61,17 @@ const handleColumns = cols => {
 };
 
 const run = ({ fixPostGaps, autoBreakpoint, expandedMasonry }) => {
-  columnCount = expandedMasonry;
-  //mutationManager.start(`:not(${customAttribute})>${columnSelector}`, handleColumns);
-  let styleText = '';
+  // columnCount = expandedMasonry;
+  // mutationManager.start(`:not(${customAttribute})>${columnSelector}`, handleColumns);
 
-  if (fixPostGaps) styleText += `@media (max-width: 768px) {
+  style.textContent = '';
+
+  if (fixPostGaps) style.textContent = style.textContent + `@media (max-width: 768px) {
     #feed-posts > .masonry-col { display: flex !important; }
-      #feed-posts > .masonry-col-right { padding-top: 1.25rem !important; }
+    #feed-posts > .masonry-col-right { padding-top: 1.25rem !important; }
     }`;
   if (autoBreakpoint);
   if (expandedMasonry);
-
-  if (document.querySelector(`style.${customClass}`)) document.querySelector(`style.${customClass}`).textContent = styleText;
-  else document.body.append(noact({
-    tag: 'style',
-    className: customClass,
-    children: styleText
-  }));
 };
 
 /* "autoBreakpoint": {

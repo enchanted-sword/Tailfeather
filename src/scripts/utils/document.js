@@ -10,6 +10,7 @@ export const dynamicStyle = (customClass = '') => ({
     tag: 'style',
     className: `tf-dynamicStyle ${customClass}`
   }),
+  get textContent() { return this.styleSheet.textContent; },
   set textContent(style) {
     if (!this.attached) this.attach();
     this.styleSheet.textContent = style;
