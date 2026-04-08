@@ -1,0 +1,30 @@
+@media (max-width: 768px) {
+  .nav-container {
+    gap: 1rem;
+  }
+
+  .nav-container .logo {
+    text-indent: -9999px;
+    width: 2rem;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+
+    &::before {
+      display: block;
+      width: 2rem;
+      height: 2rem;
+      content: "";
+      position: absolute;
+      background: center / 2rem no-repeat url(https://noterook.net/static/icons/icon-192x192.png);
+    }
+  }
+
+  .nav-links {
+    justify-content: flex-end;
+  }
+
+  .connection-status {
+    min-width: none;
+  }
+}

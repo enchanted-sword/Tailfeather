@@ -67,11 +67,13 @@ const run = ({ fixPostGaps, autoBreakpoint, expandedMasonry }) => {
   style.textContent = '';
 
   if (fixPostGaps) style.textContent = style.textContent + `@media (max-width: 768px) {
-    #feed-posts > .masonry-col { display: flex !important; }
-    #feed-posts > .masonry-col-right { padding-top: 1.25rem !important; }
-    }`;
-  if (autoBreakpoint);
-  if (expandedMasonry);
+  #everyone-posts > .masonry-col {
+    display: flex !important;
+  }
+  #everyone-posts > .masonry-col-right {
+    padding-top: 1.25rem;
+  }
+}`;
 };
 
 /* "autoBreakpoint": {

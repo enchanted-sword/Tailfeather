@@ -1,6 +1,5 @@
 [
   "customIcons",
-  "appNav",
   "feedTweaks",
   "editor",
   "themes",
@@ -10,5 +9,6 @@
   "safeScroll",
   "inlineAdditions",
   "displaySource",
-  "touchHovercards"
+  "touchHovercards",
+  "compactNav"
 ]

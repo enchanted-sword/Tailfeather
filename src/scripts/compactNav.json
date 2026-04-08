@@ -1,0 +1,9 @@
+{
+  "name": "compactNav",
+  "title": "Compact Navigation Header",
+  "description": "Tweaks for how posts are displayed",
+  "preferences": {
+    "enabled": false
+  },
+  "css": true
+}
