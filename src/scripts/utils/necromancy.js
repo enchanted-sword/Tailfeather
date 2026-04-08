@@ -17,9 +17,9 @@ const unwrapBlob = blob => {
   return modifyPostObjects(author, posts);
 };
 
-const userObject = ({ author_username, author_name, author_avatar, updated_at }) => ({
-  username: author_username || author_name,
-  display_name: author_name,
+const userObject = ({ author, author_username, author_name, author_avatar, updated_at }) => ({
+  username: author || author_username,
+  display_name: author_name || author_username,
   avatar_url: author_avatar,
   updated_at
 });
