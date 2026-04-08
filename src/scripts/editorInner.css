@@ -52,6 +52,26 @@ h2 {
   body {
     flex-direction: column;
   }
+
+  aside {
+    height: fit-content;
+  }
+
+  header {
+    padding: .25rem;
+  }
+
+  footer {
+    padding: .5rem;
+  }
+
+  .composer-wrapper {
+    gap: .5rem;
+  }
+
+  .composer-header {
+    font-size: .75rem
+  }
 }
 
 main {
