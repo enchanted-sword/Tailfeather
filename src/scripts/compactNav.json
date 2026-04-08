@@ -1,7 +1,7 @@
 {
   "name": "compactNav",
   "title": "Compact Navigation Header",
-  "description": "Tweaks for how posts are displayed",
+  "description": "Makes the navigation header more compact on narrow screens. Pairs well with Custom Icons.",
   "preferences": {
     "enabled": false
   },
