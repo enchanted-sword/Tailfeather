@@ -39,7 +39,7 @@
       "matches": [
         "*://*.noterook.net/*"
       ],
-      "run_at": "document_end",
+      "run_at": "document_start",
       "js": [
         "control/contentScript.js",
         "lib/culori.min.js",

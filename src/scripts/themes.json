@@ -6,7 +6,7 @@
     "enabled": false,
     "options": {
       "mode": {
-        "value": "hue",
+        "value": "preset",
         "type": "select",
         "name": "Mode",
         "tooltip": "Custom theme mode",
@@ -18,6 +18,33 @@
           {
             "value": "preset",
             "name": "Preset"
+          }
+        ]
+      },
+      "preset": {
+        "value": "trueblue",
+        "type": "select",
+        "name": "Preset theme",
+        "options": [
+          {
+            "value": "trueblue",
+            "name": "True Blue"
+          },
+          {
+            "value": "lcc",
+            "name": "Low-contrast Classic"
+          },
+          {
+            "value": "gm9",
+            "name": "Godmode9"
+          },
+          {
+            "value": "abyss",
+            "name": "Abyss"
+          },
+          {
+            "value": "fruit",
+            "name": "Fruit"
           }
         ]
       },
@@ -50,33 +77,6 @@
         "value": 0,
         "step": 0.01,
         "unit": ""
-      },
-      "preset": {
-        "value": "trueblue",
-        "type": "select",
-        "name": "Preset theme",
-        "options": [
-          {
-            "value": "trueblue",
-            "name": "True Blue"
-          },
-          {
-            "value": "lcc",
-            "name": "Low-contrast Classic"
-          },
-          {
-            "value": "gm9",
-            "name": "Godmode9"
-          },
-          {
-            "value": "abyss",
-            "name": "Abyss"
-          },
-          {
-            "value": "fruit",
-            "name": "Fruit"
-          }
-        ]
       }
     }
   },
