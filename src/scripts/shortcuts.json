@@ -1,0 +1,34 @@
+{
+  "name": "shortcuts",
+  "title": "Keyboard Shortcuts",
+  "description": "Adds keyboard shortcuts for navigation",
+  "extendedDescription": {
+    "tag": "p",
+    "children": [
+      {
+        "tag": "span",
+        "style": "font-family: monospace;font-weight: bold;font-size: 1rem;border: 1px solid currentColor;border-radius: 3px;padding: 0 .25rem;",
+        "children": [
+          "j"
+        ]
+      },
+      " - Scroll upwards one post",
+      {
+        "tag": "br"
+      },
+      {
+        "tag": "span",
+        "style": "font-family: monospace;font-weight: bold;font-size: 1rem;border: 1px solid currentColor;border-radius: 3px;padding: 0 .25rem;",
+        "children": [
+          "k"
+        ]
+      },
+      " - Scroll downwards one post"
+    ]
+  },
+  "preferences": {
+    "enabled": false
+  },
+  "js": true,
+  "css": true
+}
