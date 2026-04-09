@@ -191,7 +191,7 @@
       },
       "keybinding": {
         "value": "vscode",
-        "name": "Keybinding",
+        "name": "Keybindings",
         "type": "select",
         "options": [
           {
