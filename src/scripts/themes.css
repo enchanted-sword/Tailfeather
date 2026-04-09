@@ -151,8 +151,7 @@
     background-color: var(--bg-cherry);
   }
 
-  :is(.nav-links a, .nav-logout, .notif-bell),
-  :is(.logo, .book-header, .feed-header, .everyone-header) {
+  :is(.logo, .nav-links a, .nav-logout, .notif-bell) {
     color: var(--white-on-dark);
   }
 
