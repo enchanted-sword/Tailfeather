@@ -8,7 +8,7 @@ const getCSRFToken = () => {
     }
   }
   return '';
-}
+};
 
 const defaultOptions = {
   baseUrl: 'https://noterook.net/api',
@@ -22,7 +22,7 @@ const defaultOptions = {
   queryParams: {},
 };
 
-const jsonTypes = ['application/octet-stream', 'application/json'];
+const jsonTypes = ['application/octet-stream', 'application/json', 'application/json; charset=utf-8'];
 
 const convertToFetchOptions = options => {
   // These are not actually options passed to native fetch api

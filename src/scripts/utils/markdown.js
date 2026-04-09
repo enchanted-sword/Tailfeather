@@ -688,3 +688,15 @@ export function getProcessor() {
   }
   return _instance;
 }
+
+/**
+ * Escape HTML entities to prevent XSS in string interpolation.
+ * @param {string} str
+ * @returns {string}
+ */
+export function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}

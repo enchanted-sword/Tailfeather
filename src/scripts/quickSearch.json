@@ -1,0 +1,10 @@
+{
+  "name": "quickSearch",
+  "title": "Quick Search",
+  "description": "Displays a popover search menu when clicking the navigation search button",
+  "preferences": {
+    "enabled": false
+  },
+  "js": true,
+  "css": true
+}
