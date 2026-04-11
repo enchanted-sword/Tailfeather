@@ -1,3 +1,4 @@
-.sticker-emoji {
+.sticker-emoji,
+.sticker-tray-btn {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif, "Noto Color Emoji";
 }
