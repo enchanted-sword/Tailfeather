@@ -39,8 +39,8 @@ const setupDisplay = ([postBody, bodyContent]) => {
   let actionTarget;
   try {
     postBody.setAttribute(customAttribute, showBoth ? 'showBoth' : 'switch');
-    actionTarget = postBody.parentElement.querySelector('.post-actions') || postBody.parentElement.querySelector('.chain-addition-header');
-    actionTarget.querySelector('.post-action-report,.chain-addition-time,.post-action-delete,[data-action="sticker"]').insertAdjacentElement('beforebegin', sourceButton());
+    actionTarget = postBody.parentElement.querySelector('.post-author:has(~.chain-additions)') || postBody.parentElement.querySelector('.post-actions') || postBody.parentElement.querySelector('.chain-addition-header');
+    actionTarget.querySelector('.post-timestamp,.post-action-report,.chain-addition-time,.post-action-delete,[data-action="sticker"]').insertAdjacentElement('beforebegin', sourceButton());
     postBody.parentElement.insertBefore(newSourceDisplay(bodyContent), postBody.nextElementSibling); // why isn't insertAfter a thing?
   } catch (e) {
     console.warn('[DisplaySource] Failed to place button or source display:', postBody, actionTarget, bodyContent, e);
