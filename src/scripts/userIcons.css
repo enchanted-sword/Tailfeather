@@ -1,7 +1,7 @@
 a:has(.tailfeather-userIcons) {
   display: inline-flex;
   align-items: center;
-  gap: .5rem;
+  gap: .25rem;
 }
 
 svg.tailfeather-userIcons {

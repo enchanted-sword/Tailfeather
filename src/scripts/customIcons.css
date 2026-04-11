@@ -5,6 +5,7 @@
 
 :is(a, button):has(.tailfeather-icons) {
   text-indent: -9999px;
+  display: flex;
 }
 
 [data-tf-icons] .post-action-btn {
@@ -13,11 +14,6 @@
 
 .post-action-pinned .tailfeather-icons {
   fill: currentColor;
-}
-
-.nav-links a:has(.tailfeather-icons),
-.nav-logout {
-  display: flex;
 }
 
 #nav-new-post {
