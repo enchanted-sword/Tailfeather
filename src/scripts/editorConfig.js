@@ -40,6 +40,10 @@ const initEditor = ({ userInfo, defaultContent, defaultCss, theme, keybinding })
     cssEditor.resize();
   };
 
+  const [_, additionToPost] = /\/?additionToPost=(.+)$/.exec(location.search) || []
+
+  if (additionToPost) document.getElementById('composer-submit').textContent = 'Add';
+
   document.getElementById('tf-preview').append(noact({
     className: 'post-card',
     children: [
@@ -88,7 +92,7 @@ const initEditor = ({ userInfo, defaultContent, defaultCss, theme, keybinding })
     const composerContent = getFullText();
     const hideFromSearch = document.getElementById('composer-hide-search').checked;
     const tagString = document.getElementById('composer-tags').value;
-    window.parent.postMessage({ composerContent, hideFromSearch, tagString }, uri);
+    window.parent.postMessage({ composerContent, hideFromSearch, tagString, additionToPost }, uri);
   });
 
   const tagInput = document.getElementById('composer-tags');

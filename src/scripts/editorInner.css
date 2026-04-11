@@ -91,7 +91,10 @@ main {
   box-sizing: border-box;
 }
 
-header,
+header {
+  padding: .5rem;
+}
+
 footer {
   padding: 1.25rem;
 }
