@@ -39,7 +39,7 @@ const addIcons = posts => posts.forEach(post => {
       mutualCache.set(username, mutuals);
     } else mutuals = mutualCache.get(username);
 
-    if (mutuals) user.append(noact(paths['ds-user-mutual-outline']));
+    if (mutuals) user.insertAdjacentElement('afterend', noact(paths['ds-user-mutual-outline']));
   });
   post.setAttribute(customAttribute, '');
 })
