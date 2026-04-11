@@ -144,6 +144,7 @@ export const updateData = (dataObj, options = null) => {
       else if (typeof existingData === 'object') {
         if ('updated_at' in existingData && 'updated_at' in data) {
           if (data.updated_at > existingData.updated_at) updateData = Object.assign(structuredClone(existingData), data);
+          else return;
         } else updateData = Object.assign(structuredClone(existingData), data);
       }
       else updateData = data;
