@@ -54,7 +54,7 @@ const avatarise = async posts => {
         width: 32,
         loading: 'lazy'
       } : {
-        className: `${customClass} post-author-avatar hovercard-avatar-placeholder`,
+        className: `${customClass} post-author-avatar post-avatar-placeholder`,
         children: additionAuthors[i][0]
       }));
     });
