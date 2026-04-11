@@ -1,4 +1,4 @@
-.tf-icon {
+.tailfeather-icons {
   width: 1.5rem;
   height: 1.5rem;
 }
@@ -6,6 +6,24 @@
 :is(a, button):has(.tailfeather-icons) {
   text-indent: -9999px;
   display: flex;
+}
+
+.nav-links:has(.tailfeather-icons) {
+  gap: 1rem;
+
+  .tailfeather-icons {
+    transition: color 0.15s;
+  }
+
+  >a {
+    padding: .25rem;
+  }
+
+  .notif-bell svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    stroke-width: 1.5;
+  }
 }
 
 [data-tf-icons] .post-action-btn {
@@ -22,7 +40,8 @@
   padding: 0.25rem 0.9rem;
 }
 
-.nav-logout-form {
+.nav-logout-form:has(.tailfeather-icons) {
   display: inline-flex;
   align-items: center;
+  padding: .25rem;
 }
