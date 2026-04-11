@@ -1,4 +1,4 @@
-.chain-addition-author:has(.tailfeather-displaySource) {
+:is(.post-author, .chain-addition-header):has(.tailfeather-displaySource) :is(.post-author-name, .chain-addition-author) {
   text-overflow: ellipsis;
   word-break: break-word;
   overflow: hidden;

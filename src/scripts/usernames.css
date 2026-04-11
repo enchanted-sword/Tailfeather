@@ -1,4 +1,4 @@
-.chain-addition-header:has(.tailfeather-usernames) :is(.chain-addition-author, .tailfeather-usernames) {
+:is(.post-author, .chain-addition-header):has(.tailfeather-usernames) :is(.post-author-name, .chain-addition-author, .tailfeather-usernames) {
   text-overflow: ellipsis;
   word-break: break-word;
   overflow: hidden;
