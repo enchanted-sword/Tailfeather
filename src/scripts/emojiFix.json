@@ -1,6 +1,6 @@
 {
   "name": "emojiFix",
-  "title": "Emoji Fix",
+  "title": "Sticker Fix",
   "description": "Replaces the default system emoji set with Noto Color Emoji, fixing any emojis that your system does not natively support.",
   "preferences": {
     "enabled": false
