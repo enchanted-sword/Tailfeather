@@ -30,6 +30,11 @@
     top: 4.5rem;
   }
 
+  .tailfeather-avatars-scrollContainer a:has(.hovercard-avatar-placeholder) {
+    text-decoration: none;
+    user-select: none;
+  }
+
   .post-card:has(.tailfeather-avatars-scrollContainer) .post-staple-attribution .post-author-avatar,
   .post-card:has(.tailfeather-avatars-scrollContainer):not(:has(.post-staple-attribution, .chain-stapled-badge)) .post-author .post-author-avatar {
     display: none;
