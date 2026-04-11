@@ -3,6 +3,10 @@
   height: 1.5rem;
 }
 
+:is(a, button):has(.tailfeather-icons) {
+  text-indent: -9999px;
+}
+
 [data-tf-icons] .post-action-btn {
   padding: unset;
 }
@@ -11,7 +15,8 @@
   fill: currentColor;
 }
 
-.nav-links a:has(.tailfeather-icons) {
+.nav-links a:has(.tailfeather-icons),
+.nav-logout {
   display: flex;
 }
 
