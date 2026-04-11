@@ -1,3 +1,13 @@
+.chain-addition-header:has(.tailfeather-usernames) :is(.chain-addition-author, .tailfeather-usernames) {
+  text-overflow: ellipsis;
+  word-break: break-word;
+  overflow: hidden;
+  line-clamp: 1;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+}
+
 .tailfeather-usernames {
   font-size: .8rem;
   color: var(--text-dim);

@@ -1,3 +1,13 @@
+.chain-addition-author:has(.tailfeather-displaySource) {
+  text-overflow: ellipsis;
+  word-break: break-word;
+  overflow: hidden;
+  line-clamp: 1;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+}
+
 .chain-addition-author .post-action-btn.tailfeather-displaySource {
   margin-left: auto;
 }

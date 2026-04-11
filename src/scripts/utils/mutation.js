@@ -230,7 +230,7 @@ export const mutationManager = Object.freeze({ // Interface wrapper for both the
       return;
     }
 
-    const matchingElements = [this.lightManager.root?.querySelector(selector), this.shadowManager.root?.querySelector(selector)]
+    const matchingElements = [this.lightManager.root?.querySelectorAll(selector), this.shadowManager.root?.querySelectorAll(selector)]
       .filter(nl => !!nl).flatMap(nl => [...nl]);
     if (matchingElements.length !== 0) {
       func(matchingElements, this);
