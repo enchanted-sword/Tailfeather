@@ -1,10 +1,12 @@
 import { necromancePosts } from './necromancy.js';
 import { postSelector } from './document.js';
+import { addNavigationListener, navigationListeners, removeNavigationListener } from './navigation.js';
 
-class MutationManager {
+class LightManager {
   addedNodesQueue = [];
   targetNodesQueue = [];
   updateQueued = false;
+  observing = false;
   timerId;
   root;
   options;
@@ -76,7 +78,6 @@ class MutationManager {
     let selector;
     if (!this.root) return;
     if (this.listeners.has(func)) selector = this.listeners.get(func);
-    else if (this.targetListeners.has(func)) selector = this.targetListeners.get(func);
     else return;
 
     if (func.length === 0) {
@@ -98,6 +99,7 @@ class MutationManager {
    */
 
   observe(root, options = { childList: true, subtree: true }) {
+    this.observing = true;
     this.root = root || document.body || document.documentElement;// fallback for some early loads
     this.options = options;
     this.observer = new MutationObserver(mutations => {
@@ -130,11 +132,12 @@ class MutationManager {
   }
 }
 
-export const mutationManager = new MutationManager(document.body);
-
-export class ShadowManager extends MutationManager {
-
+export class ShadowManager extends LightManager {
   _observe() {
+    if (this.observer) {
+      this.observer.disconnect();
+      delete this.observer;
+    }
     this.observer = new MutationObserver(mutations => {
       const addedNodes = mutations
         .flatMap(({ addedNodes }) => [...addedNodes])
@@ -154,6 +157,7 @@ export class ShadowManager extends MutationManager {
   }
 
   observe(shadowHost, options = { childList: true, subtree: true }) {
+    this.observing = true;
     this.options = options;
     if (shadowHost.shadowRoot) {
       this.root = shadowHost.shadowRoot;
@@ -174,19 +178,77 @@ export class ShadowManager extends MutationManager {
   }
 }
 
-
 const bookHostId = 'book-shadow-host';
 let pfShadowManager;
 
-const onNewPosts = posts => {
-  for (const [func, filter] of postFunction.functions) {
-    filter ? func(posts.filter(post => post.matches(filter))) : func(posts)
+export const mutationManager = Object.freeze({ // Interface wrapper for both the light and shadow DOM observers
+  listeners: new Map(),
+  lightManager: new LightManager(document.body),
+  shadowManager: new ShadowManager(document.getElementById(bookHostId)),
+
+  _shadowTl() {
+    if (document.getElementById(bookHostId)) this.shadowManager.observe(document.getElementById(bookHostId));
+  },
+
+  /**
+   * Start a mutation callback
+   * @param {string} selector - CSS selector for elements to target
+   * @param {Function} func - Callback function for matching elements
+   */
+  start(selector, func) {
+    if (!navigationListeners.has(this._shadowTl)) addNavigationListener(this._shadowTl);
+    if (this.listeners.has(func)) this.listeners.delete(func);
+    this.listeners.set(func, selector);
+    this.lightManager.listeners.set(func, selector);
+    this.shadowManager.listeners.set(func, selector);
+    this.trigger(func);
+  },
+
+  /**
+   * Stop a mutation callback
+   * @param {Function} func - Function to remove
+   */
+  stop(func) {
+    if (this.listeners.has(func)) this.listeners.delete(func);
+    if (this.lightManager.listeners.has(func)) this.listeners.delete(func);
+    if (this.shadowManager.listeners.has(func)) this.listeners.delete(func);
+    if (!this.listeners.length) removeNavigationListener(this._shadowManaging);
+  },
+
+  /**
+   * Trigger a mutation callback on all matching elements
+   * @param {Function} func - Function to run
+   */
+  trigger(func) {
+    let selector;
+    if (this.listeners.has(func)) selector = this.listeners.get(func);
+    else return;
+
+    if (func.length === 0) {
+      if (this.lightManager.root?.querySelector(selector)) func(this.lightManager);
+      if (this.shadowManager.root?.querySelector(selector)) func(this.lightManager); // ShadowManager.root is already the shadowRoot
+      return;
+    }
+
+    const matchingElements = [this.lightManager.root?.querySelector(selector), this.shadowManager.root?.querySelector(selector)]
+      .filter(nl => !!nl).flatMap(nl => [...nl]);
+    if (matchingElements.length !== 0) {
+      func(matchingElements, this);
+    }
   }
-  necromancePosts(posts);
-}
+});
+
+
 
 export const postFunction = Object.freeze({ // old PF interface but with a new coat of...shadow DOM paint
   functions: new Map(),
+
+  _onNewPosts(posts) {
+    for (const [func, filter] of postFunction.functions) {
+      filter ? func(posts.filter(post => post.matches(filter))) : func(posts)
+    }
+    necromancePosts(posts);
+  },
 
   /**
    * Start a mutation callback on new posts
@@ -196,16 +258,9 @@ export const postFunction = Object.freeze({ // old PF interface but with a new c
   start(func, filter = false) {
     if (this.functions.has(func)) this.functions.delete(func);
     this.functions.set(func, filter);
-    if (!pfShadowManager) { // book pages encapsulate the whole post container in the shadow DOM, thus we need a ShadowManager to look for book page posts
-      const host = document.getElementById(bookHostId);
-      if (host) pfShadowManager = new ShadowManager(host);
-    }
-    if (pfShadowManager) {
-      if (pfShadowManager.listeners.has(onNewPosts)) pfShadowManager.trigger(onNewPosts);
-      else (pfShadowManager.start(postSelector, onNewPosts));
-    }
-    if (mutationManager.listeners.has(onNewPosts)) mutationManager.trigger(onNewPosts);
-    else (mutationManager.start(postSelector, onNewPosts));
+
+    if (mutationManager.listeners.has(this._onNewPosts)) mutationManager.trigger(this._onNewPosts);
+    else (mutationManager.start(postSelector, this._onNewPosts));
   },
 
   /**
@@ -214,7 +269,6 @@ export const postFunction = Object.freeze({ // old PF interface but with a new c
    */
   stop(func) {
     this.functions.delete(func);
-    pfShadowManager?.stop(func);
     mutationManager.stop(func)
   }
 });
