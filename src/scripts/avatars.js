@@ -40,7 +40,7 @@ const avatarise = async posts => {
           height: 64,
           loading: 'lazy'
         } : {
-          className: 'post-author-avatar post-avatar-placeholder',
+          className: 'post-author-avatar hovercard-avatar-placeholder',
           children: author[0]
         }
       }
@@ -54,7 +54,7 @@ const avatarise = async posts => {
         width: 32,
         loading: 'lazy'
       } : {
-        className: 'post-author-avatar post-avatar-placeholder',
+        className: 'post-author-avatar hovercard-avatar-placeholder',
         children: additionAuthors[i][0]
       }));
     });
