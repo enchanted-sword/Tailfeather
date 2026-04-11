@@ -141,7 +141,11 @@ export const updateData = (dataObj, options = null) => {
       let updateData;
       const existingData = await smartGetData(store, data);
       if (storeOptions?.updateStrict && typeof existingData === 'undefined') return;
-      else if (typeof existingData === 'object') updateData = Object.assign(structuredClone(existingData), data);
+      else if (typeof existingData === 'object') {
+        if ('updated_at' in existingData && 'updated_at' in data) {
+          if (data.updated_at > existingData.updated_at) updateData = Object.assign(structuredClone(existingData), data);
+        } else updateData = Object.assign(structuredClone(existingData), data);
+      }
       else updateData = data;
       updateData.stored_at = Date.now();
       try {
