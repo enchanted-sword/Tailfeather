@@ -54,7 +54,7 @@ export async function openDatabase(userId) {
     // the upgrade is blocked.  Log a warning and wait — the other
     // connection's onversionchange handler should close it shortly.
     request.onblocked = () => {
-      console.warn('[BookStore] DB upgrade blocked by another tab/SW — waiting for it to close');
+      console.warn('[TF-BookStore] DB upgrade blocked by another tab/SW — waiting for it to close');
     };
 
     request.onupgradeneeded = (event) => {
@@ -99,7 +99,7 @@ export async function openDatabase(userId) {
         const uid = _userId;
         _db.close();
         _db = null;
-        console.debug('[BookStore] Closed DB for version upgrade — reopening');
+        console.debug('[TF-BookStore] Closed DB for version upgrade — reopening');
         if (uid) openDatabase(uid).catch(() => { });
       };
 
@@ -107,7 +107,7 @@ export async function openDatabase(userId) {
     };
 
     request.onerror = (event) => {
-      console.error('[BookStore] Failed to open database:', event.target.error);
+      console.error('[TF-BookStore] Failed to open database:', event.target.error);
       reject(event.target.error);
     };
   });
@@ -175,6 +175,83 @@ export function getPost(postId) {
     request.onsuccess = () => resolve(request.result);
     request.onerror = (e) => reject(e.target.error);
   });
+}
+/**
+ * Resolve a post by ID — tries IndexedDB first, then blob cache.
+ *
+ * Use this instead of getPost() when you need to find a post that may
+ * belong to another user (e.g., clicking "add to" on someone else's
+ * post). Their posts are rendered from blob cache but never stored in
+ * IndexedDB.
+ *
+ * @param {string} postId
+ * @param {string} [blobOwner] - username whose blob might contain the post
+ * @param {string} [originalAuthor] - fallback username if different from blobOwner
+ * @returns {Promise<object|null>}
+ */
+export async function resolvePost(postId, blobOwner, originalAuthor) {
+  // 1. Local IndexedDB (own posts, previously stapled posts)
+  const local = await getPost(postId);
+  if (local) return local;
+
+  // 2. SSE post cache (posts delivered via real-time events, not yet in blobs)
+  const sseCached = _ssePostCache.get(postId);
+  if (sseCached) {
+    console.debug(`[TF-BookStore] resolvePost: found ${postId} in SSE cache`);
+    return sseCached;
+  }
+
+  // 3. Blob cache (other users' posts we've viewed)
+  const { default: BlobManager } = await import('./blob-manager.js');
+
+  if (blobOwner) {
+    const cached = BlobManager.getCached(blobOwner);
+    if (cached?.envelope?.posts) {
+      const post = cached.envelope.posts.find(p => p.post_id === postId);
+      if (post) return post;
+    }
+    // Try fetching fresh
+    const result = await BlobManager.fetchBlobCached(blobOwner);
+    if (result.envelope?.posts) {
+      const post = result.envelope.posts.find(p => p.post_id === postId);
+      if (post) return post;
+    }
+  }
+
+  // 4. Fallback: original author's blob
+  if (originalAuthor && originalAuthor !== blobOwner) {
+    const result = await BlobManager.fetchBlobCached(originalAuthor);
+    if (result.envelope?.posts) {
+      const post = result.envelope.posts.find(p => p.post_id === postId);
+      if (post) return post;
+    }
+  }
+
+  console.debug(`[TF-BookStore] resolvePost: ${postId} not found (owner=${blobOwner}, author=${originalAuthor})`);
+  return null;
+}
+
+// ── SSE post cache ─────────────────────────────────────────────────
+// Posts delivered via SSE events aren't in IndexedDB or blob caches.
+// This in-memory cache bridges the gap so actions (staple, add-to)
+// work on SSE-delivered posts before the author's blob is published.
+// Capped and session-scoped — not persisted.
+
+const _ssePostCache = new Map();
+const SSE_POST_CACHE_MAX = 500;
+
+/**
+ * Cache a post delivered via SSE so resolvePost() can find it.
+ * Call from feed-view, everyone-init, etc. when rendering SSE posts.
+ */
+export function cacheSSEPost(post) {
+  if (!post?.post_id) return;
+  if (_ssePostCache.size >= SSE_POST_CACHE_MAX) {
+    // Evict oldest entry (first key)
+    const oldest = _ssePostCache.keys().next().value;
+    _ssePostCache.delete(oldest);
+  }
+  _ssePostCache.set(post.post_id, post);
 }
 
 /**
@@ -467,44 +544,88 @@ export function getMetadata(key) {
  * to the parent's full tag set; post-migration, post.tags is [] for
  * old additions (since they never had their own tags).
  *
- * Simple staples (no user addition) are left alone — their tags were
+ * Simple staples (no user addition) are left alone - their tags were
  * intentionally chosen by the stapler.
  *
  * Idempotent and safe to re-run.  Skips if already applied.
  * @param {string} currentUsername
  */
 export async function migrateAdditionTags(currentUsername) {
+  // v1 of this migration aggressively cleared post.tags on old composites
+  // where additions didn't have their own tags field.  This made tags
+  // vanish entirely - inherited tags disappeared and there were no
+  // addition tags to replace them.
+  //
+  // v2: if the migration already ran (v1), RESTORE inherited tags from
+  // original_tags so old composites aren't left tagless.  For users who
+  // haven't run it yet, just mark as done without modifying anything.
+  // Old composites keep their inherited visible tags until the user
+  // creates a new addition (which uses the new addition-tags system).
   const done = await getMetadata('migration_addition_tags');
-  if (done) return { migrated: 0 };
 
-  const posts = await getAllPosts();
-  const toUpdate = [];
+  if (done) {
+    // v1 already ran - check if we need to restore tags
+    const v2Done = await getMetadata('migration_addition_tags_v2');
+    if (v2Done) return { migrated: 0 };
 
-  for (const post of posts) {
-    // Only migrate composites where the user's own addition is the tip
-    if (!post.is_mine || !post.additions?.length) continue;
-    const lastAddition = post.additions[post.additions.length - 1];
-    if (lastAddition.author !== currentUsername) continue;
-
-    // If the addition already has tags, it was created with the new
-    // system — nothing to migrate.
-    if (lastAddition.tags && lastAddition.tags.length > 0) continue;
-
-    // Old composite: post.tags was copied from parent.
-    // Clear it since the addition had no tags of its own.
-    // original_tags already preserves the root's tags for inheritance.
-    if (post.tags && post.tags.length > 0) {
-      post.tags = [];
-      toUpdate.push(post);
+    const posts = await getAllPosts();
+    const toUpdate = [];
+    for (const post of posts) {
+      if (!post.is_mine || !post.additions?.length) continue;
+      const lastAddition = post.additions[post.additions.length - 1];
+      if (lastAddition.author !== currentUsername) continue;
+      // If tags were cleared and original_tags has content, restore
+      if ((!post.tags || post.tags.length === 0) && post.original_tags?.length) {
+        post.tags = [...post.original_tags];
+        toUpdate.push(post);
+      }
     }
+    if (toUpdate.length) await storePosts(toUpdate);
+    await setMetadata('migration_addition_tags_v2', new Date().toISOString());
+    return { migrated: toUpdate.length };
   }
 
-  if (toUpdate.length) {
-    await storePosts(toUpdate);
-  }
-
+  // Never ran v1 - just mark as done, don't modify anything
   await setMetadata('migration_addition_tags', new Date().toISOString());
-  return { migrated: toUpdate.length };
+  await setMetadata('migration_addition_tags_v2', new Date().toISOString());
+  return { migrated: 0 };
+}
+
+/**
+ * One-time migration: clean stale deleted_post_ids entries.
+ *
+ * The old addToPost() deleted parent posts when creating composites and
+ * added them to deleted_post_ids. This caused the sync merge to skip
+ * those posts when syncing from another device, leading to data loss.
+ *
+ * Fix: remove any deleted_post_ids entry where the post still exists
+ * in IndexedDB (if it's still there, it wasn't really deleted). Also
+ * remove entries for posts that exist in the server blob.
+ */
+export async function migrateCleanDeletedIds() {
+  const done = await getMetadata('migration_clean_deleted_ids');
+  if (done) return { cleaned: 0 };
+
+  const deletedIds = (await getMetadata('deleted_post_ids')) || [];
+  if (!deletedIds.length) {
+    await setMetadata('migration_clean_deleted_ids', new Date().toISOString());
+    return { cleaned: 0 };
+  }
+
+  // Remove entries for posts that still exist in IDB
+  const posts = await getAllPosts();
+  const existingIds = new Set(posts.map(p => p.post_id));
+  const cleaned = deletedIds.filter(id => existingIds.has(id));
+  const remaining = deletedIds.filter(id => !existingIds.has(id));
+
+  // Also clear any entries that look like they came from the old
+  // addToPost supersede pattern (we can't distinguish these perfectly,
+  // but clearing the whole list is safe - the only cost is that a
+  // previously-deleted post might reappear from a stale blob, which
+  // the user can just delete again).
+  await setMetadata('deleted_post_ids', []);
+  await setMetadata('migration_clean_deleted_ids', new Date().toISOString());
+  return { cleaned: deletedIds.length };
 }
 
 // =========================================================================

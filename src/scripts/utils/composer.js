@@ -104,8 +104,6 @@ export async function createPost(body, tagsInput, user, options = {}) {
     hide_from_search: options.hideFromSearch ? 1 : 0,
   };
 
-  console.log(post);
-
   // Store to IndexedDB (Single Gateway)
   await BookStore.openDatabase(user.id).then(() => BookStore.storePost(post));
 
