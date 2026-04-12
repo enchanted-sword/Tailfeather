@@ -13,7 +13,7 @@
       },
       "outline": {
         "name": "Solid sticker outlines",
-        "tooltip": "Adds a contrasting solid outline to stickers",
+        "tooltip": "Adds a contrasting solid outline to stickers.",
         "type": "toggle",
         "enabled": true
       },
