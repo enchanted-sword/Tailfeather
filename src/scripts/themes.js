@@ -1,6 +1,5 @@
 import { dynamicStyle } from './utils/document.js';
 import { getOptions } from './utils/jsTools.js';
-import { noact } from './utils/noact.js';
 
 const { formatCss } = culori;
 
@@ -325,7 +324,7 @@ const run = ({ mode, hueshift, fgl, bgl, preset }) => {
       const fg = lumShift(Object.entries(initialFg), fgl);
       const bg = lumShift(Object.entries(initialBg), bgl);
       entries = [...fg, ...bg];
-    } else entries = Object.entries(getFgBg(document.body.dataset.theme));
+    } else entries = getFgBg(document.body.dataset.theme).flatMap(pl => Object.entries(pl));
     if (hueshift) entries = hueShift(entries, hueshift);
     style.textContent = `:is(:root,body[data-theme]) { ${cssStr(entries)} }`;
   } else style.textContent = '';
