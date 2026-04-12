@@ -5,15 +5,13 @@ import { userInfo } from './utils/user.js';
 import { debounce } from './utils/jsTools.js';
 
 const customClass = 'tailfeather-postPreview';
-const customAttribute = 'data-smartPostPreview';
+const customAttribute = 'data-tf-post-preview';
 
-const editorSelector = `#composer-mount:not([${customAttribute}])`;
-let bodySelector = '#composer-body';
+const bodySelector = '#composer-body';
 const tagInputSelector = '#composer-tags';
+const editorSelector = `#composer-mount:not([${customAttribute}]) ${bodySelector}`; // Otherwise it will trigger on the mount before the textarea is attached
 
-
-const previewWindow = (body, tagInput) => {
-  const text = body?.value || '';
+const previewWindow = tagInput => {
   const tags = tagInput?.value || '';
 
   return noact({
@@ -41,7 +39,6 @@ const previewWindow = (body, tagInput) => {
       {
         id: 'postPreview-body',
         className: 'post-body post-body-collapsible',
-        //children: getProcessor().renderToElement(text) BROKEN
       },
       {
         id: 'postPreview-tags',
@@ -57,26 +54,38 @@ const formatTags = tags => tags.split(',').filter(t => !!t).map(t => t.toLowerCa
 function updateBody({ target }) {
   requestAnimationFrame(() => {
     const text = target.value || '';
-    document.getElementById('postPreview-body').replaceChildren(getProcessor().renderToElement(text));
+    const preview = document.getElementById('postPreview-body');
+
+    let content = preview.querySelector(':scope > .shadow-wrapper');
+    if (content) preview.removeChild(content);
+
+    content = noact({ className: 'shadow-wrapper' });
+    preview.replaceChildren(content);
+    getProcessor().renderToElement(text, content);
+
+    if (content.matches(':empty')) content.append(noact({
+      tag: 'span',
+      style: 'font-style: italic',
+      children: 'Nothing to preview'
+    }));
   });
 }
 function updateTags({ target }) {
   document.getElementById('postPreview-tags').replaceChildren(...noact(formatTags(target.value)));
 }
 
-const addPreview = async editors => {
-  for (const editor of editors) {
-    editor.setAttribute(customAttribute, '');
+const addPreview = editorBodies => editorBodies.forEach(body => {
+  const editor = body.closest('#composer-mount');
+  editor.setAttribute(customAttribute, '');
 
-    const body = editor.querySelector(bodySelector);
-    body.addEventListener('input', debounce(updateBody, 300));
+  body.addEventListener('input', debounce(updateBody, 300));
 
-    const tagInput = editor.querySelector(tagInputSelector);
-    tagInput.addEventListener('input', updateTags);
+  const tagInput = editor.querySelector(tagInputSelector);
+  tagInput.addEventListener('input', updateTags);
 
-    editor.append(previewWindow(editor, body));
-  }
-};
+  editor.append(previewWindow(editor, body));
+  updateBody({ target: body });
+})
 
 export const main = async () => {
   mutationManager.start(editorSelector, addPreview);
