@@ -1,4 +1,11 @@
 :root {
+  /* Shared tokens */
+  --radius: 8px;
+  --radius-sm: 4px;
+  --max-width: 680px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Dark theme (default) - raven palette */
   --bg: #1a1d2e;
   --bg-surface: #1e2235;
   --bg-elevated: #2a2d4a;
@@ -9,16 +16,72 @@
   --accent: #6b7094;
   --accent-hover: #8388a8;
   --accent-dim: rgba(107, 112, 148, 0.15);
+  --accent-text: #fff;
   --border: #2e3148;
   --border-light: #252838;
   --error: #e74c3c;
   --success: #2ecc71;
   --warning: #f39c12;
-  --radius: .5rem;
-  --radius-sm: 4px;
-  --max-width: 680px;
-  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --border-radius-sm: 3px;
+}
+
+/* Light theme - warm parchment, WCAG AA on all backgrounds */
+body[data-theme="light"] {
+  --bg: #f5f3ef;
+  --bg-surface: #ffffff;
+  --bg-elevated: #eae7e1;
+  --bg-input: #ffffff;
+  --text: #2c2c2c;
+  --text-muted: #555555;
+  --text-dim: #646464;
+  --accent: #3d4470;
+  --accent-hover: #2e3460;
+  --accent-dim: rgba(61, 68, 112, 0.10);
+  --accent-text: #fff;
+  --border: #d5d0c8;
+  --border-light: #e5e1da;
+  --error: #a3301f;
+  --success: #157035;
+  --warning: #8a5a00;
+}
+
+/* High contrast dark - WCAG AAA (7:1+ on all text), raven indigo tint */
+body[data-theme="hc-dark"] {
+  --bg: #0c0e1a;
+  --bg-surface: #101220;
+  --bg-elevated: #181b2c;
+  --bg-input: #080a14;
+  --text: #f0f1f5;
+  --text-muted: #c4c7d4;
+  --text-dim: #a8acc4;
+  --accent: #a5abcf;
+  --accent-hover: #b5badb;
+  --accent-dim: rgba(165, 171, 207, 0.20);
+  --accent-text: #0c0e1a;
+  --border: #3a3d58;
+  --border-light: #2a2d44;
+  --error: #ff8c8c;
+  --success: #5bff8a;
+  --warning: #ffcc44;
+}
+
+/* High contrast light - WCAG AAA (7:1+ on all text), raven indigo tint */
+body[data-theme="hc-light"] {
+  --bg: #f2f1f6;
+  --bg-surface: #ffffff;
+  --bg-elevated: #e8e6ee;
+  --bg-input: #ffffff;
+  --text: #0e0f1a;
+  --text-muted: #2e3050;
+  --text-dim: #3e4060;
+  --accent: #2e3470;
+  --accent-hover: #222860;
+  --accent-dim: rgba(46, 52, 112, 0.10);
+  --accent-text: #fff;
+  --border: #8a8da8;
+  --border-light: #b0b2c4;
+  --error: #9a0018;
+  --success: #005522;
+  --warning: #654000;
 }
 
 html,
@@ -70,6 +133,10 @@ h2 {
     padding: .5rem;
   }
 
+  .composer {
+    margin: 0;
+  }
+
   .composer-wrapper {
     gap: .5rem;
   }
@@ -115,6 +182,8 @@ aside {
   height: 50%;
   display: flex;
   flex-direction: column;
+  margin: 0 .5rem;
+  border-radius: var(--radius-sm);
 }
 
 .composer-header {

@@ -234,6 +234,9 @@
       }
     }
   },
+  "recieveUpdates": [
+    "theme"
+  ],
   "js": true,
   "css": true
 }

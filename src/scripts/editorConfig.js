@@ -1,6 +1,7 @@
 import { noact } from './utils/noact.js';
 import { debounce } from './utils/jsTools.js';
 import { getProcessor } from './utils/markdown.js';
+import * as Themes from './themes.js';
 
 const uri = 'https://noterook.net';
 const DEFAULT_CONTENT = '<!-- Write the post your heart desires! -->';
@@ -16,8 +17,10 @@ function updateTags({ target }) {
 
 const transformStyle = cssText => `\n<style>\n${cssText}\n</style>`;
 
-const initEditor = ({ userInfo, defaultContent, defaultCss, theme, keybinding }) => {
+const initEditor = ({ userInfo, defaultContent, defaultCss, theme, nrTheme, keybinding }) => {
   console.debug('[EditorConfig] Ace loaded', userInfo, defaultContent, defaultCss, theme, keybinding);
+
+  document.body.dataset.theme = nrTheme;
 
   const editor = ace.edit('composer', {
     mode: 'ace/mode/markdown',
@@ -39,6 +42,8 @@ const initEditor = ({ userInfo, defaultContent, defaultCss, theme, keybinding })
     editor.resize();
     cssEditor.resize();
   };
+
+  Themes.main();
 
   const [_, additionToPost] = /\/?additionToPost=(.+)$/.exec(location.search) || []
 

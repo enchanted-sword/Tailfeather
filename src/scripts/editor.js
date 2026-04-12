@@ -9,12 +9,12 @@ const customClass = 'tailfeather-editor';
 const formSelector = '.inline-addition-form';
 const uri = browser.runtime.getURL('');
 
-let defaultContent, defaultCss, theme, keybinding;
+let defaultContent, defaultCss, theme, keybinding, nrTheme;
 
 const listener = event => {
   if (event.origin + '/' !== uri) return;
   if (event.data === 'frameInit') {
-    event.source.postMessage({ userInfo, defaultContent, defaultCss, theme, keybinding }, uri);
+    event.source.postMessage({ userInfo, defaultContent, defaultCss, theme, nrTheme, keybinding }, uri);
   }
   else if (typeof event.data === 'object' && 'composerContent' in event.data) {
     const { composerContent, hideFromSearch, tagString, additionToPost } = event.data;
@@ -108,10 +108,12 @@ const addFormControls = forms => forms.forEach(form => {
   }))
 });
 
-export const update = options => ({ defaultContent } = options);
+export const update = async options => ({ defaultContent, defaultCss, theme, keybinding } = options);
 
 export const main = async () => {
   ({ defaultContent, defaultCss, theme, keybinding } = await getOptions('editor'));
+  nrTheme = document.body.dataset.theme || '';
+
   window.addEventListener('message', listener);
   document.getElementById('nav-new-post').insertAdjacentElement('afterend', noact({
     id: 'tf-nav-new-post',
