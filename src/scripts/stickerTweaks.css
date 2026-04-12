@@ -1,0 +1,9 @@
+.sticker-emoji,
+.sticker-tray-btn {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif, "Noto Color Emoji";
+  filter: drop-shadow(white 1px 1px 0px) drop-shadow(white -1px -1px 0px) drop-shadow(white -1px 1px 0px) drop-shadow(white 1px -1px 0px);
+}
+
+:is([data-theme="light"], [data-theme="hc-light"], [tf-theme="preset-fruit"], [tf-theme="preset-lcc"]) :is(.sticker-emoji, .sticker-tray-btn) {
+  filter: drop-shadow(black 1px 1px 0px) drop-shadow(black -1px -1px 0px) drop-shadow(black -1px 1px 0px) drop-shadow(black 1px -1px 0px);
+}

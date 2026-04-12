@@ -1,0 +1,35 @@
+{
+  "name": "stickerTweaks",
+  "title": "Sticker Tweaks",
+  "description": "Tweaks to sticker display and appearance",
+  "preferences": {
+    "enabled": false,
+    "options": {
+      "colourEmojis": {
+        "name": "Fix unsupported emojis",
+        "tooltip": "Replaces the default system emoji set with Noto Color Emoji, fixing any emojis that your system does not natively support.",
+        "type": "toggle",
+        "enabled": true
+      },
+      "outline": {
+        "name": "Solid sticker outlines",
+        "tooltip": "Adds a contrasting solid outline to stickers",
+        "type": "toggle",
+        "enabled": true
+      },
+      "opacity": {
+        "name": "Make stickers translucent on hover",
+        "type": "toggle",
+        "enabled": false
+      },
+      "arranged": {
+        "name": "Neat stickers",
+        "tooltip": "Overrides default sticker placement entirely in favour of neatly arranging them along the bottom edge of each post.",
+        "type": "toggle",
+        "enabled": false
+      }
+    }
+  },
+  "js": true,
+  "css": true
+}
