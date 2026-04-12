@@ -116,6 +116,11 @@
     --accent: #2277f1;
     --accent-hover: #1965d3;
     --accent-dim: rgb(24, 119, 241, 0.15);
+    --font: "Fira Code VF", "Fira Code", Courier, monospace;
+  }
+
+  ::selection {
+    background-color: rgb(119 18 17);
   }
 
   .site-header {
