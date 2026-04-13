@@ -179,7 +179,6 @@ export class ShadowManager extends LightManager {
 }
 
 const bookHostId = 'book-shadow-host';
-let pfShadowManager;
 
 export const mutationManager = Object.freeze({ // Interface wrapper for both the light and shadow DOM observers
   listeners: new Map(),
@@ -196,7 +195,7 @@ export const mutationManager = Object.freeze({ // Interface wrapper for both the
    * @param {Function} func - Callback function for matching elements
    */
   start(selector, func) {
-    if (!navigationListeners.has(this._shadowTl)) addNavigationListener(this._shadowTl);
+    if (!navigationListeners.has(this._shadowTl)) addNavigationListener(this._shadowTl.bind(this));
     if (this.listeners.has(func)) this.listeners.delete(func);
     this.listeners.set(func, selector);
     this.lightManager.listeners.set(func, selector);
