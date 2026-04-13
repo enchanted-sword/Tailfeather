@@ -1,0 +1,10 @@
+{
+  "name": "gamepad",
+  "title": "Controller support",
+  "description": "Adds controller support to Noterook",
+  "preferences": {
+    "enabled": false
+  },
+  "js": true,
+  "css": true
+}
