@@ -10,9 +10,9 @@ const keyHandler = ({ ctrlKey, key, repeat }) => {
     if (key === 'k') scrollTarget = posts.sort((a, b) => a.getBoundingClientRect().y - b.getBoundingClientRect().y).find(post => Math.floor(post.getBoundingClientRect().y) > 80);
     else scrollTarget = posts.sort((a, b) => b.getBoundingClientRect().y - a.getBoundingClientRect().y).find(post => Math.ceil(post.getBoundingClientRect().y) < 80);
     if (typeof scrollTarget === 'undefined') {
-      if (key === 'j') window.scroll(0, 0);
+      if (key === 'j') window.scroll({ top: 0, left: 0, }); // Could use behavior: 'smooth' but the scroll animation feels slow when doing multi-column scrolling
       else return;
-    } else scrollTarget.scrollIntoView();
+    } else scrollTarget.scrollIntoView(); // { behavior: 'smooth' }
   } /* else if (['l'].includes(key) && !repeat) { // unused interaction, might circle back around to this if we can think of a good way to handle masonry
     const posts = Array.from(document.querySelectorAll(postSelector));
     if (posts.length === 0) return;
