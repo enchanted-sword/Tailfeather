@@ -1,7 +1,7 @@
 import { noact } from './utils/noact.js';
 import { postFunction } from './utils/mutation.js';
 import { getOptions } from './utils/jsTools.js';
-import { necromancePostObjects } from './utils/necromancy.js';
+import { necromancePostObjects, summonLivePost } from './utils/necromancy.js';
 import { svgIcon } from './utils/icons.js';
 import { getProcessor } from './utils/markdown.js';
 
@@ -47,9 +47,9 @@ const setupDisplay = (postBody, actionTarget, postMarkdown) => {
 
 const addButtons = async posts => {
   const postObjects = await necromancePostObjects(posts);
-  posts.forEach((post, i) => {
+  posts.forEach(async (post, i) => {
     post.setAttribute(customAttribute, showBoth ? 'showBoth' : 'switch');
-    if (!postObjects[i]) return;
+    if (!postObjects[i]) postObjects[i] = await summonLivePost(post.dataset.postId, post.dataset.author);
     const { body, additions } = postObjects[i];
     const chainAdditions = Array.from(post.querySelectorAll('.chain-addition-body'));
 

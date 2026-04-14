@@ -11,7 +11,10 @@ const modifyPostObjects = (bookAuthor, posts) => posts.map(post => {
 });
 
 const unwrapBlob = blob => {
-  if (blob.error) throw blob;
+  if (blob.error) {
+    console.warn(`[Solidifer] Failed to obtain blob`, blob);
+    return;
+  }
 
   const { author, posts } = blob.envelope;
   return modifyPostObjects(author, posts);
@@ -24,12 +27,9 @@ const userObject = ({ author, author_username, author_name, author_avatar, updat
   updated_at
 });
 
-const storeBlobData = async usernames => {
-  const unwrappedPosts = (await Promise.all(usernames.map(username => fetchBlobCached(username)
-    .then(unwrapBlob)
-    .catch(e => console.warn(`[Solidifer] Failed to obtain blob for user '${username}':`, e)))))
-    .flat()
-    .filter(p => typeof p !== 'undefined');
+const cacheBlobs = async blobs => {
+  const unwrappedPosts = blobs.flatMap(unwrapBlob).filter(p => typeof p !== 'undefined');
+  //console.log(blobs, unwrappedPosts)
 
   const shallowUsers = unwrappedPosts.map(userObject);
   const shallowUsersFiltered = new Map();
@@ -39,10 +39,16 @@ const storeBlobData = async usernames => {
     if (!shallowUsersFiltered.has(username) || Date.parse(user.updated_at) > Date.parse(shallowUsersFiltered.get(username).updated_at)) shallowUsersFiltered.set(username, user);
   });
 
-  updateData({
+  return updateData({
     postStore: unwrappedPosts,
     userStore: Array.from(shallowUsersFiltered.values())
   });
+}
+
+const storeBlobDataFromUsers = async usernames => {
+  const userBlobs = await Promise.all(usernames.map(username => fetchBlobCached(username)));
+
+  return cacheBlobs(userBlobs);
 };
 
 const thrallCache = new WeakMap();
@@ -72,13 +78,33 @@ export const necromancePostShallow = post => { // Shallow, non-IDB-cached data f
   return thrallCache.get(post);
 };
 
-export const necromancePosts = articles => {
+export const enthrallPosts = articles => {
   const shallowData = articles.map(necromancePostShallow);
 
-  storeBlobData(shallowData
+  storeBlobDataFromUsers(shallowData
     .flatMap(({ author, originalAuthor, chain }) => [author, originalAuthor, ...chain.map(({ author: chainAuthor }) => chainAuthor)])
     .filter(uniqueFn)
     .filter(val => !!val));
 };
 
-export const necromancePostObjects = async posts => await getIndexedPosts(posts.map(post => post.dataset.postId));
+/* Bit of a strange workflow here, but it's theoretically more resource-conscious
+ * All post => cached post object transformations are batched into one FDB transaction, and the main thread need only wait for that to occur before proceeding
+ * Any empty indices can then be summoned from the corresponding user's blob if not cached (network transaction),
+ * which should always take place in a non-awaited async function, and thus the whole operation doesn't have to wait for one missing post
+ * The full nuclear option would be to then filter post objects by initial cache state in every post function, start an async thread for batching as many missing indices as possible
+ * (avoiding re-fetching the same blob for multiple posts),
+ * and then synchronously handle the cached indices while that defers
+ * 
+ * Totally overkill for Tailfeather, but Noteraven (or NXT) would be heavenly with that kind of performance structure
+ */
+
+export const necromancePostObjects = async posts => getIndexedPosts(posts.map(post => post.dataset.postId));
+
+export const summonLivePost = async (postId, author) => fetchBlobCached(author).then(blob => {
+  if (blob.error) {// If we're doing a dedicated fetch and it fails, that merits an error as opposed to a warning for just cache storage
+    console.error(`[Solidifer] Failed to obtain blob`, blob);
+    return;
+  }
+  cacheBlobs([blob]);
+  return modifyPostObjects(author, blob.envelope.posts).find(({ post_id }) => post_id === postId);
+})
