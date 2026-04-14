@@ -1,5 +1,5 @@
 import { getUsersShallow } from './utils/user.js';
-import { getOptions } from './utils/jsTools.js';
+import { getOptions, uniqueFn } from './utils/jsTools.js';
 import { postFunction } from './utils/mutation.js';
 import { necromancePostShallow } from './utils/necromancy.js';
 import { noact } from './utils/noact.js';
@@ -11,7 +11,7 @@ let staplerAvatars, floatingAvatars, additionAvatars, square;
 
 const avatarise = async posts => {
   const shallowData = posts.map(necromancePostShallow);
-  const postUsers = shallowData.flatMap(({ author, originalAuthor, chain }) => [author, originalAuthor, ...chain.map(({ author }) => author)]).filter(u => !!u);
+  const postUsers = shallowData.flatMap(({ author, originalAuthor, chain }) => [author, originalAuthor, ...chain.map(({ author }) => author)]).filter(u => !!u).filter(uniqueFn);
   const avatarMap = new Map();
   await getUsersShallow(postUsers).then(users => users.filter(u => !!u).forEach(({ username, avatar_url }) => avatarMap.set(username, avatar_url)));
 
