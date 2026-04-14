@@ -106,5 +106,7 @@ export const summonLivePost = async (postId, author) => fetchBlobCached(author).
     return;
   }
   cacheBlobs([blob]);
-  return modifyPostObjects(author, blob.envelope.posts).find(({ post_id }) => post_id === postId);
+  const post = modifyPostObjects(author, blob.envelope.posts).find(({ post_id }) => post_id === postId);
+  if (post) return post;
+  console.warn(`[Solidifer] Blob not yet updated for post ${postId} from ${author}`);
 })

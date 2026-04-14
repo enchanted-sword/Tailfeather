@@ -50,6 +50,7 @@ const addButtons = async posts => {
   posts.forEach(async (post, i) => {
     post.setAttribute(customAttribute, showBoth ? 'showBoth' : 'switch');
     if (!postObjects[i]) postObjects[i] = await summonLivePost(post.dataset.postId, post.dataset.author);
+    if (!postObjects[i]) return; // If blob is outdated
     const { body, additions } = postObjects[i];
     const chainAdditions = Array.from(post.querySelectorAll('.chain-addition-body'));
 
