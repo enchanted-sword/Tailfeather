@@ -7,7 +7,7 @@
     "posttest": "eslint ./",
     "build": "web-ext build",
     "start:dev": "web-ext run --firefox=deved -t=firefox-desktop",
-    "start:adb": "web-ext run -t=firefox-android --adb-device=[] --firefox-apk=org.mozilla.fenix"
+    "start:adb": "web-ext run -t=firefox-android --adb-device=001691569000791 --firefox-apk=org.mozilla.fenix --adb-remove-old-artifacts"
   },
   "author": "Cassiopeia Lunarii",
   "license": "GPL-3.0-only",

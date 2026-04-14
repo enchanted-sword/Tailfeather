@@ -154,4 +154,4 @@ export const numFormat = num => {
   return str;
 }
 
-export const hasMouse = () => matchMedia('(pointer:fine)').matches;
+export const hasMouse = () => matchMedia('(pointer:fine)').matches; // (any-hover:hover) might be of more use in some cases

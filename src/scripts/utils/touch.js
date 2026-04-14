@@ -1,20 +1,29 @@
 const longPressDelay = 500;
 
-export const onLongPress = (elem, func) => {
+function cancelContextMenu(e) {
+  e.preventDefault();
+}
+
+export function onLongPress(elem, func, matchFunc) {
   if (elem.dataset.longpressEvent) return;
   let timeoutId;
 
   elem.dataset.longpressEvent = true;
 
   function onTouchStart(e) {
+    if (matchFunc && !matchFunc(e.target)) return;
+    e.target.style.userSelect = 'none';
+    e.target.addEventListener('contextmenu', cancelContextMenu);
     timeoutId = setTimeout(() => {
       timeoutId = null;
       e.stopPropagation();
       func(e);
     }, longPressDelay);
   }
-  function onTouchCancel() {
-    timeoutId && clearTimeout(timeoutId)
+
+  function onTouchCancel({ target }) {
+    target.removeEventListener('contextmenu', cancelContextMenu);
+    timeoutId && clearTimeout(timeoutId);
   }
 
   elem.addEventListener('touchstart', onTouchStart);

@@ -14,22 +14,16 @@ function _matchLink(el) {
   return match ? { link, username: decodeURIComponent(match[1]) } : null;
 }
 
-function cancelContextMenu(e) { e.preventDefault() }
-
 function touchOut({ target }) {
-  target.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+  document.querySelectorAll('.user-hovercard.hovercard-visible').forEach(s => s.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true })));
 }
 
 function triggerHoverCard({ target }) {
-  if (_matchLink(target)) {
-    target.addEventListener('contextmenu', cancelContextMenu);
-    target.style.userSelect = 'none';
-    target.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
-  }
+  target.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
 }
 
 export const main = async () => {
-  off = onLongPress(document.documentElement, triggerHoverCard);
+  off = onLongPress(document.documentElement, triggerHoverCard, _matchLink);
   document.addEventListener('touchstart', touchOut);
 };
 
