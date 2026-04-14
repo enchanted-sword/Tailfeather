@@ -1,7 +1,7 @@
 {
   "name": "avatars",
-  "title": "Show More Avatars",
-  "description": "Allows showing more avatars on posts",
+  "title": "Avatar Tweaks",
+  "description": "Adds more customisation for where and how avatars are displayed",
   "preferences": {
     "enabled": false,
     "options": {
@@ -21,6 +21,12 @@
         "value": false,
         "name": "Floating author avatars",
         "tooltip": "Makes post author avatars larger, displayed to the left of posts, and scrolled with the timeline. Will display the stapler if the post is a staple.",
+        "type": "toggle"
+      },
+      "square": {
+        "value": false,
+        "name": "Square avatars",
+        "tooltip": "Makes avatars (slightly rounded) squares.",
         "type": "toggle"
       }
     }

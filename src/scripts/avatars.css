@@ -16,6 +16,7 @@
   }
 
   .tailfeather-avatars-scrollContainer {
+    user-select: none;
     position: absolute;
     left: -5.25rem;
     top: 0;
@@ -25,7 +26,6 @@
   .tailfeather-avatars-scrollContainer .post-author-avatar {
     width: 4rem;
     height: 4rem;
-    border-radius: var(--radius);
     position: sticky;
     top: 4.5rem;
   }
@@ -39,4 +39,12 @@
   .post-card:has(.tailfeather-avatars-scrollContainer):not(:has(.post-staple-attribution, .chain-stapled-badge)) .post-author .post-author-avatar {
     display: none;
   }
+}
+
+[data-tf-avatars="square"] :is(.tf-staple-avatar, .post-author-avatar, .tf-chain-author-avatar) {
+  border-radius: var(--radius-sm);
+}
+
+[data-tf-avatars="square"] :is(.tailfeather-avatars-scrollContainer .post-author-avatar) {
+  border-radius: var(--radius);
 }

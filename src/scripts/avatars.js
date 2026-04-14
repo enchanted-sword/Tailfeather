@@ -7,7 +7,7 @@ import { noact } from './utils/noact.js';
 const customClass = 'tailfeather-avatars';
 const customAttribute = 'data-tf-avatars';
 
-let staplerAvatars, floatingAvatars, additionAvatars;
+let staplerAvatars, floatingAvatars, additionAvatars, square;
 
 const avatarise = async posts => {
   const shallowData = posts.map(necromancePostShallow);
@@ -22,10 +22,10 @@ const avatarise = async posts => {
     const _additionAvatars = additionAuthors.map(aa => avatarMap.get(aa));
 
     if (shallowData[i].isTransparentStaple && staplerAvatars) post.querySelector('.post-staple-attribution')?.prepend(noact({
-      className: `${customClass} post-author-avatar`,
+      className: `${customClass} tf-staple-avatar`, // tf-staple-avatar is not a Tailfeather class funnily enough
       src: authorAvatar,
-      height: 32,
-      width: 32,
+      height: 20,
+      width: 20,
       loading: 'lazy'
     }));
 
@@ -48,23 +48,23 @@ const avatarise = async posts => {
 
     if (additionAuthors.length && additionAvatars) post.querySelectorAll('.chain-addition-header').forEach((header, i) => {
       if (typeof additionAuthors[i] !== 'undefined') header.prepend(noact(_additionAvatars[i] ? {
-        className: `${customClass} post-author-avatar`,
+        className: `${customClass} tf-chain-author-avatar`,
         src: _additionAvatars[i],
         height: 32,
         width: 32,
         loading: 'lazy'
       } : {
-        className: `${customClass} post-author-avatar post-avatar-placeholder`,
+        className: `${customClass} tf-chain-author-avatar post-avatar-placeholder`,
         children: additionAuthors[i][0]
       }));
     });
 
-    post.setAttribute(customAttribute, '');
+    post.setAttribute(customAttribute, square ? 'square' : '');
   });
 };
 
 const run = options => {
-  ({ staplerAvatars, floatingAvatars, additionAvatars } = options);
+  ({ staplerAvatars, floatingAvatars, additionAvatars, square } = options);
 
   document.querySelectorAll(`.${customClass}`).forEach(s => s.remove());
   document.querySelectorAll(`[${customAttribute}]`).forEach(s => s.removeAttribute(customAttribute));
