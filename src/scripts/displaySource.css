@@ -45,23 +45,15 @@ div.tailfeather-displaySource {
 }
 
 .post-card:has(.post-actions .tailfeather-displaySource[data-active="true"]) .post-body~div.tailfeather-displaySource,
+.post-card:has(.post-author .tailfeather-displaySource[data-active="true"]) .post-body~div.tailfeather-displaySource,
 .chain-addition:has(.chain-addition-header .tailfeather-displaySource[data-active="true"]) .chain-addition-body~div.tailfeather-displaySource {
   display: flex;
 }
 
 .post-card:has(.post-actions .tailfeather-displaySource[data-active="true"]) :is(.post-body[data-tf-display-source="switch"], .post-body[data-tf-display-source="switch"] ~ .post-read-more),
+.post-card:has(.post-author .tailfeather-displaySource[data-active="true"]) :is(.post-body[data-tf-display-source="switch"], .post-body[data-tf-display-source="switch"] ~ .post-read-more),
 .chain-addition:has(.chain-addition-header .tailfeather-displaySource[data-active="true"]) :is(.chain-addition-body[data-tf-display-source="switch"], .chain-addition-body[data-tf-display-source="switch"] ~ .post-read-more) {
   display: none;
-}
-
-.co-thread-header:has([data-active="true"]) {
-  ~[data-tf-display-source="switch"] {
-    display: none;
-  }
-
-  ~div.tailfeather-displaySource {
-    display: flex;
-  }
 }
 
 [data-theme="abyss"] {

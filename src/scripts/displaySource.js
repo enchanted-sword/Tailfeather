@@ -35,15 +35,13 @@ const newSourceDisplay = body => noact({
   }
 });
 
-const setupDisplay = ([postBody, bodyContent]) => {
-  let actionTarget;
+const setupDisplay = (postBody, actionTarget, postMarkdown) => {
   try {
     postBody.setAttribute(customAttribute, showBoth ? 'showBoth' : 'switch');
-    actionTarget = postBody.parentElement.querySelector('.post-author:has(~.chain-additions)') || postBody.parentElement.querySelector('.post-actions') || postBody.parentElement.querySelector('.chain-addition-header');
-    actionTarget.querySelector('.post-timestamp,.post-action-report,.chain-addition-time,.post-action-delete,[data-action="sticker"]').insertAdjacentElement('beforebegin', sourceButton());
-    postBody.parentElement.insertBefore(newSourceDisplay(bodyContent), postBody.nextElementSibling); // why isn't insertAfter a thing?
+    actionTarget.insertAdjacentElement('beforebegin', sourceButton());
+    postBody.parentElement.insertBefore(newSourceDisplay(postMarkdown), postBody.nextElementSibling); // why isn't insertAfter a thing?
   } catch (e) {
-    console.warn('[DisplaySource] Failed to place button or source display:', postBody, actionTarget, bodyContent, e);
+    console.warn('[DisplaySource] Failed to place button or source display:', postBody, actionTarget, postMarkdown, e);
   }
 };
 
@@ -55,13 +53,18 @@ const addButtons = async posts => {
     const { body, additions } = postObjects[i];
     const chainAdditions = Array.from(post.querySelectorAll('.chain-addition-body'));
 
-    [[post.querySelector('.post-body'), body], ...additions.map(({ body: a }, j) => [chainAdditions[j], a])].forEach(setupDisplay)
-
-    /* post.querySelector('.post-action-report').insertAdjacentElement('beforebegin', sourceButton());
-
-    post.append(newSourceDisplay(body)); */
-  })
-}
+    if (additions.length) { // all source displays are inserted into headers for posts with additions
+      setupDisplay(post.querySelector('.post-body'), post.querySelector('.post-author .post-timestamp'), body);
+      additions.forEach(({ body: additionBody }, j) => {
+        // apparently some necromanced posts can get stored in such a way where the physical post has no additions but the indexed record *does*
+        // hence it's worth a check
+        if (chainAdditions[j]) setupDisplay(chainAdditions[j], chainAdditions[j].parentElement.querySelector('.chain-addition-header .chain-addition-time'), additionBody);
+      });
+    } else { // for standalone posts, the toggle is placed in the footer
+      setupDisplay(post.querySelector('.post-body'), post.querySelector('.post-actions :is(.post-action-report,.post-action-delete,[data-action="sticker"])'), body); // a few fallbacks that handle different routes
+    }
+  });
+};
 
 export const main = async () => {
   ({ theme, showBoth } = await getOptions('displaySource'));
