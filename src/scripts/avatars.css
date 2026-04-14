@@ -41,6 +41,13 @@
   }
 }
 
+.tf-chain-author-avatar {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 [data-tf-avatars="square"] :is(.tf-staple-avatar, .post-author-avatar, .tf-chain-author-avatar) {
   border-radius: var(--radius-sm);
 }
