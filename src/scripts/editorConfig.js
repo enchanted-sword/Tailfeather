@@ -1,6 +1,7 @@
 import { noact } from './utils/noact.js';
 import { debounce } from './utils/jsTools.js';
 import { getProcessor } from './utils/markdown.js';
+import { formatTags } from './utils/elements.js';
 import * as Themes from './themes.js';
 
 const uri = 'https://noterook.net';
@@ -10,9 +11,8 @@ const DEFAULT_PREVIEW = '<!-- Start writing a post to have it preview here! -->'
 const MAX_LENGTH = 100000;
 
 const handleTheme = theme => theme === 'abyss' ? ({ cssClass: 'abyss-theme', isDark: true }) : `ace/theme/${theme}`;
-const formatTags = tags => tags.split(',').filter(t => !!t).map(t => t.toLowerCase().replace('/#/g', '')).map(t => ({ className: 'post-tag', children: `#${t}` }));
-function updateTags({ target }) {
-  document.getElementById('postPreview-tags').replaceChildren(...noact(formatTags(target.value)));
+function updateTags({ target: { value } }) {
+  document.getElementById('postPreview-tags').replaceChildren(...formatTags(value));
 }
 
 const transformStyle = cssText => `\n<style>\n${cssText}\n</style>`;

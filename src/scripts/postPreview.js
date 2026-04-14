@@ -3,6 +3,7 @@ import { noact } from './utils/noact.js';
 import { getProcessor } from './utils/markdown.js';
 import { userInfo } from './utils/user.js';
 import { debounce } from './utils/jsTools.js';
+import { formatTags } from './utils/elements.js';
 
 const customClass = 'tailfeather-postPreview';
 const customAttribute = 'data-tf-post-preview';
@@ -49,8 +50,6 @@ const previewWindow = tagInput => {
   });
 };
 
-const formatTags = tags => tags.split(',').filter(t => !!t).map(t => t.toLowerCase().replace('/#/g', '')).map(t => ({ className: 'post-tag', href: `/search/?q=${t}`, children: `#${t}` }));
-
 function updateBody({ target }) {
   requestAnimationFrame(() => {
     const text = target.value || '';
@@ -70,8 +69,8 @@ function updateBody({ target }) {
     }));
   });
 }
-function updateTags({ target }) {
-  document.getElementById('postPreview-tags').replaceChildren(...noact(formatTags(target.value)));
+function updateTags({ target: { value } }) {
+  document.getElementById('postPreview-tags').replaceChildren(...formatTags(value));
 }
 
 const addPreview = editorBodies => editorBodies.forEach(body => {
