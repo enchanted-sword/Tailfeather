@@ -1,4 +1,4 @@
-const DB_VERSION = 3; // database version
+const DB_VERSION = 4; // database version
 const EXPIRY_TIME = 86400000; // period after which data is considered expired
 export const txOptions = { durability: 'relaxed' }; // more performant
 
@@ -36,9 +36,10 @@ export const openDatabase = async () => new Promise((resolve, reject) => {
     conditionalCreateStore(db, 'postStore', { keyPath: 'post_id' });
     conditionalCreateStore(db, 'userStore', { keyPath: 'username' });
     conditionalCreateStore(db, 'userBookStore', { keyPath: 'username' });
+    conditionalCreateStore(db, 'searchStore', { keyPath: 'post_id' });
 
     tx.oncomplete = () => { // upgrade transaction must finish before we can open a transaction to access objectStores and open indices
-      const indextx = db.transaction(['postStore', 'userStore']);
+      const indextx = db.transaction(['postStore', 'userStore', 'userBookStore', 'searchStore']);
       const postStore = indextx.objectStore('postStore');
       conditionalCreateIndex(postStore, 'post_id', 'post_id', { unique: true });
       conditionalCreateIndex(postStore, 'created_at', 'created_at', { unique: false });
@@ -53,6 +54,11 @@ export const openDatabase = async () => new Promise((resolve, reject) => {
       conditionalCreateIndex(userBookStore, 'username', 'username', { unique: true });
       conditionalCreateIndex(userBookStore, 'display_name', 'display_name', { unique: false });
       conditionalCreateIndex(userBookStore, 'stored_at', 'stored_at', { unique: false });
+
+      const searchStore = indextx.objectStore('searchStore');
+      conditionalCreateIndex(searchStore, 'post_id', 'post_id', { unique: true });
+      conditionalCreateIndex(searchStore, 'quick_info', 'quick_info', { unique: false });
+      conditionalCreateIndex(searchStore, 'storedAt', 'storedAt', { unique: false });
 
       console.info(`[FDB] Updated database from v${event.oldVersion} to v${event.newVersion}`)
     };

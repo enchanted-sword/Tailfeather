@@ -1,0 +1,51 @@
+{
+  "name": "postFinder",
+  "title": "Post Finder",
+  "description": "Find posts you've seen before!",
+  "category": [
+    "posts",
+    "utility"
+  ],
+  "preferences": {
+    "enabled": false,
+    "options": {
+      "splitMode": {
+        "name": "Query split mode",
+        "value": "comma",
+        "type": "select",
+        "options": [
+          {
+            "value": "comma",
+            "name": "Comma"
+          },
+          {
+            "value": "space",
+            "name": "Space (replace spaces in queries with \"_\")"
+          }
+        ]
+      },
+      "maxResults": {
+        "title": "Results per page",
+        "tooltip": "Larger numbers will take longer to find/render",
+        "type": "range",
+        "min": 50,
+        "max": 1000,
+        "value": 200,
+        "step": 10,
+        "unit": "",
+        "list": [
+          {
+            "value": 50,
+            "label": "50"
+          },
+          {
+            "value": 1000,
+            "label": "1000"
+          }
+        ]
+      }
+    }
+  },
+  "js": true,
+  "css": true
+}

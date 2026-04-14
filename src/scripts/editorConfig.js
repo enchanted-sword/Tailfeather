@@ -86,7 +86,7 @@ const initEditor = ({ userInfo, defaultContent, defaultCss, theme, nrTheme, keyb
     ]
   }));
 
-  const getFullText = () => editor.session.getValue() + transformStyle(cssEditor.session.getValue());
+  const getFullText = () => transformStyle(cssEditor.session.getValue()) + editor.session.getValue();
 
   const preview = document.getElementById('postPreview-body');
   const charCount = document.getElementById('composer-char-count');

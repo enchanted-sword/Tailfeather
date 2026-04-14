@@ -155,7 +155,7 @@ export async function fetchBlobCached(username) {
   // (fetchBlob reads X-Blob-Version from response and caches automatically)
   const result = await _fetchBlob(username);
   if (result.envelope) _lastVerified.set(username, Date.now());
-  return { ...result, cached: false, method: 'full-blob' };
+  return { ...result, cached: false, method: 'full-blob', username };
 }
 
 /**
