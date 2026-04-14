@@ -1,7 +1,3 @@
-import { onLongPress } from './utils/touch.js';
-
-let off = () => null;
-
 function _matchLink(el) {
   if (!el || el.nodeType !== 1) return null;
   const link = el.closest('a[href^="/book/"]');
@@ -14,20 +10,30 @@ function _matchLink(el) {
   return match ? { link, username: decodeURIComponent(match[1]) } : null;
 }
 
-function touchOut({ target }) {
-  document.querySelectorAll('.user-hovercard.hovercard-visible').forEach(s => s.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true })));
+function _cancelContextMenu(e) {
+  e.preventDefault();
 }
 
-function triggerHoverCard({ target }) {
-  target.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+function _onTouchEnd({ target }) {
+  target.removeEventListener('contextmenu', _cancelContextMenu);
+  target.removeEventListener('touchend', _onTouchEnd);
+}
+
+function _onTouchStart({ target }) {
+  document.querySelectorAll('.user-hovercard.hovercard-visible').forEach(s => {
+    s.classList.remove('hovercard-visible');  // Noterook's current _dismiss() implementation relies on always knowing what the active hovercard is, which breaks if there are multiple
+    setTimeout(() => s.remove(), 150);        // Which this fixes by just manually closing all open cards on touchstart before potentially opening a new one
+  });
+  if (!_matchLink(target)) return;
+  target.style.userSelect = 'none';
+  target.addEventListener('touchend', _onTouchEnd);
+  setTimeout(() => target.addEventListener('contextmenu', _cancelContextMenu), 100); // buffer so that some device implementations don't then trigger on touchend
 }
 
 export const main = async () => {
-  off = onLongPress(document.documentElement, triggerHoverCard, _matchLink);
-  document.addEventListener('touchstart', touchOut);
+  document.addEventListener('touchstart', _onTouchStart);
 };
 
 export const clean = async () => {
-  off();
-  document.removeEventListener('touchstart', touchOut);
+  document.removeEventListener('touchstart', _onTouchStart);
 };
