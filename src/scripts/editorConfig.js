@@ -1,5 +1,5 @@
 import { noact } from './utils/noact.js';
-import { debounce } from './utils/jsTools.js';
+import { debounce, getStorage } from './utils/jsTools.js';
 import { getProcessor } from './utils/markdown.js';
 import { formatTags } from './utils/elements.js';
 import * as Themes from './themes.js';
@@ -43,7 +43,7 @@ const initEditor = ({ userInfo, defaultContent, defaultCss, theme, nrTheme, keyb
     cssEditor.resize();
   };
 
-  Themes.main();
+  getStorage(['preferences']).then(({ preferences }) => preferences.themes?.enabled ? Themes.main() : null);
 
   const [_, additionToPost] = /\/?additionToPost=(.+)$/.exec(location.search) || []
 
