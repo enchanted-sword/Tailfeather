@@ -35,4 +35,4 @@ export function onLongPress(elem, func, matchFunc) {
     elem.removeEventListener('touchend', onTouchCancel);
     elem.removeEventListener('touchmove', onTouchCancel);
   };
-};
+}

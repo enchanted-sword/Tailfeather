@@ -7,7 +7,7 @@ function clampDropdown({ target }) {
   if (leftEdge < 0) {
     dropdown.style.right = leftEdge - 8 + 'px';
   } else dropdown.style.right = 0;
-};
+}
 
 export const main = async () => document.getElementById('notif-bell').addEventListener('click', clampDropdown);
 export const clean = async () => document.getElementById('notif-bell')?.removeEventListener('click', clampDropdown);

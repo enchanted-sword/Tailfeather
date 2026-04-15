@@ -319,7 +319,7 @@ const renderResult = post => {
               children: [
                 {
                   children: [
-                    !!resolveAvatar(author, author_avatar) ?
+                    resolveAvatar(author, author_avatar) ?
                       {
                         className: 'post-author-avatar',
                         src: resolveAvatar(author, author_avatar),

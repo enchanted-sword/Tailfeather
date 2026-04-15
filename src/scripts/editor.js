@@ -77,7 +77,7 @@ function openEditorIFrame(qualifier = '') {
     }
   }));
   window.addEventListener('keydown', closeEditor);
-};
+}
 
 const addChainAdditionFormControls = forms => forms.forEach(form => {
   const postId = form.querySelector('[data-post-id]')?.dataset.postId;
