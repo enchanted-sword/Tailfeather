@@ -1,3 +1,45 @@
+# v1.2.0
+
+## General
+
+- Fixed MutationManager `this` inheritance
+- Better post index & avatar handling/caching
+- Better blob handling
+- Synchronised tag parsing/rendering
+- Removed several features now implemented into the site directly
+
+## Avatar Tweaks
+
+- Removed stapler & addition avatar options (added by the site)
+- Added square avatars option
+
+## Source display
+
+- Fixed source display for root posts
+- Very new posts may still fail to have a source display assigned if their blob has not yet updated
+
+## Custom Icons
+
+- Inbox icon now matches custom navigation icon size
+
+## Sticker Tweaks
+
+- Replaced Neat stickers option with a general visibility option
+  - Stickers can now be hidden entirely
+
+## Custom Editor
+
+- Fixed outdated database version
+- Added support for answering asks
+
+## New feature! Clamp Notification Dropdown
+
+- Clamps the notification dropdown to the edges of the window on narrow displays
+
+## New feature! Post Finder
+
+- Allows searching through your cached posts, complete with keywords and strict matching mode
+
 # v1.1.0
 
 ## General

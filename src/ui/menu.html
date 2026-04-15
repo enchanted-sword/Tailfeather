@@ -147,115 +147,69 @@
             Report an issue
           </a>
           <div class="ui-aboutLink ui-changelog">
-            <h1 style="text-align: center">v1.1.0</h1>
+            <h1 style="text-align: center">v1.2.0</h1>
             <h2 style="text-align: center">General</h2>
             <ul>
-              <li>Updated site utilities</li>
-              <li>Improved mutation management</li>
-              <li>Improved cache update handling</li>
-              <li>Removed Feed Tweaks (obsoleted)</li>
+              <li>Fixed MutationManager <code>this</code> inheritance</li>
+              <li>Better post index &amp; avatar handling/caching</li>
+              <li>Better blob handling</li>
+              <li>Synchronised tag parsing/rendering</li>
               <li>
-                Removed App Nav (largely a cohost-centric module, I don&#39;t
-                know why we ported it)
+                Removed several features now implemented into the site directly
               </li>
-              <li>A ton of miscellaneous CSS tweaks to various features</li>
-              <li>
-                Fixed some features potentially causing chain headers to
-                overflow horizontally
-              </li>
-              <li>Added <span class="ui-new">the dragon</span></li>
             </ul>
-            <h2 style="text-align: center">
-              <span class="ui-new">New feature!</span> Compact Navigation Header
-            </h2>
+            <h2 style="text-align: center">Avatar Tweaks</h2>
             <ul>
               <li>
-                Makes the navigation header more compact on narrow screens
+                Removed stapler &amp; addition avatar options (added by the
+                site)
               </li>
-              <li>Pairs well with Custom Icons</li>
+              <li>Added square avatars option</li>
+            </ul>
+            <h2 style="text-align: center">Source display</h2>
+            <ul>
+              <li>Fixed source display for root posts</li>
+              <li>
+                Very new posts may still fail to have a source display assigned
+                if their blob has not yet updated
+              </li>
             </ul>
             <h2 style="text-align: center">Custom Icons</h2>
             <ul>
-              <li>Added icon for /followers/</li>
-              <li>Added icon for logout action</li>
-              <li>Made notification bell icon fit the style of custom icons</li>
+              <li>Inbox icon now matches custom navigation icon size</li>
             </ul>
-            <h2 style="text-align: center">Custom Themes</h2>
+            <h2 style="text-align: center">Sticker Tweaks</h2>
             <ul>
-              <li>Various theme colour fixes</li>
+              <li>
+                Replaced Neat stickers option with a general visibility option
+                <ul>
+                  <li>Stickers can now be hidden entirely</li>
+                </ul>
+              </li>
+            </ul>
+            <h2 style="text-align: center">Custom Editor</h2>
+            <ul>
+              <li>Fixed outdated database version</li>
+              <li>Added support for answering asks</li>
             </ul>
             <h2 style="text-align: center">
-              <span class="ui-new">New feature!</span> Keyboard Shortcuts
+              <span class="ui-new">New feature!</span> Clamp Notification
+              Dropdown
             </h2>
             <ul>
               <li>
-                Adds tumblr-like keyboard shortcuts for navigation
-                <ul>
-                  <li><code>j</code> - Scroll upwards one post</li>
-                  <li><code>k</code> - Scroll downwards one post</li>
-                </ul>
+                Clamps the notification dropdown to the edges of the window on
+                narrow displays
               </li>
             </ul>
             <h2 style="text-align: center">
-              <span class="ui-new">New feature!</span> Mutual Icons
-            </h2>
-            <ul>
-              <li>Shows icons next to your mutuals&#39; usernames</li>
-            </ul>
-            <h2 style="text-align: center">Post Editor</h2>
-            <ul>
-              <li>
-                Now correctly uses the selected Noterook or Tailfeather theme
-              </li>
-              <li>
-                Can now be used to compose additions via a new button in the
-                inline addition form
-              </li>
-            </ul>
-            <h2 style="text-align: center">
-              <span class="ui-new">New feature!</span> Post Previews
-            </h2>
-            <ul>
-              <li>Live post previews for the default post composer</li>
-            </ul>
-            <h2 style="text-align: center">
-              <span class="ui-new">New feature!</span> Sticker Tweaks
+              <span class="ui-new">New feature!</span> Post Finder
             </h2>
             <ul>
               <li>
-                Fix unsupported emojis:
-                <ul>
-                  <li>
-                    Replaces the default system emoji set with Noto Color Emoji,
-                    fixing any emojis that your system does not natively support
-                  </li>
-                </ul>
+                Allows searching through your cached posts, complete with
+                keywords and strict matching mode
               </li>
-              <li>
-                Solid sticker outlines:
-                <ul>
-                  <li>Adds a contrasting solid outline to stickers.</li>
-                </ul>
-              </li>
-              <li>
-                Make stickers translucent on hover:
-                <ul>
-                  <li>(50% opacity)</li>
-                </ul>
-              </li>
-              <li>
-                Neat stickers:
-                <ul>
-                  <li>
-                    Overrides default sticker placement entirely in favour of
-                    neatly arranging them along the bottom edge of each post.
-                  </li>
-                </ul>
-              </li>
-            </ul>
-            <h1 style="text-align: center">v1.0.0</h1>
-            <ul>
-              <li>Initial release</li>
             </ul>
           </div>
           <!-- <div class="ui-aboutLink">
