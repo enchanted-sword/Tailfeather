@@ -176,7 +176,7 @@ const keywordSearch = async (keywords, start = 0) => {
   }
 
   cursorStatus.disableAutoSync();
-  console.log(`Searched ${cursorStatus.index - start} indices in ${performance.now() - t0}ms`);
+  console.debug(`[PostFinder] Searched ${cursorStatus.index - start} indices in ${performance.now() - t0}ms`);
 
   return hits.map(unstringifyHits).sort((a, b) => (new Date(b.quick_info.updated_at)) - (new Date(a.quick_info.updated_at)));
 };
@@ -264,7 +264,7 @@ const indexPosts = async (force = false) => {
   const dt = performance.now() - t0;
 
   indexProgress.disableAutoSync();
-  console.log(`Indexed ${i} posts in ${dt}ms\nStore seek speed: ${((indexProgress.progress * 1000) / dt).toFixed(3)} keys/s`);
+  console.debug(`[PostFinder] Indexed ${i} posts in ${dt}ms\nStore seek speed: ${((indexProgress.progress * 1000) / dt).toFixed(3)} keys/s`);
 
   tx.oncomplete = () => cursorStatus.remaining = searchableIndices.size;
 
@@ -301,7 +301,6 @@ const newResultCounter = () => {
 const renderResult = (post, hit) => {
   try {
     const d = new Date(post.created_at);
-    console.log(post, getProcessor().renderStrict(post.additions.length ? post.additions.slice(-1)?.body : post.body))
 
     return noact({
       className: 'postFinder-result',
