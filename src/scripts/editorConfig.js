@@ -22,6 +22,8 @@ const initEditor = ({ userInfo, defaultContent, defaultCss, theme, nrTheme, keyb
 
   document.body.dataset.theme = nrTheme;
 
+  const submitButton = document.getElementById('composer-submit');
+
   const editor = ace.edit('composer', {
     mode: 'ace/mode/markdown',
     value: defaultContent || DEFAULT_CONTENT,
@@ -45,9 +47,10 @@ const initEditor = ({ userInfo, defaultContent, defaultCss, theme, nrTheme, keyb
 
   getStorage(['preferences']).then(({ preferences }) => preferences.themes?.enabled ? Themes.main() : null);
 
-  const [_, additionToPost] = /\/?additionToPost=(.+)$/.exec(location.search) || []
+  const [_, qualifier, qualifierId] = /\?(.+)=(.+)$/.exec(location.search) || [];
 
-  if (additionToPost) document.getElementById('composer-submit').textContent = 'Add';
+  if (qualifier === 'additionToPost') submitButton.textContent = 'Add';
+  else if (qualifier === 'answerToAsk') submitButton.textContent = 'Add';
 
   document.getElementById('tf-preview').append(noact({
     className: 'post-card',
@@ -93,11 +96,11 @@ const initEditor = ({ userInfo, defaultContent, defaultCss, theme, nrTheme, keyb
 
   if (defaultContent) updateBody();
 
-  document.getElementById('composer-submit').addEventListener('click', function () {
+  submitButton.addEventListener('click', function () {
     const composerContent = getFullText();
     const hideFromSearch = document.getElementById('composer-hide-search').checked;
     const tagString = document.getElementById('composer-tags').value;
-    window.parent.postMessage({ composerContent, hideFromSearch, tagString, additionToPost }, uri);
+    window.parent.postMessage({ composerContent, hideFromSearch, tagString, qualifier, qualifierId }, uri);
   });
 
   const tagInput = document.getElementById('composer-tags');

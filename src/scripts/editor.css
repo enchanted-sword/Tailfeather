@@ -53,14 +53,10 @@
   }
 }
 
-.inline-addition-form .tailfeather-editor {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: .4rem;
-}
-
-.tailfeather-editor .btn-primary-sm {
+.tailfeather-editor.btn-primary-sm {
   display: inline-flex;
   align-items: center;
   gap: .5rem;
+  justify-self: flex-start;
+  margin-right: .5rem;
 }

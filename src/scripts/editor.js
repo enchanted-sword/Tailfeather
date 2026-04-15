@@ -6,7 +6,8 @@ import { getOptions } from './utils/jsTools.js';
 import { mutationManager } from './utils/mutation.js';
 
 const customClass = 'tailfeather-editor';
-const formSelector = '.inline-addition-form';
+const chainAdditionFormSelector = '.inline-addition-form';
+const answerFormSelector = '.ask-answer-form';
 const uri = browser.runtime.getURL('');
 
 let defaultContent, defaultCss, theme, keybinding, nrTheme;
@@ -17,12 +18,18 @@ const listener = event => {
     event.source.postMessage({ userInfo, defaultContent, defaultCss, theme, nrTheme, keybinding }, uri);
   }
   else if (typeof event.data === 'object' && 'composerContent' in event.data) {
-    const { composerContent, hideFromSearch, tagString, additionToPost } = event.data;
-    if (additionToPost) {
-      const form = document.querySelector(`article[data-post-id="${additionToPost}"] .inline-addition-form`);
+    const { composerContent, hideFromSearch, tagString, qualifier, qualifierId } = event.data;
+    if (qualifier === 'additionToPost') {
+      const form = document.querySelector(`article[data-post-id="${qualifierId}"] .inline-addition-form`);
       form.querySelector('.chain-addition-textarea').value = composerContent;
       form.querySelector('.inline-tags-input').value = tagString;
       form.querySelector('[data-action="submit-inline-addition"]').click();
+      closeEditor({ type: 'click' });
+    } else if (qualifier === 'answerToAsk') {
+      const form = document.querySelector(`article[data-ask-id="${qualifierId}"] .ask-answer-form`);
+      form.querySelector('.ask-answer-body').value = composerContent;
+      form.querySelector('.inline-tags-input').value = tagString;
+      form.querySelector('.ask-answer-send').click();
       closeEditor({ type: 'click' });
     } else {
       createPost(composerContent, tagString, userInfo, { hideFromSearch }).then(post => {
@@ -43,10 +50,14 @@ function closeEditor(event) {
   }
 }
 
-function openEditor(event) {
+function onOpenEditor(event) {
   event.preventDefault();
   event.stopPropagation();
 
+  openEditorIFrame();
+}
+
+function openEditorIFrame(qualifier = '') {
   document.body.append(noact({
     id: 'tf-editor-dialogue',
     className: customClass,
@@ -55,7 +66,7 @@ function openEditor(event) {
       children: [
         {
           tag: 'iframe',
-          src: browser.runtime.getURL('/scripts/editor.html')
+          src: browser.runtime.getURL('/scripts/editor.html') + qualifier
         },
         {
           className: 'tf-editor-close',
@@ -65,46 +76,40 @@ function openEditor(event) {
       ]
     }
   }));
-
   window.addEventListener('keydown', closeEditor);
-}
+};
 
-const addFormControls = forms => forms.forEach(form => {
+const addChainAdditionFormControls = forms => forms.forEach(form => {
   const postId = form.querySelector('[data-post-id]')?.dataset.postId;
-  form.prepend(noact({
-    className: customClass,
-    children: {
-      className: 'btn-primary-sm',
-      onclick: function () {
-        document.body.append(noact({
-          id: 'tf-editor-dialogue',
-          className: customClass,
-          children: {
-            className: 'tf-editor-wrapper',
-            children: [
-              {
-                tag: 'iframe',
-                src: browser.runtime.getURL('/scripts/editor.html') + `?additionToPost=${postId}`
-              },
-              {
-                className: 'tf-editor-close',
-                onclick: closeEditor,
-                children: svgIcon('close', 24, 24)
-              }
-            ]
-          }
-        }));
-
-        window.addEventListener('keydown', closeEditor);
+  form.querySelector('.chain-addition-form-controls').prepend(noact({
+    className: customClass + ' btn-primary-sm',
+    onclick: function () {
+      openEditorIFrame(`?additionToPost=${postId}`)
+    },
+    children: [
+      {
+        tag: 'span',
+        children: 'Open in custom editor'
       },
-      children: [
-        {
-          tag: 'span',
-          children: 'Open in custom editor'
-        },
-        svgIcon('commandline', 20, 20)
-      ]
-    }
+      svgIcon('commandline', 20, 20)
+    ]
+  }))
+});
+
+const addAnswerFormControls = forms => forms.forEach(form => {
+  const askId = form.closest('[data-ask-id]')?.dataset.askId;
+  form.querySelector('.ask-answer-controls').prepend(noact({
+    className: customClass + ' btn-primary-sm',
+    onclick: function () {
+      openEditorIFrame(`?answerToAsk=${askId}`)
+    },
+    children: [
+      {
+        tag: 'span',
+        children: 'Open in custom editor'
+      },
+      svgIcon('commandline', 20, 20)
+    ]
   }))
 });
 
@@ -119,14 +124,15 @@ export const main = async () => {
     id: 'tf-nav-new-post',
     className: 'btn-primary-sm',
     title: 'Write a new post using the custom editor',
-    onclick: openEditor,
+    onclick: onOpenEditor,
     children: svgIcon('commandline', 24, 24)
   }));
-  mutationManager.start(formSelector, addFormControls);
+  mutationManager.start(chainAdditionFormSelector, addChainAdditionFormControls);
+  mutationManager.start(answerFormSelector, addAnswerFormControls);
 };
 
 export const clean = async () => {
-  mutationManager.stop(addFormControls);
+  mutationManager.stop(addChainAdditionFormControls);
   window.removeEventListener('message', listener);
   document.querySelectorAll(`.${customClass}`).forEach(s => s.remove());
 };
