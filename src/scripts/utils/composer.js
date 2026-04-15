@@ -84,9 +84,8 @@ export async function createPost(body, tagsInput, user, options = {}) {
   const post = {
     post_id: postId,
     author_id: user.id,
-    author: user.username, // Fix from the vanilla composer, which doesn't supply the `author` field
+    author: user.username,
     author_name: user.displayName || user.display_name || user.username,
-    author_username: user.username,
     author_avatar: user.avatarUrl || user.avatar_url || '',
     body: body,
     media_urls: [],
