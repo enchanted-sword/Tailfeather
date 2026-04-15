@@ -19,7 +19,7 @@
     padding: .25rem;
   }
 
-  .notif-bell svg {
+  :is(.notif-bell, .nav-inbox) svg {
     width: 1.5rem;
     height: 1.5rem;
     stroke-width: 1.5;
