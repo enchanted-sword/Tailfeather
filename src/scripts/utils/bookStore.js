@@ -18,7 +18,7 @@
  * Requires: idb.min.js (via importmap or global)
  */
 
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const POSTS_STORE = 'posts';
 const TOMBSTONES_STORE = 'tombstones';
 const PHANTOM_TAGS_STORE = 'phantom_tags';
