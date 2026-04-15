@@ -5,18 +5,6 @@
   "preferences": {
     "enabled": false,
     "options": {
-      "staplerAvatars": {
-        "value": false,
-        "name": "Staple author avatars",
-        "tooltip": "Shows the avatar of the user that stapled a post.",
-        "type": "toggle"
-      },
-      "additionAvatars": {
-        "value": true,
-        "name": "Addition author avatars",
-        "tooltip": "Shows avatars on additions.",
-        "type": "toggle"
-      },
       "floatingAvatars": {
         "value": false,
         "name": "Floating author avatars",

@@ -48,7 +48,7 @@
   flex-shrink: 0;
 }
 
-[data-tf-avatars="square"] :is(.tf-staple-avatar, .post-author-avatar, .tf-chain-author-avatar) {
+[data-tf-avatars="square"] :is(.tf-staple-avatar, .post-author-avatar, .chain-addition-avatar) {
   border-radius: var(--radius-sm);
 }
 

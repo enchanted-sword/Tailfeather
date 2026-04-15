@@ -18,16 +18,6 @@ const avatarise = async posts => {
   posts.forEach((post, i) => {
     const author = shallowData[i].author;
     const authorAvatar = avatarMap.get(author);
-    const additionAuthors = shallowData[i].chain.map(({ author }) => author);
-    const _additionAvatars = additionAuthors.map(aa => avatarMap.get(aa));
-
-    if (shallowData[i].isTransparentStaple && staplerAvatars) post.querySelector('.post-staple-attribution')?.prepend(noact({
-      className: `${customClass} tf-staple-avatar`, // tf-staple-avatar is not a Tailfeather class funnily enough
-      src: authorAvatar,
-      height: 20,
-      width: 20,
-      loading: 'lazy'
-    }));
 
     if (floatingAvatars) post.append(noact({
       className: `${customClass} ${customClass}-scrollContainer`,
@@ -45,19 +35,6 @@ const avatarise = async posts => {
         }
       }
     }));
-
-    if (additionAuthors.length && additionAvatars) post.querySelectorAll('.chain-addition-header').forEach((header, i) => {
-      if (typeof additionAuthors[i] !== 'undefined') header.prepend(noact(_additionAvatars[i] ? {
-        className: `${customClass} tf-chain-author-avatar`,
-        src: _additionAvatars[i],
-        height: 32,
-        width: 32,
-        loading: 'lazy'
-      } : {
-        className: `${customClass} tf-chain-author-avatar post-avatar-placeholder`,
-        children: additionAuthors[i][0]
-      }));
-    });
 
     post.setAttribute(customAttribute, square ? 'square' : '');
   });
