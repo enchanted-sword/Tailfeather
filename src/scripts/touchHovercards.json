@@ -1,9 +1,0 @@
-{
-  "name": "touchHovercards",
-  "title": "Fix Touch Hovercards",
-  "description": "Fixes displaying hovercards on devices without fine pointing capabilities.",
-  "preferences": {
-    "enabled": false
-  },
-  "js": true
-}

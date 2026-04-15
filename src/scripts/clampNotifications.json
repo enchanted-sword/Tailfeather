@@ -1,0 +1,9 @@
+{
+  "name": "clampNotifications",
+  "title": "Clamp Notification Dropdown",
+  "description": "Clamps the notification dropdown within the boundaries of the window",
+  "preferences": {
+    "enabled": false
+  },
+  "js": true
+}
