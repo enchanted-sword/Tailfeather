@@ -35,7 +35,7 @@
     user-select: none;
   }
 
-  .post-card:has(.tailfeather-avatars-scrollContainer) .post-staple-attribution .post-author-avatar,
+  .post-card:has(.tailfeather-avatars-scrollContainer) .post-staple-attribution .tf-staple-avatar,
   .post-card:has(.tailfeather-avatars-scrollContainer):not(:has(.post-staple-attribution, .chain-stapled-badge)) .post-author .post-author-avatar {
     display: none;
   }

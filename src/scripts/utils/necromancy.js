@@ -1,7 +1,7 @@
 import { getIndexedPosts, updateData } from './database.js';
 import { fetchBlobCached } from './blobManager.js';
 import { uniqueFn } from './jsTools.js';
-import { extractUserFromHref } from './user.js';
+import { extractUserFromHref, cacheAvatar } from './user.js';
 
 const unwrapTags = tagsElement => tagsElement ? Array.from(tagsElement.querySelectorAll('.post-tag')).map(tag => tag.textContent.slice(1)) : ([]);
 
@@ -38,6 +38,8 @@ const cacheBlobs = async blobs => {
     const { username } = user;
     if (!shallowUsersFiltered.has(username) || Date.parse(user.updated_at) > Date.parse(shallowUsersFiltered.get(username).updated_at)) shallowUsersFiltered.set(username, user);
   });
+
+  shallowUsers.forEach(({ username, avatar_url }) => cacheAvatar(username, avatar_url));
 
   return updateData({
     postStore: unwrappedPosts,

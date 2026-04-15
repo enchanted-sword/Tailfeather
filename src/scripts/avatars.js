@@ -1,4 +1,4 @@
-import { getUsersShallow } from './utils/user.js';
+import { cacheAvatar, getCachedAvatar, getUsersShallow } from './utils/user.js';
 import { getOptions, uniqueFn } from './utils/jsTools.js';
 import { postFunction } from './utils/mutation.js';
 import { necromancePostShallow } from './utils/necromancy.js';
@@ -7,17 +7,16 @@ import { noact } from './utils/noact.js';
 const customClass = 'tailfeather-avatars';
 const customAttribute = 'data-tf-avatars';
 
-let staplerAvatars, floatingAvatars, additionAvatars, square;
+let floatingAvatars, square;
 
 const avatarise = async posts => {
   const shallowData = posts.map(necromancePostShallow);
   const postUsers = shallowData.flatMap(({ author, originalAuthor, chain }) => [author, originalAuthor, ...chain.map(({ author }) => author)]).filter(u => !!u).filter(uniqueFn);
-  const avatarMap = new Map();
-  await getUsersShallow(postUsers).then(users => users.filter(u => !!u).forEach(({ username, avatar_url }) => avatarMap.set(username, avatar_url)));
+  await getUsersShallow(postUsers).then(users => users.filter(u => !!u).forEach(({ username, avatar_url }) => cacheAvatar(username, avatar_url)));
 
   posts.forEach((post, i) => {
     const author = shallowData[i].author;
-    const authorAvatar = avatarMap.get(author);
+    const authorAvatar = getCachedAvatar(author);
 
     if (floatingAvatars) post.append(noact({
       className: `${customClass} ${customClass}-scrollContainer`,
@@ -41,7 +40,7 @@ const avatarise = async posts => {
 };
 
 const run = options => {
-  ({ staplerAvatars, floatingAvatars, additionAvatars, square } = options);
+  ({ floatingAvatars, square } = options);
 
   document.querySelectorAll(`.${customClass}`).forEach(s => s.remove());
   document.querySelectorAll(`[${customAttribute}]`).forEach(s => s.removeAttribute(customAttribute));

@@ -55,3 +55,40 @@ export const extractUserFromHref = href => (usernameRegex.exec(href) || [null, n
 
 export const isUserFollowing = username => JSON.parse(localStorage.getItem('noterook_following') || '[]').includes(username);
 export const isFollowingUser = username => JSON.parse(localStorage.getItem('noterook_followers') || '[]').includes(username);
+
+const _avatarCache = new Map();
+
+/**
+ * Cache an avatar URL for a username.
+ * @param {string} username
+ * @param {string} url
+ */
+export function cacheAvatar(username, url) {
+  if (username && url) {
+    _avatarCache.set(username, url);
+  }
+}
+
+/**
+ * Get a cached avatar URL for a username.
+ * @param {string} username
+ * @returns {string|undefined}
+ */
+export function getCachedAvatar(username) {
+  return _avatarCache.get(username);
+}
+
+/**
+ * Resolve avatar for a post - uses cached version if the post has none.
+ * Also caches any new avatar it sees.
+ * @param {string} username
+ * @param {string} avatarUrl - Avatar URL from the post (may be empty)
+ * @returns {string} Best available avatar URL (may be empty)
+ */
+export function resolveAvatar(username, avatarUrl) {
+  if (avatarUrl) {
+    cacheAvatar(username, avatarUrl);
+    return avatarUrl;
+  }
+  return getCachedAvatar(username) || '';
+}
