@@ -22,11 +22,25 @@
         "type": "toggle",
         "value": false
       },
-      "arranged": {
-        "name": "Neat stickers",
-        "tooltip": "Overrides default sticker placement entirely in favour of neatly arranging them along the bottom edge of each post.",
-        "type": "toggle",
-        "value": false
+      "visibility": {
+        "name": "Improved sticker visibility",
+        "tooltip": "Neat stickers: Overrides default sticker placement entirely in favour of neatly arranging them along the bottom edge of each post.",
+        "type": "select",
+        "value": "default",
+        "options": [
+          {
+            "value": "default",
+            "name": "Disabled"
+          },
+          {
+            "value": "neat",
+            "name": "Neat stickers"
+          },
+          {
+            "value": "hide",
+            "name": "Hide stickers"
+          }
+        ]
       }
     }
   },

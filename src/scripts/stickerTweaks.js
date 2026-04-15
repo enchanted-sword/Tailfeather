@@ -38,14 +38,18 @@ article[data-post-id] :is(.sticker-slot, .sticker-emoji) {
 article[data-post-id] .sticker-emoji {
   width: .75rem !important;
 }`;
+const hideStyles = `article[data-post-id] .sticker-layer {
+  display: none !important;
+}`;
 
-const run = ({ colourEmoji, outline, opacity, arranged }) => {
+const run = ({ colourEmoji, outline, opacity, visibility }) => {
   style.textContent = '';
 
   if (colourEmoji) style.textContent = style.textContent + colourEmojiStyles;
   if (outline) style.textContent = style.textContent + outlineStyles;
   if (opacity) style.textContent = style.textContent + opacityStyles;
-  if (arranged) style.textContent = style.textContent + arrangedStyles;
+  if (visibility === 'neat') style.textContent = style.textContent + arrangedStyles;
+  else if (visibility === 'hide') style.textContent = style.textContent + hideStyles;
 };
 
 export const update = options => run(options);
