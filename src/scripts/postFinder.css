@@ -239,11 +239,14 @@ body[data-tf-custom-icons] .nav-links .postFinder-icon {
 
 .postFinder-blog {
   flex-grow: 1;
-  color: var(--accent);
 
-  :hover {
-    color: var(--accent-hover);
-    text-decoration: underline;
+  a {
+    color: var(--accent);
+
+    :hover {
+      color: var(--accent-hover);
+      text-decoration: underline;
+    }
   }
 }
 

@@ -4,6 +4,7 @@ import { noact } from './utils/noact.js';
 import { svgIcon } from './utils/icons.js';
 import { getProcessor } from './utils/markdown.js';
 import { formatTags } from './utils/elements.js';
+import { resolveAvatar } from './utils/user.js';
 
 const customClass = 'tailfeather-postFinder';
 
@@ -207,7 +208,7 @@ const strictCategorySearch = async ({ users, texts, tags, date }) => categorySea
 
 const isDefined = x => !!x;
 
-const quick_info = ({ post_id, author, author_name, author_avatar, body, tags, additions, created_at, updated_at }) => {
+const quick_info = ({ post_id, author, author_name, author_avatar, body, tags, additions, stapled_by, updated_at }) => {
   const userObjects = [
     {
       username: author,
@@ -227,7 +228,7 @@ const quick_info = ({ post_id, author, author_name, author_avatar, body, tags, a
     post_id,
     author: author,
     avatar_url: author_avatar,
-    users: unique(userObjects.flatMap(({ username, display_name }) => [username, display_name])).filter(isDefined).join(','),
+    users: unique([stapled_by, ...userObjects.flatMap(({ username, display_name }) => [username, display_name])]).filter(isDefined).join(','),
     texts: contentStr,
     tags: tagStr,
     updated_at
@@ -249,7 +250,7 @@ const indexPosts = async (force = false) => {
 
     storeEntries.forEach(post => {
       if (!searchableIndices.has(post.post_id) || force) {
-        const searchable = { post_id: post.post_id, post_url: `/book/${encodeURIComponent(post.author)}`, quick_info: quick_info(post), stored_at: Date.now() };
+        const searchable = { post_id: post.post_id, quick_info: quick_info(post), stored_at: Date.now() };
         searchableIndices.add(post.post_id);
         searchStore.put(searchable);
         ++i;
@@ -278,7 +279,7 @@ const indexFromUpdate = async ({ detail: { targets } }) => { // take advantage o
         if (postIndices.has(post.post_id)) postIndices.add(post.post_id);
         if (!searchableIndices.has(post.post_id)) {
           if (searchableIndices.has(post.post_id)) searchableIndices.add(post.post_id);
-          return { post_id: post.post_id, post_url: `/book/${encodeURIComponent(post.author)}`, quick_info: quick_info(post) };
+          return { post_id: post.post_id, quick_info: quick_info(post) };
         }
       }).filter(s => !!s)
     }).then(() => cursorStatus.remaining = searchableIndices.size);
@@ -298,9 +299,14 @@ const newResultCounter = () => {
   return noact({ className: 'postFinder-resultCounter', children: l });
 };
 
-const renderResult = (post, hit) => {
+const renderResult = post => {
   try {
-    const d = new Date(post.created_at);
+    const { is_stapled, stapled_by, additions, post_id } = post;
+    const servingUser = is_stapled ? stapled_by : post.author;
+    const [opaqueSlice] = additions.length ? additions.slice(-1) : [post];
+    const { author, author_name, body, tags, created_at, author_avatar } = opaqueSlice;
+    const d = new Date(created_at);
+    console.log(author, resolveAvatar(author, author_avatar))
 
     return noact({
       className: 'postFinder-result',
@@ -313,16 +319,20 @@ const renderResult = (post, hit) => {
               children: [
                 {
                   children: [
+                    !!resolveAvatar(author, author_avatar) ?
+                      {
+                        className: 'post-author-avatar',
+                        src: resolveAvatar(author, author_avatar),
+                        loading: 'lazy',
+                        width: 32,
+                        height: 32
+                      } : {
+                        className: 'post-author-avatar post-avatar-placeholder',
+                        children: author[0]
+                      },
                     {
-                      className: 'post-author-avatar' + (post.author_avatar ? '' : ' post-author-placeholder'),
-                      src: post.author_avatar,
-                      loading: 'lazy',
-                      width: 32,
-                      height: 32
-                    },
-                    {
-                      href: `/book/${encodeURIComponent(post.author)}/?post=${post.post_id}`,
-                      children: post.author_name
+                      href: `/book/${encodeURIComponent(author)}/?post=${opaqueSlice.post_id}`,
+                      children: author_name
                     },
                   ]
                 },
@@ -333,25 +343,25 @@ const renderResult = (post, hit) => {
         },
         {
           className: 'post-body post-body-collapsed postFinder-post',
-          innerHTML: getProcessor().renderStrict(post.additions.length ? post.additions.slice(-1)?.body : post.body)
+          innerHTML: getProcessor().renderStrict(body)
         },
-        post.tags.length ? {
+        tags.length ? {
           className: 'postFinder-tags',
-          children: formatTags(post.tags.join(','))
+          children: formatTags(tags.join(','))
         } : null,
         {
           className: 'postFinder-link',
-          href: `/book/${encodeURIComponent(post.author)}/?post=${post.post_id}`,
+          href: `/book/${encodeURIComponent(servingUser)}/?post=${post_id}`,
           onclick: function (event) {
             closeDialog(event);
             // Navigation handled by Noterook
           },
-          children: `https://noterook.net/book/${encodeURIComponent(post.author)}/?post=${post.post_id}`
+          children: `https://noterook.net/book/${encodeURIComponent(servingUser)}/?post=${post_id}`
         }
       ]
     });
   } catch (e) {
-    console.error('[PostFinder] `renderResult` error:', e, post, hit);
+    console.error('[PostFinder] `renderResult` error:', e, post);
     return '';
   }
 };
@@ -365,7 +375,7 @@ const renderResults = async (hits, replace = true) => {
   }
 
   const posts = await getIndexedPosts(hits.map(({ post_id }) => post_id));
-  const results = posts.map((post, i) => renderResult(post, hits[i]));
+  const results = posts.map(renderResult);
   let resultLabel = newResultCounter();
 
   if (replace) resultSection.replaceChildren(resultLabel, ...results);
