@@ -206,17 +206,16 @@ const strictCategorySearch = async ({ users, texts, tags, date }) => categorySea
 });
 
 const isDefined = x => !!x;
-const resolveAuthor = (author, author_username, author_name) => author || author_username || author_name; // Probably needs tweaking
 
-const quick_info = ({ post_id, author, author_username, author_name, author_avatar, body, tags, additions, created_at, updated_at }) => {
+const quick_info = ({ post_id, author, author_name, author_avatar, body, tags, additions, created_at, updated_at }) => {
   const userObjects = [
     {
-      username: resolveAuthor(author, author_username, author_name),
-      display_name: resolveAuthor(author_name, author_username, author),
+      username: author,
+      display_name: author_name,
     },
-    ...additions.map(({ author: chain_author, author_username: chain_author_username, author_name: chain_author_name }) => ({
-      username: resolveAuthor(chain_author, chain_author_username, chain_author_name),
-      display_name: resolveAuthor(chain_author_name, chain_author_username, chain_author)
+    ...additions.map(({ author: chain_author, author_name: chain_author_name }) => ({
+      username: chain_author,
+      display_name: chain_author_name
     }))
   ].filter(isDefined);
   const contentStr = [body, ...additions.map(({ body: addition_body }) => addition_body)]
@@ -226,7 +225,7 @@ const quick_info = ({ post_id, author, author_username, author_name, author_avat
 
   return JSON.stringify({
     post_id,
-    author: resolveAuthor(author, author_username, author_name),
+    author: author,
     avatar_url: author_avatar,
     users: unique(userObjects.flatMap(({ username, display_name }) => [username, display_name])).filter(isDefined).join(','),
     texts: contentStr,
@@ -250,7 +249,7 @@ const indexPosts = async (force = false) => {
 
     storeEntries.forEach(post => {
       if (!searchableIndices.has(post.post_id) || force) {
-        const searchable = { post_id: post.post_id, post_url: `/book/${encodeURIComponent(resolveAuthor(post.author, post.author_username, post.author_name))}`, quick_info: quick_info(post), stored_at: Date.now() };
+        const searchable = { post_id: post.post_id, post_url: `/book/${encodeURIComponent(post.author)}`, quick_info: quick_info(post), stored_at: Date.now() };
         searchableIndices.add(post.post_id);
         searchStore.put(searchable);
         ++i;
@@ -269,7 +268,7 @@ const indexPosts = async (force = false) => {
 
   tx.oncomplete = () => cursorStatus.remaining = searchableIndices.size;
 
-  document.getElementById('postFinder-status-index')?.remove();
+  hideStatus();
 };
 
 const indexFromUpdate = async ({ detail: { targets } }) => { // take advantage of dispatched events to index new posts for free without opening extra transactions
@@ -279,7 +278,7 @@ const indexFromUpdate = async ({ detail: { targets } }) => { // take advantage o
         if (postIndices.has(post.post_id)) postIndices.add(post.post_id);
         if (!searchableIndices.has(post.post_id)) {
           if (searchableIndices.has(post.post_id)) searchableIndices.add(post.post_id);
-          return { post_id: post.post_id, post_url: `/book/${encodeURIComponent(resolveAuthor(post.author, post.author_username, post.author_name))}`, quick_info: quick_info(post) };
+          return { post_id: post.post_id, post_url: `/book/${encodeURIComponent(post.author)}`, quick_info: quick_info(post) };
         }
       }).filter(s => !!s)
     }).then(() => cursorStatus.remaining = searchableIndices.size);
@@ -305,11 +304,6 @@ const renderResult = (post, hit) => {
     console.log(post, getProcessor().renderStrict(post.additions.length ? post.additions.slice(-1)?.body : post.body))
 
     return noact({
-      href: `/book/${post.author}/?post=${post.post_id}`,
-      onclick: function (event) {
-        closeDialog(event);
-        // Navigation handled by Noterook
-      },
       className: 'postFinder-result',
       children: [
         {
@@ -321,13 +315,16 @@ const renderResult = (post, hit) => {
                 {
                   children: [
                     {
-                      className: 'post-author-avatar' + post.author_avatar ? '' : ' post-author-placeholder',
+                      className: 'post-author-avatar' + (post.author_avatar ? '' : ' post-author-placeholder'),
                       src: post.author_avatar,
                       loading: 'lazy',
                       width: 32,
                       height: 32
                     },
-                    resolveAuthor(post.author_name, post.author_username, post.author),
+                    {
+                      href: `/book/${encodeURIComponent(post.author)}/?post=${post.post_id}`,
+                      children: post.author_name
+                    },
                   ]
                 },
                 `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
@@ -336,7 +333,7 @@ const renderResult = (post, hit) => {
           ]
         },
         {
-          className: 'post-body postFinder-post',
+          className: 'post-body post-body-collapsed postFinder-post',
           innerHTML: getProcessor().renderStrict(post.additions.length ? post.additions.slice(-1)?.body : post.body)
         },
         post.tags.length ? {
@@ -345,8 +342,12 @@ const renderResult = (post, hit) => {
         } : null,
         {
           className: 'postFinder-link',
-          href: post.post_url,
-          children: post.post_url
+          href: `/book/${encodeURIComponent(post.author)}/?post=${post.post_id}`,
+          onclick: function (event) {
+            closeDialog(event);
+            // Navigation handled by Noterook
+          },
+          children: `https://noterook.net/book/${encodeURIComponent(post.author)}/?post=${post.post_id}`
         }
       ]
     });
@@ -381,7 +382,7 @@ const paginationFunction = page => async function () {
 };
 
 const newPaginationMenu = page => noact({
-  className: 'postFinder-pagination',
+  className: 'postFinder-pagination btn-primary-sm',
   onclick: paginationFunction(page),
   children: `Load next ${maxResults} results`
 });
@@ -459,36 +460,42 @@ function toggleAdvanced() {
   }
 }
 
-const button = noact({
-  className: 'postFinder-button',
+const navButton = noact({
+  tag: 'a', // to inherit .nav-links a styling
+  className: 'postFinder-button tf-nav-iconified',
   onclick: showDialog,
   children: [
-    {
-      tag: 'h2',
-      className: 'postFinder-title',
-      children: 'Post Finder'
-    },
-    svgIcon('search', 24, 24, 'postFinder-icon'),
-    {
-      id: 'postFinder-status-index',
-      children: [
-        'Indexed ',
-        {
-          tag: 'span',
-          className: 'postFinder-status-indexProgress',
-          children: indexProgress.progress || '?'
-        },
-        ' of ',
-        {
-          tag: 'span',
-          className: 'postFinder-status-indexTotal',
-          children: indexProgress.total || '?'
-        },
-        ' posts'
-      ]
-    }
+    svgIcon('postsearch', 24, 24, 'postFinder-icon'),
+    'Post Finder',
   ]
 });
+
+const indexStatus = noact({
+  id: 'postFinder-status-index',
+  className: 'status-bar status-bar--visible',
+  children: [
+    'PostFinder: Indexed ',
+    {
+      tag: 'span',
+      className: 'postFinder-status-indexProgress',
+      children: indexProgress.progress || '?'
+    },
+    ' of ',
+    {
+      tag: 'span',
+      className: 'postFinder-status-indexTotal',
+      children: indexProgress.total || '?'
+    },
+    ' posts'
+  ]
+});
+const hideStatus = () => {
+  indexStatus.classList.add('status-bar--fading');
+  setTimeout(() => {
+    indexStatus.classList.remove('status-bar--visible', 'status-bar--fading');
+    indexStatus.remove();
+  }, 600)
+}
 
 const searchWindow = noact({
   tag: 'dialog',
@@ -527,7 +534,7 @@ const searchWindow = noact({
           {
             onclick: toggleAdvanced,
             dataset: { state: '' },
-            children: svgIcon('filter', 24, 24, '', 'rgba(var(--black), .6)')
+            children: svgIcon('filter', 24, 24, 'postFinder-toggleAdvanced')
           }
         ]
       },
@@ -618,6 +625,7 @@ const searchWindow = noact({
           },
           {
             id: 'postFinder-advanced-submit',
+            className: 'btn-primary-sm',
             onclick: onAdvancedSearch,
             children: 'Search',
           }
@@ -642,7 +650,8 @@ export const main = async () => {
   postIndices = new Set(await promisifyIDBRequest(tx.objectStore('postStore').getAllKeys()));
   searchableIndices = new Set(await promisifyIDBRequest(tx.objectStore('searchStore').getAllKeys()));
 
-  document.body.append(button);
+  document.querySelector('.nav-links [href="/search/"]').insertAdjacentElement('afterend', navButton);
+  document.querySelector('.site-header').insertAdjacentElement('afterend', indexStatus);
   document.body.append(searchWindow);
   document.addEventListener('keydown', closeDialog);
   document.getElementById('postFinder-defaultSearch').title = `${splitMode}-separated`;
@@ -653,14 +662,14 @@ export const main = async () => {
   indexProgress.total = postIndices.size;
   indexProgress.sync();
 
-  if (indexProgress.progress >= indexProgress.total) document.getElementById('postFinder-status-index').remove();
+  if (indexProgress.progress >= indexProgress.total) hideStatus();
 
   indexPosts();
   window.addEventListener('tailfeather-database-update', indexFromUpdate);
 };
 
 export const clean = async () => {
-  button.remove();
+  navButton.remove();
   searchWindow.remove();
   document.querySelectorAll(`.${customClass}`).forEach(e => e.remove());
   document.removeEventListener('keydown', closeDialog);
