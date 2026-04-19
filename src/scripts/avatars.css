@@ -9,12 +9,6 @@
     margin-left: 5.25rem;
   }
 
-  .post-staple-attribution {
-    display: flex;
-    gap: .5rem;
-    align-items: center;
-  }
-
   .tailfeather-avatars-scrollContainer {
     user-select: none;
     position: absolute;
@@ -23,11 +17,16 @@
     height: 100%;
   }
 
-  .tailfeather-avatars-scrollContainer .post-author-avatar {
-    width: 4rem;
-    height: 4rem;
+  /* The sticky part doesn't currently work and I cannot for the life of me figure out why. It's probably due to how Noterook scrolls the entire body */
+  .tailfeather-avatars-scrollContainer a {
+    display: block;
     position: sticky;
     top: 4.5rem;
+  }
+
+  .tailfeather-avatars-scrollContainer :is(a, .post-author-avatar) {
+    width: 4rem;
+    height: 4rem;
   }
 
   .tailfeather-avatars-scrollContainer a:has(.hovercard-avatar-placeholder) {

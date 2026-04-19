@@ -8,7 +8,7 @@
       "floatingAvatars": {
         "value": false,
         "name": "Floating author avatars",
-        "tooltip": "Makes post author avatars larger, displayed to the left of posts, and scrolled with the timeline. Will display the stapler if the post is a staple.",
+        "tooltip": "Makes post author avatars larger and displayed to the left of posts. Will display the stapler if the post is a staple.",
         "type": "toggle"
       },
       "square": {
