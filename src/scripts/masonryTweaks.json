@@ -1,0 +1,27 @@
+{
+  "name": "masonryTweaks",
+  "title": "Masonry Tweaks",
+  "description": "Tweaks for how posts are displayed",
+  "preferences": {
+    "enabled": false,
+    "options": {
+      "autoBreakpoint": {
+        "value": true,
+        "type": "toggle",
+        "name": "Automatic masonry breakpoint",
+        "tooltip": "Automatically switches from masonry to single-column on narrow displays"
+      },
+      "expandedMasonry": {
+        "title": "Expanded masonry columns",
+        "tooltip": "Sets the max number of masonry columns",
+        "type": "range",
+        "min": 2,
+        "max": 8,
+        "value": 2,
+        "step": 1,
+        "unit": ""
+      }
+    }
+  },
+  "js": true
+}
