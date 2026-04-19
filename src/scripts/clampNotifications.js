@@ -1,13 +1,10 @@
 const calcWidth = () => Math.min(320, window.innerWidth - 16);
 
-function clampDropdown({ target }) {
+function positionDropdown({ target }) {
   const dropdown = document.getElementById('notif-dropdown');
-  const { right } = target.closest('.notif-bell-wrap').getBoundingClientRect();
-  const leftEdge = right - calcWidth() - 8;
-  if (leftEdge < 0) {
-    dropdown.style.right = leftEdge - 8 + 'px';
-  } else dropdown.style.right = 0;
+  const { bottom } = target.closest('.notif-bell-wrap').getBoundingClientRect();
+  dropdown.style.top = bottom - 24 + 'px';
 }
 
-export const main = async () => document.getElementById('notif-bell').addEventListener('click', clampDropdown);
-export const clean = async () => document.getElementById('notif-bell')?.removeEventListener('click', clampDropdown);
+export const main = async () => document.getElementById('notif-bell').addEventListener('click', positionDropdown);
+export const clean = async () => document.getElementById('notif-bell')?.removeEventListener('click', positionDropdown);

@@ -1,7 +1,7 @@
 {
   "name": "clampNotifications",
-  "title": "Clamp Notification Dropdown",
-  "description": "Clamps the notification dropdown within the boundaries of the window",
+  "title": "Fix Notification Dropdown Position",
+  "description": "Adjusts the positioning of the notification dropdown on narrow screens",
   "preferences": {
     "enabled": false
   },
