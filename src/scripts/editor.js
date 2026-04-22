@@ -1,21 +1,34 @@
 import { svgIcon } from './utils/icons.js';
 import { noact } from './utils/noact.js';
-import { getActiveBlog } from './utils/activeBlogs.js';
+import { getActiveBlog, listBlogs } from './utils/activeBlogs.js';
 import { createPost } from './utils/composer.js';
 import { getOptions } from './utils/jsTools.js';
 import { mutationManager } from './utils/mutation.js';
+
+// activeBlog imports are resolved here and not editorConfig.js because the iframe context is separate from the main window
 
 const customClass = 'tailfeather-editor';
 const chainAdditionFormSelector = '.inline-addition-form';
 const answerFormSelector = '.ask-answer-form';
 const uri = browser.runtime.getURL('');
 
-let defaultContent, defaultCss, theme, keybinding, nrTheme;
+let defaultContent, defaultCss, theme, keybinding, nrTheme, trustedImageHosts, trustedMediaHosts, trustedStylesheetHosts;
 
 const listener = event => {
   if (event.origin + '/' !== uri) return;
   if (event.data === 'frameInit') {
-    event.source.postMessage({ blog: getActiveBlog(), defaultContent, defaultCss, theme, nrTheme, keybinding }, uri);
+    event.source.postMessage({
+      blog: getActiveBlog(),
+      userBlogs: listBlogs(),
+      defaultContent,
+      defaultCss,
+      theme,
+      nrTheme,
+      keybinding,
+      trustedImageHosts,
+      trustedMediaHosts,
+      trustedStylesheetHosts
+    }, uri);
   }
   else if (typeof event.data === 'object' && 'composerContent' in event.data) {
     const { composerContent, hideFromSearch, tagString, qualifier, qualifierId, blog } = event.data;
@@ -33,7 +46,6 @@ const listener = event => {
       closeEditor({ type: 'click' });
     } else {
       createPost(composerContent, tagString, blog, { hideFromSearch }).then(post => {
-        console.log(`[TF-Editor] Successfully created post ${post.post_id}`);
         closeEditor({ type: 'click' });
       }, e => {
         console.error('[TF-Editor] Failed to create post:', e, event.data);
@@ -117,7 +129,7 @@ export const update = async options => ({ defaultContent, defaultCss, theme, key
 
 export const main = async () => {
   ({ defaultContent, defaultCss, theme, keybinding } = await getOptions('editor'));
-  nrTheme = document.body.dataset.theme || '';
+  ({ theme: nrTheme, trustedImageHosts, trustedMediaHosts, trustedStylesheetHosts } = document.body.dataset);
 
   window.addEventListener('message', listener);
   document.getElementById('nav-new-post').insertAdjacentElement('afterend', noact({

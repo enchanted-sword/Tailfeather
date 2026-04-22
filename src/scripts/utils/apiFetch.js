@@ -163,8 +163,9 @@ export async function apiFetch(givenPath, givenOptions) {
     },
   };
 
+  // Let function calls override active blog so we can post from different blogs and have the SSE resolve the author correctly
   // Only stamp for same-origin relative URLs so we don't leak active-blog identity to third parties.
-  if (options.baseUrl === defaultOptions.baseUrl) options.headers['X-As-Blog'] = activeSlug;
+  if (!('X-As-Blog' in options.headers) && options.baseUrl === defaultOptions.baseUrl) options.headers['X-As-Blog'] = activeSlug;
   console.log(options, activeSlug)
 
   if (options.body) {

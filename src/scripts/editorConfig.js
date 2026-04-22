@@ -1,7 +1,8 @@
 import { noact } from './utils/noact.js';
 import { debounce, getStorage } from './utils/jsTools.js';
-import { getProcessor } from './utils/markdown.js';
+import { MarkdownProcessor } from './utils/markdown.js';
 import { formatTags } from './utils/elements.js';
+import { blogSwitcher } from './utils/elements.js';
 import * as Themes from './themes.js';
 
 const uri = 'https://noterook.net';
@@ -15,12 +16,21 @@ function updateTags({ target: { value } }) {
   document.getElementById('postPreview-tags').replaceChildren(...formatTags(value));
 }
 
-const transformStyle = cssText => `\n<style>\n${cssText}\n</style>`;
+const transformStyle = cssText => (cssText.trim() && cssText !== DEFAULT_CSS) ? `\n<style>\n${cssText}\n</style>` : '';
 
-const initEditor = ({ blog, defaultContent, defaultCss, theme, nrTheme, keybinding }) => {
+// initEditor could technically handle its own option handling and skip having the main window
+// pass feature options entirely, but that would require it to be async, so might as well not
+const initEditor = ({ blog, userBlogs, defaultContent, defaultCss, theme, nrTheme, keybinding, trustedImageHosts, trustedMediaHosts, trustedStylesheetHosts }) => {
   console.debug('[EditorConfig] Ace loaded', blog, defaultContent, defaultCss, theme, keybinding);
+  let activeBlog = blog;
 
   document.body.dataset.theme = nrTheme;
+  document.body.dataset.trustedImageHosts = trustedImageHosts;
+  document.body.dataset.trustedMediaHosts = trustedMediaHosts;
+  document.body.dataset.trustedStylesheetHosts = trustedStylesheetHosts;
+
+  // Initialise processor after propagating trusted hosts
+  const localProcessor = new MarkdownProcessor();
 
   const submitButton = document.getElementById('composer-submit');
 
@@ -52,6 +62,15 @@ const initEditor = ({ blog, defaultContent, defaultCss, theme, nrTheme, keybindi
   if (qualifier === 'additionToPost') submitButton.textContent = 'Add';
   else if (qualifier === 'answerToAsk') submitButton.textContent = 'Add';
 
+  function switchActive(newBlog) {
+    activeBlog = newBlog;
+    document.getElementById('tf-author-avatar').src = newBlog.avatar_url;
+    document.getElementById('tf-author-name').textContent = newBlog.display_name;
+  }
+
+  const editorSwitcher = blogSwitcher(switchActive, userBlogs, activeBlog, 'Switch composing blog');
+  document.getElementById('editor-header').append(editorSwitcher);
+
   document.getElementById('tf-preview').append(noact({
     className: 'post-card',
     children: [
@@ -59,13 +78,15 @@ const initEditor = ({ blog, defaultContent, defaultCss, theme, nrTheme, keybindi
         className: 'post-author',
         children: [
           {
+            id: 'tf-author-avatar',
             className: 'post-author-avatar',
-            src: blog.avatar_url
+            src: activeBlog.avatar_url
           },
           {
+            id: 'tf-author-name',
             tag: 'span',
             className: 'post-author-name',
-            children: blog.display_name
+            children: activeBlog.display_name
           },
           {
             tag: 'span',
@@ -100,7 +121,7 @@ const initEditor = ({ blog, defaultContent, defaultCss, theme, nrTheme, keybindi
     const composerContent = getFullText();
     const hideFromSearch = document.getElementById('composer-hide-search').checked;
     const tagString = document.getElementById('composer-tags').value;
-    window.parent.postMessage({ composerContent, hideFromSearch, tagString, qualifier, qualifierId, blog }, uri);
+    window.parent.postMessage({ composerContent, hideFromSearch, tagString, qualifier, qualifierId, blog: activeBlog }, uri);
   });
 
   const tagInput = document.getElementById('composer-tags');
@@ -115,7 +136,7 @@ const initEditor = ({ blog, defaultContent, defaultCss, theme, nrTheme, keybindi
 
       content = noact({ className: 'shadow-wrapper' });
       preview.replaceChildren(content);
-      getProcessor().renderToElement(fullText, content);
+      localProcessor.renderToElement(fullText, content);
 
       charCount.textContent = `${fullText.length.toLocaleString()} / ${MAX_LENGTH.toLocaleString()}`;
 

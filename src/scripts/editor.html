@@ -2,30 +2,31 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <link
+      rel="stylesheet"
+      href="https://noterook.net/static/css/noterook.css"
+    />
     <link rel="stylesheet" href="./editorInner.css" />
     <link rel="stylesheet" href="./themes.css" />
   </head>
-  <body
-    data-trusted-image-hosts='["imgur.com", "catbox.moe", "postimg.cc", "imgbb.com", "i.ibb.co", "gyazo.com", "imgchest.com", "lensdump.com", "cdn.discordapp.com", "media.discordapp.net", "i.redd.it", "preview.redd.it", "cdn.bsky.app", "64.media.tumblr.com", "pbs.twimg.com", "f-list.net", "squidge.org", "file.garden", "toyhou.se", "e621.net", "rule34.xxx", "gelbooru.com", "raw.githubusercontent.com", "gist.githubusercontent.com", "soldierexclipse.art", "upload.wikimedia.org"]'
-    data-trusted-stylesheet-hosts='["fonts.googleapis.com", "fonts.gstatic.com", "fonts.bunny.net", "cdn.jsdelivr.net", "unpkg.com", "cdnjs.cloudflare.com", "cdn.discordapp.com", "file.garden", "*.github.io"]'
-  >
+  <body>
     <main>
-      <header id="editor-header"></header>
+      <header></header>
       <div class="composer-wrapper">
-        <div class="composer">
-          <div class="composer-header">
+        <div class="tf-composer">
+          <div id="editor-header" class="composer-header">
             <h2>Markdown</h2>
           </div>
           <div id="composer"></div>
         </div>
-        <div class="composer">
+        <div class="tf-composer">
           <div class="composer-header">
             <h2>CSS</h2>
           </div>
           <div id="css-composer"></div>
         </div>
       </div>
-      <footer class="composer-controls">
+      <footer class="tf-composer-controls">
         <input
           id="composer-tags"
           type="text"
