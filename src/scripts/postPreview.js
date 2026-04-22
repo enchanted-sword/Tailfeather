@@ -23,12 +23,12 @@ const previewWindow = tagInput => {
         className: 'post-author',
         children: [
           {
-            className: 'post-author-avatar',
+            className: `${customClass} post-author-avatar`,
             src: userInfo.avatar_url
           },
           {
             tag: 'span',
-            className: 'post-author-name chain-author-link',
+            className: `${customClass} post-author-name chain-author-link`,
             children: userInfo.display_name
           },
           {
@@ -70,6 +70,7 @@ function updateBody({ target }) {
     }));
   });
 }
+
 function updateTags({ target: { value } }) {
   document.getElementById('postPreview-tags').replaceChildren(...formatTags(value));
 }
@@ -85,13 +86,20 @@ const addPreview = editorBodies => editorBodies.forEach(body => {
 
   editor.append(previewWindow(editor, body));
   updateBody({ target: body });
-})
+});
+
+function onActiveBlogChanged({ detail: { blog } }) {
+  document.querySelectorAll(`.${customClass}.post-author-avatar`).forEach(a => a.src = blog.avatar_url);
+  document.querySelectorAll(`.${customClass}.post-author-name`).forEach(a => a.textContent = blog.display_name);
+}
 
 export const main = async () => {
   mutationManager.start(editorSelector, addPreview);
+  document.addEventListener('nr:active_blog_changed', onActiveBlogChanged)
 };
 
 export const clean = async () => {
   document.querySelectorAll(`[${customAttribute}]`).forEach(s => s.removeAttribute(customAttribute));
   document.querySelectorAll(`.${customClass}`).forEach(s => s.remove());
+  document.removeEventListener('nr:active_blog_changed', onActiveBlogChanged);
 };
