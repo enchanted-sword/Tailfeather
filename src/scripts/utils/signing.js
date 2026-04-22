@@ -29,24 +29,6 @@ const LEGACY_KEY_TTL_DAYS = 30;
 const _encoder = new TextEncoder();
 
 /**
- * Derive a 32-byte Ed25519 seed from a password via PBKDF2.
- * @param {string} password
- * @returns {Promise<Uint8Array>} 32-byte seed
- */
-export async function deriveSigningKey(password) {
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw', _encoder.encode(password), 'PBKDF2', false, ['deriveBits']
-  );
-  const bits = await crypto.subtle.deriveBits({
-    name: 'PBKDF2',
-    salt: _encoder.encode(SIGNING_SALT),
-    iterations: PBKDF2_ITERATIONS,
-    hash: 'SHA-256',
-  }, keyMaterial, 256);
-  return new Uint8Array(bits);
-}
-
-/**
  * Derive Ed25519 public key from a 32-byte private seed.
  * @param {Uint8Array} privateKey - 32-byte seed
  * @returns {Uint8Array} 32-byte public key
@@ -144,6 +126,22 @@ export async function verifyPost(signable, signatureBase64, publicKey) {
  */
 const STORAGE_KEY_FRESH = 'noterook_signing_fresh';
 
+// Per-blog (sideblog) keypair storage. Keyed on the blog's handle
+// so `alice-art` lives at `noterook_signing_private_key:alice-art`.
+// The LEGACY blog (signing_key_salt=null) shares its key with the
+// account and uses the unsuffixed STORAGE_KEY_PRIVATE / _PUBLIC
+// slots; this namespace only holds sideblog keys.
+const STORAGE_KEY_BLOG_PRIVATE_PREFIX = 'noterook_signing_private_key:';
+const STORAGE_KEY_BLOG_PUBLIC_PREFIX = 'noterook_signing_public_key:';
+
+// Temporary password stash used to derive sideblog keys on the
+// first authenticated page load after login. setupFormInterception
+// writes here with the raw password; ensureBlogKeys() consumes and
+// wipes immediately after deriving every sideblog's key. Lifetime
+// is typically tens of milliseconds; sessionStorage is per-tab and
+// clears on tab close.
+const STORAGE_KEY_PASSWORD_TMP = 'noterook_pw_tmp';
+
 export function storeKeys(privateKey, publicKey) {
   const existingPub = localStorage.getItem(STORAGE_KEY_PUBLIC);
   const newPubB64 = uint8ToBase64(publicKey);
@@ -155,7 +153,7 @@ export function storeKeys(privateKey, publicKey) {
       localStorage.setItem(STORAGE_KEY_LEGACY, existingPriv);
       const expiry = Date.now() + (LEGACY_KEY_TTL_DAYS * 24 * 60 * 60 * 1000);
       localStorage.setItem(STORAGE_KEY_LEGACY_EXPIRY, String(expiry));
-      console.debug('[TF-Signing] Old key preserved as legacy (30-day TTL)');
+      console.debug('[Signing] Old key preserved as legacy (30-day TTL)');
     }
   }
 
@@ -164,6 +162,150 @@ export function storeKeys(privateKey, publicKey) {
   // Mark keys as freshly derived - ensurePublicKeyPublished() checks this
   // to know whether to trust local over server on mismatch.
   localStorage.setItem(STORAGE_KEY_FRESH, '1');
+}
+
+/** Store a sideblog's derived keypair (per-blog namespace). */
+export function storeBlogKey(blogSlug, privateKey, publicKey) {
+  if (!blogSlug) return;
+  try {
+    localStorage.setItem(
+      STORAGE_KEY_BLOG_PRIVATE_PREFIX + blogSlug,
+      uint8ToBase64(privateKey),
+    );
+    localStorage.setItem(
+      STORAGE_KEY_BLOG_PUBLIC_PREFIX + blogSlug,
+      uint8ToBase64(publicKey),
+    );
+  } catch (err) {
+    console.warn(`[Signing] Failed to store key for @${blogSlug}:`, err);
+  }
+}
+
+/** Drop a sideblog's cached keypair. Call after blog deletion. */
+export function forgetBlogKey(blogSlug) {
+  if (!blogSlug) return;
+  try {
+    localStorage.removeItem(STORAGE_KEY_BLOG_PRIVATE_PREFIX + blogSlug);
+    localStorage.removeItem(STORAGE_KEY_BLOG_PUBLIC_PREFIX + blogSlug);
+  } catch { /* ignored */ }
+}
+
+/** Load a sideblog's private key, or null if not cached. */
+export function loadBlogPrivateKey(blogSlug) {
+  if (!blogSlug) return null;
+  const b64 = localStorage.getItem(STORAGE_KEY_BLOG_PRIVATE_PREFIX + blogSlug);
+  if (!b64) return null;
+  return base64ToUint8(b64);
+}
+
+/** Load a sideblog's public key, or null if not cached. */
+export function loadBlogPublicKey(blogSlug) {
+  if (!blogSlug) return null;
+  const b64 = localStorage.getItem(STORAGE_KEY_BLOG_PUBLIC_PREFIX + blogSlug);
+  if (!b64) return null;
+  return base64ToUint8(b64);
+}
+
+/**
+ * Resolve the private key that should be used to sign content for
+ * a given blog.
+ *
+ * - Legacy blog (signing_key_salt=null): uses the account's
+ *   localStorage key (matches what the server has published as the
+ *   legacy blog's public key, since they were populated in lockstep).
+ * - Sideblog (UUID salt): uses the per-blog cached key. Falls back
+ *   to the legacy key if the sideblog key isn't cached yet - this
+ *   produces a signature that will fail verification on viewers
+ *   (the sideblog's published pubkey won't match), but the post
+ *   still reaches the feed. The ``ensureBlogKeys`` flow run at
+ *   login time populates the cache; users who don't have keys
+ *   cached can log in again to get them.
+ *
+ * @param {{username: string, signing_key_salt: string|null}} blog
+ * @returns {Uint8Array|null}
+ */
+export function loadKeyForBlog(blog) {
+  if (!blog) return loadPrivateKey();
+  if (!blog.signing_key_salt) {
+    // Legacy blog = the account's existing key.
+    return loadPrivateKey();
+  }
+  const sideKey = loadBlogPrivateKey(blog.username);
+  if (sideKey) return sideKey;
+  // Cache miss. Fall back to the legacy key so the post still
+  // submits; signature will mismatch on viewers until the user
+  // re-logs-in or (future) we prompt for password-to-derive.
+  console.warn(
+    `[Signing] No cached key for @${blog.username}; falling back to legacy key. `
+    + 'Log out + back in to derive the per-blog key.',
+  );
+  return loadPrivateKey();
+}
+
+/**
+ * After login, stash the raw password briefly so ensureBlogKeys()
+ * can derive sideblog keys on the next page load. Called from
+ * setupFormInterception right before the form is submitted.
+ */
+export function stashPasswordForBlogKeys(password) {
+  try {
+    sessionStorage.setItem(STORAGE_KEY_PASSWORD_TMP, password);
+  } catch { /* sessionStorage disabled */ }
+}
+
+/**
+ * Enumerate the caller's blogs, derive + cache a private key for
+ * every sideblog (non-null signing_key_salt) whose key isn't
+ * already in localStorage. Consumes and wipes the stashed password
+ * from sessionStorage. No-op if no password is stashed (e.g. page
+ * load of an already-authenticated session).
+ *
+ * Call after login / ensurePublicKeyPublished completes.
+ */
+export async function ensureBlogKeys() {
+  let password = null;
+  try {
+    password = sessionStorage.getItem(STORAGE_KEY_PASSWORD_TMP);
+  } catch { /* disabled */ }
+
+  if (!password) {
+    // No password available - we can still check for missing
+    // keys and warn the user, but can't derive.
+    return { derived: 0, missing: 0, password: false };
+  }
+
+  let blogs = [];
+  try {
+    const resp = await fetch('/api/v1/blogs/mine/', {
+      credentials: 'same-origin',
+    });
+    if (!resp.ok) throw new Error(`blogs fetch ${resp.status}`);
+    blogs = await resp.json() || [];
+  } catch (err) {
+    console.warn('[Signing] ensureBlogKeys: blog list fetch failed:', err);
+    return { derived: 0, missing: 0, password: true };
+  }
+
+  let derived = 0;
+  for (const blog of blogs) {
+    if (!blog.signing_key_salt) continue;  // legacy blog uses account key
+    if (loadBlogPrivateKey(blog.username)) continue;  // already cached
+
+    try {
+      const priv = await deriveSigningKey(password, blog.signing_key_salt);
+      const pub = await getPublicKey(priv);
+      storeBlogKey(blog.username, priv, pub);
+      derived++;
+      console.debug(`[Signing] Derived + cached key for @${blog.username}`);
+    } catch (err) {
+      console.error(`[Signing] Failed to derive key for @${blog.username}:`, err);
+    }
+  }
+
+  // Wipe the stash. The password should never outlive its purpose.
+  try { sessionStorage.removeItem(STORAGE_KEY_PASSWORD_TMP); } catch { /* */ }
+
+  return { derived, missing: 0, password: true };
 }
 
 /**
@@ -201,149 +343,6 @@ export function loadLegacyPrivateKey() {
   const b64 = localStorage.getItem(STORAGE_KEY_LEGACY);
   if (!b64) return null;
   return base64ToUint8(b64);
-}
-
-// =========================================================================
-// Form Interception
-// =========================================================================
-
-/**
- * Set up form interception on login/signup forms.
- * Intercepts form submit to derive Ed25519 keys from password.
- * Same pattern as Carrion's setupFormInterception().
- */
-export function setupFormInterception() {
-  // Look for auth forms with password fields
-  const forms = document.querySelectorAll('form');
-  for (const form of forms) {
-    const passwordField = form.querySelector('input[type="password"]');
-    if (!passwordField) continue;
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const password = passwordField.value;
-      if (!password) {
-        form.submit();
-        return;
-      }
-
-      try {
-        const privateKey = await deriveSigningKey(password);
-        const publicKey = await getPublicKey(privateKey);
-        storeKeys(privateKey, publicKey);
-        console.debug('[TF-Signing] Keys derived and stored');
-        // Publish immediately — don't wait for the next page load.
-        // Best-effort: if this fails, ensurePublicKeyPublished()
-        // retries after the redirect lands.
-        publishPublicKey(uint8ToBase64(publicKey)).catch(() => { });
-      } catch (err) {
-        console.error('[TF-Signing] Key derivation failed:', err);
-        // Don't block form submission - keys can be derived on next login
-      }
-
-      // Submit the form after key derivation completes (or fails)
-      form.submit();
-    });
-  }
-}
-
-/**
- * Publish the public key to the server.
- * Called after login/signup form submission.
- * @param {string} publicKeyBase64
- */
-export async function publishPublicKey(publicKeyBase64) {
-  try {
-    const response = await apiFetch('/v1/keys/publish/', { method: 'POST', body: JSON.stringify({ public_key: publicKeyBase64 }) });
-    if (response.ok) {
-      console.debug('[TF-Signing] Public key published to server');
-    } else {
-      console.warn('[TF-Signing] Failed to publish key:', response.status);
-    }
-  } catch (err) {
-    console.warn('[TF-Signing] Key publish network error:', err);
-  }
-}
-
-/**
- * Ensure the public key is published on page load.
- * Called as a backup in case the form interception publish failed.
- */
-export async function ensurePublicKeyPublished() {
-  const pubKey = localStorage.getItem(STORAGE_KEY_PUBLIC);
-  if (!pubKey) return;
-
-  const MAX_RETRIES = 3;
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      const response = await fetch('/api/v1/keys/my-key/', {
-        credentials: 'same-origin',
-      });
-      if (response.status === 404) {
-        // No key on server yet - publish ours
-        await publishPublicKey(pubKey);
-      } else if (response.ok) {
-        const data = await response.json();
-        if (data.public_key && data.public_key !== pubKey) {
-          const isFresh = localStorage.getItem(STORAGE_KEY_FRESH);
-          localStorage.removeItem(STORAGE_KEY_FRESH);
-
-          if (isFresh) {
-            // Keys were just derived from password on this login -
-            // local is authoritative, publish to server.
-            await publishPublicKey(pubKey);
-          } else {
-            // Keys are from a previous session and don't match the
-            // server. Local is likely stale (password changed on
-            // another device, etc.). Clear so posts aren't signed
-            // with a bad key. User gets fresh keys on next login.
-            console.warn('[TF-Signing] Local key does not match server - clearing stale keys');
-            localStorage.removeItem(STORAGE_KEY_PRIVATE);
-            localStorage.removeItem(STORAGE_KEY_PUBLIC);
-            _notifySigningDegraded('Key mismatch — re-login to restore signing');
-          }
-        } else {
-          // Keys match - clear fresh flag
-          localStorage.removeItem(STORAGE_KEY_FRESH);
-        }
-      }
-      return; // success — no retry needed
-    } catch (err) {
-      if (attempt < MAX_RETRIES) {
-        // Exponential backoff: 2s, 4s, 8s
-        await new Promise(r => setTimeout(r, 2000 * (2 ** attempt)));
-      }
-      // Last attempt failed — will retry on next page load
-    }
-  }
-}
-
-// =========================================================================
-// Degraded-signing notification
-// =========================================================================
-
-/**
- * Dispatch a custom event when signing is unavailable or degraded.
- * Listeners (e.g. status-bar, post-composer) can surface this to the user.
- * @param {string} reason - Human-readable explanation
- */
-function _notifySigningDegraded(reason) {
-  document.dispatchEvent(new CustomEvent('nr:signing_degraded', {
-    detail: { reason },
-  }));
-}
-
-/**
- * Check if signing keys are available. If not, fires nr:signing_degraded
- * so the UI can warn the user. Returns the private key or null.
- * @returns {Uint8Array|null}
- */
-export function requirePrivateKey() {
-  const key = loadPrivateKey();
-  if (!key) {
-    _notifySigningDegraded('Signing key unavailable — re-login to restore');
-  }
-  return key;
 }
 
 // =========================================================================

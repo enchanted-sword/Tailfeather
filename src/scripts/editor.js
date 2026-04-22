@@ -1,6 +1,6 @@
 import { svgIcon } from './utils/icons.js';
 import { noact } from './utils/noact.js';
-import { userInfo } from './utils/user.js';
+import { getActiveBlog } from './utils/activeBlogs.js';
 import { createPost } from './utils/composer.js';
 import { getOptions } from './utils/jsTools.js';
 import { mutationManager } from './utils/mutation.js';
@@ -15,10 +15,10 @@ let defaultContent, defaultCss, theme, keybinding, nrTheme;
 const listener = event => {
   if (event.origin + '/' !== uri) return;
   if (event.data === 'frameInit') {
-    event.source.postMessage({ userInfo, defaultContent, defaultCss, theme, nrTheme, keybinding }, uri);
+    event.source.postMessage({ blog: getActiveBlog(), defaultContent, defaultCss, theme, nrTheme, keybinding }, uri);
   }
   else if (typeof event.data === 'object' && 'composerContent' in event.data) {
-    const { composerContent, hideFromSearch, tagString, qualifier, qualifierId } = event.data;
+    const { composerContent, hideFromSearch, tagString, qualifier, qualifierId, blog } = event.data;
     if (qualifier === 'additionToPost') {
       const form = document.querySelector(`article[data-post-id="${qualifierId}"] .inline-addition-form`);
       form.querySelector('.chain-addition-textarea').value = composerContent;
@@ -32,7 +32,7 @@ const listener = event => {
       form.querySelector('.ask-answer-send').click();
       closeEditor({ type: 'click' });
     } else {
-      createPost(composerContent, tagString, userInfo, { hideFromSearch }).then(post => {
+      createPost(composerContent, tagString, blog, { hideFromSearch }).then(post => {
         console.log(`[TF-Editor] Successfully created post ${post.post_id}`);
         closeEditor({ type: 'click' });
       }, e => {

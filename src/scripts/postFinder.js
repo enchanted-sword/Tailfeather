@@ -4,7 +4,7 @@ import { noact } from './utils/noact.js';
 import { svgIcon } from './utils/icons.js';
 import { getProcessor } from './utils/markdown.js';
 import { formatTags } from './utils/elements.js';
-import { resolveAvatar } from './utils/user.js';
+import { resolveAvatar } from './utils/users.js';
 
 const customClass = 'tailfeather-postFinder';
 

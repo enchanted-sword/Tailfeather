@@ -1,4 +1,5 @@
 import { apiFetch } from './apiFetch.js';
+import { getActiveBlog } from './activeBlogs.js'
 import * as Signing from './signing.js';
 import * as BookStore from './bookStore.js';
 
@@ -16,12 +17,38 @@ export function generatePostId() {
   const timestamp = Date.now().toString(16);
   const random = crypto.getRandomValues(new Uint8Array(8));
   const hex = Array.from(random, b => b.toString(16).padStart(2, '0')).join('');
-  return `${timestamp}-${hex}`;
+  return `tf-${timestamp}-${hex}`; // Custom prefix shouldn't break anything and might provide helpful insight
+}
+
+const _DATA_IMAGE_MARKER = '[Image blocked: Inline base64 disallowed]';
+
+export function stripInlineDataImages(body) {
+  if (!body) return body;
+  return body
+    .replace(
+      /!\[([^\]]*)\]\(\s*data:image\/[^)]*\)/gi,
+      _DATA_IMAGE_MARKER,
+    )
+    .replace(
+      /<img\b[^>]*\bsrc\s*=\s*["']data:image\/[^"']*["'][^>]*>/gi,
+      _DATA_IMAGE_MARKER,
+    )
+    // CSS url(data:...) inside inline style attributes. Covers the
+    // "wrap the base64 in <div style='background-image: url(...)'>"
+    // bypass sock + milja found on pinned posts. Match the url()
+    // reference including any surrounding whitespace / quotes, and
+    // replace with url(about:blank) so the rest of the style
+    // declaration stays syntactically valid - the browser ignores
+    // about:blank as a background-image with no warning.
+    .replace(
+      /url\(\s*(["']?)\s*data:[^)]*\1\s*\)/gi,
+      'url(about:blank)',
+    );
 }
 
 export async function registerTags(postId, tags) {
   if (!tags.length) return;
-  apiFetch('/v1/posts/register/', { method: 'POST', body: { post_id: postId, tags } }).catch(e => console.error('[TF-Composer] Tag registration failed', e));
+  apiFetch('/v1/posts/register/', { method: 'POST', body: { post_id: postId, tags } }).catch(e => console.error('[TF-Composer] Tag registration failed:', e));
 }
 
 export async function sendPostEvent(post, eventType = 'new_post') {
@@ -32,46 +59,88 @@ export async function sendPostEvent(post, eventType = 'new_post') {
   apiFetch('/v1/posts/send/', {
     method: 'POST', body: {
       post_id: post.post_id,
-      author: post.author, // Fix from the vanilla composer, which doesn't supply the `author` field
       author_name: post.author_name || '',
-      author_username: post.author_username || post.author || '',
+      // SSE wire field: carries the ROOT author username, so
+      // relay events for staples/additions can attribute back
+      // to the original author. For plain new_post this is
+      // just the author's own username. See
+      // normalizePostFromSSE for the client-side translation.
+      author_username: post.author || '',
       author_avatar: post.author_avatar || '',
       body: post.body || '',
       signature: post.signature || '',
+      // Forward root_signature on composites / additions /
+      // staples so receivers can verify the root content
+      // without waiting on the author's blob to cache. See
+      // api/sse_schemas.py NewPostEvent for the race-bug
+      // this closes.
+      root_signature: post.root_signature || '',
       tags: post.tags || [],
+      original_tags: post.original_tags || [],
       created_at: post.created_at || '',
       is_stapled: !!(post.is_stapled),
-      stapled_from: post.stapled_from || '',
       root_post_id: post.root_post_id || '',
       additions: post.additions || [],
       chain_version: post.chain_version || 0,
+      answered_ask: post.answered_ask || null,
+      hide_from_search: !!(post.hide_from_search),
       event_type: eventType,
     }
-  }).catch(e => console.warn('[TF-Composer]: SSE relay failed (non-fatal):', e));
+  }).catch(e => console.warn('[TF-Composer]: SSE relay failed:', e));
 }
 
-export async function createPost(body, tagsInput, user, options = {}) {
+export async function createPost(body, tagsInput, blog, options = {}) {
   if (!body.trim()) throw new Error('[TF-Composer] Post body cannot be empty');
+
+  // Strip inline base64 images before any further processing so both
+  // the length check and the signature see the canonical, de-bloated body
+  body = stripInlineDataImages(body);
 
   if (body.length > MAX_POST_BODY_LENGTH) throw new Error(`[TF-Composer] Post body too long (${body.length.toLocaleString()} / ${MAX_POST_BODY_LENGTH.toLocaleString()} chars)`);
 
-  const postId = generatePostId();
+  const postId = options.postId || generatePostId();
   const tags = parseTags(tagsInput);
   const createdAt = new Date().toISOString();
+
+  // Unlike Noterook, we support posting from non-active blogs
+  // Opposite priority here: fallback to getActiveBlog()
+
+  if (!blog) {
+    try {
+      blog = getActiveBlog();
+      if (blog) {
+        authorUsername = blog.username;
+        authorDisplayName = blog.display_name || blog.username;
+        authorAvatar = blog.avatar_url || '';
+      }
+    } catch {
+      console.error('[TF-Composer] No valid blog passed or findable for posting');
+      return null;
+    }
+  }
+  let authorUsername = blog.username;
+  let authorDisplayName = blog.displayName || blog.display_name || blog.username;
+  let authorAvatar = blog.avatarUrl || blog.avatar_url || '';
 
   // Build signable content
   // Fields must match what verifyBlob() reconstructs in blob-manager.js
   const signable = {
     post_id: postId,
-    author: user.username,
+    author: blog.username,
     body: body,
     tags: tags,
     created_at: createdAt,
   };
 
-  // Sign with Ed25519
+  // Sign with the ACTING BLOG's Ed25519 private key: legacy blogs
+  // use the account-level key (null salt); sideblogs use the
+  // per-blog key cached at login (post-ensureBlogKeys). If no
+  // cache entry is present for the sideblog we fall back to the
+  // legacy key and a warning is logged - signature will mismatch
+  // on viewers but the post still reaches feeds; re-logging-in
+  // populates the cache.
   let signature = '';
-  const privateKey = Signing.loadPrivateKey();
+  const privateKey = Signing.loadKeyForBlog(blog) || Signing.loadPrivateKey();
   if (privateKey) {
     try {
       signature = await Signing.signPost(signable, privateKey);
@@ -80,13 +149,14 @@ export async function createPost(body, tagsInput, user, options = {}) {
     }
   }
 
-  // Build full post object for IndexedDB
+  // Build full post object for IndexedDB. Single canonical `author`
+  // field (root author username); no legacy `author_username` mirror.
   const post = {
     post_id: postId,
-    author_id: user.id,
-    author: user.username,
-    author_name: user.displayName || user.display_name || user.username,
-    author_avatar: user.avatarUrl || user.avatar_url || '',
+    author: authorUsername,
+    author_id: blog.id,
+    author_name: authorDisplayName,
+    author_avatar: authorAvatar,
     body: body,
     media_urls: [],
     tags: tags,
@@ -94,7 +164,6 @@ export async function createPost(body, tagsInput, user, options = {}) {
     created_at: createdAt,
     is_mine: 1,        // IndexedDB index (1 = mine, 0 = stapled)
     is_stapled: 0,
-    stapled_from: null,
     additions: [],
     chain_version: 0,
     chain_tip_id: null,
@@ -103,8 +172,16 @@ export async function createPost(body, tagsInput, user, options = {}) {
     hide_from_search: options.hideFromSearch ? 1 : 0,
   };
 
+  // Ask-answer attestation. Present only when this post was created
+  // in response to an inbox ask via the answer-publicly flow. The
+  // server-signed attestation lets renderers verify the "Answered an
+  // ask from @alice" badge wasn't forged.
+  if (options.answeredAsk) {
+    post.answered_ask = options.answeredAsk;
+  }
+
   // Store to IndexedDB (Single Gateway)
-  await BookStore.openDatabase(user.id).then(() => BookStore.storePost(post));
+  await BookStore.openDatabase(blog.id).then(() => BookStore.storePost(post));
 
   // Register tags with server (non-blocking) - skip if hidden from search
   if (!options.hideFromSearch) {

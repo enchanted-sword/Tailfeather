@@ -1,9 +1,5 @@
 import { apiFetch } from './apiFetch.js';
 import { getIndexedUserBooks, getIndexedUsers, updateData } from './database.js';
-import { inject } from './inject.js';
-
-export const [{ user: userInfo }] = await inject('../scripts/inject/app.js');
-
 
 const fetchUserInfo = async username => apiFetch(`/api/v1/profiles/${username}/`);
 

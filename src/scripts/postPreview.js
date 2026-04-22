@@ -1,7 +1,7 @@
 import { mutationManager } from './utils/mutation.js';
 import { noact } from './utils/noact.js';
 import { getProcessor } from './utils/markdown.js';
-import { userInfo } from './utils/user.js';
+import { getActiveBlog } from './utils/activeBlogs.js';
 import { debounce } from './utils/jsTools.js';
 import { formatTags } from './utils/elements.js';
 
@@ -14,6 +14,7 @@ const editorSelector = `#composer-mount:not([${customAttribute}]) ${bodySelector
 
 const previewWindow = tagInput => {
   const tags = tagInput?.value || '';
+  const userInfo = getActiveBlog();
 
   return noact({
     className: `${customClass} post-card`,

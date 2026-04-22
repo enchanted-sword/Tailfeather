@@ -1,3 +1,4 @@
+import { activeSlug } from './activeBlogs.js';
 
 const getCSRFToken = () => {
   const cookies = document.cookie.split(';');
@@ -161,6 +162,10 @@ export async function apiFetch(givenPath, givenOptions) {
       ...givenOptions?.queryParams,
     },
   };
+
+  // Only stamp for same-origin relative URLs so we don't leak active-blog identity to third parties.
+  if (options.baseUrl === defaultOptions.baseUrl) options.headers['X-As-Blog'] = activeSlug;
+  console.log(options, activeSlug)
 
   if (options.body) {
     const contentType = options.headers['Content-Type'];

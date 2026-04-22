@@ -17,8 +17,8 @@ function updateTags({ target: { value } }) {
 
 const transformStyle = cssText => `\n<style>\n${cssText}\n</style>`;
 
-const initEditor = ({ userInfo, defaultContent, defaultCss, theme, nrTheme, keybinding }) => {
-  console.debug('[EditorConfig] Ace loaded', userInfo, defaultContent, defaultCss, theme, keybinding);
+const initEditor = ({ blog, defaultContent, defaultCss, theme, nrTheme, keybinding }) => {
+  console.debug('[EditorConfig] Ace loaded', blog, defaultContent, defaultCss, theme, keybinding);
 
   document.body.dataset.theme = nrTheme;
 
@@ -60,12 +60,12 @@ const initEditor = ({ userInfo, defaultContent, defaultCss, theme, nrTheme, keyb
         children: [
           {
             className: 'post-author-avatar',
-            src: userInfo.avatar_url
+            src: blog.avatar_url
           },
           {
             tag: 'span',
             className: 'post-author-name',
-            children: userInfo.display_name
+            children: blog.display_name
           },
           {
             tag: 'span',
@@ -100,7 +100,7 @@ const initEditor = ({ userInfo, defaultContent, defaultCss, theme, nrTheme, keyb
     const composerContent = getFullText();
     const hideFromSearch = document.getElementById('composer-hide-search').checked;
     const tagString = document.getElementById('composer-tags').value;
-    window.parent.postMessage({ composerContent, hideFromSearch, tagString, qualifier, qualifierId }, uri);
+    window.parent.postMessage({ composerContent, hideFromSearch, tagString, qualifier, qualifierId, blog }, uri);
   });
 
   const tagInput = document.getElementById('composer-tags');
@@ -135,7 +135,7 @@ window.parent.postMessage('frameInit', uri);
 
 const listener = event => {
   if (event.origin !== uri) return;
-  if (typeof event.data === 'object' && 'userInfo' in event.data) initEditor(event.data);
+  if (typeof event.data === 'object' && 'blog' in event.data) initEditor(event.data);
 };
 
 window.addEventListener('message', listener);

@@ -1,7 +1,7 @@
 import { getIndexedPosts, updateData } from './database.js';
 import { fetchBlobCached } from './blobManager.js';
 import { uniqueFn } from './jsTools.js';
-import { extractUserFromHref, cacheAvatar } from './user.js';
+import { extractUserFromHref, cacheAvatar } from './users.js';
 
 const unwrapTags = tagsElement => tagsElement ? Array.from(tagsElement.querySelectorAll('.post-tag')).map(tag => tag.textContent.slice(1)) : ([]);
 

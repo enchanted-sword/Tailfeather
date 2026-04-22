@@ -1,4 +1,4 @@
-import { cacheAvatar, getCachedAvatar, getUsersShallow } from './utils/user.js';
+import { cacheAvatar, getCachedAvatar, getUsersShallow } from './utils/users.js';
 import { getOptions, uniqueFn } from './utils/jsTools.js';
 import { postFunction } from './utils/mutation.js';
 import { necromancePostShallow } from './utils/necromancy.js';
