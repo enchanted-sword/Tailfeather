@@ -161,6 +161,15 @@
     color: var(--white-on-dark);
   }
 
+  .blog-switcher-toggle {
+    border: 1px solid color-mix(in srgb, var(--white-on-dark), transparent 35%);
+    color: color-mix(in srgb, var(--white-on-dark), transparent 35%);
+  }
+
+  .blog-switcher-toggle:hover {
+    color: var(--white-on-dark);
+  }
+
   .connection-status--connected {
     color: color-mix(in srgb, var(--white-on-dark), transparent 35%);
   }
