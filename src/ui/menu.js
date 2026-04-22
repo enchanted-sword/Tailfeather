@@ -168,7 +168,7 @@
                   'links' in feature ? {
                     tag: 'p',
                     children: [
-                      'see: ',
+                      'See: ',
                       feature.links.map((link, i) => {
                         return [
                           {
