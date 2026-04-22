@@ -1,5 +1,5 @@
 import { apiFetch } from './apiFetch.js';
-import { getActiveBlog } from './activeBlogs.js'
+import { getActiveBlog, userInfo } from './activeBlogs.js'
 import * as Signing from './signing.js';
 import * as BookStore from './bookStore.js';
 
@@ -51,12 +51,19 @@ export async function registerTags(postId, tags) {
   apiFetch('/v1/posts/register/', { method: 'POST', body: { post_id: postId, tags } }).catch(e => console.error('[TF-Composer] Tag registration failed:', e));
 }
 
-export async function sendPostEvent(post, eventType = 'new_post') {
+export async function sendPostEvent(post, eventType = 'new_post', postingSlug) {
   if (!post?.post_id) {
     console.warn('[TF-Composer] sendPostEvent called without post_id, skipping relay');
     return;
   }
+
   apiFetch('/v1/posts/send/', {
+    headers: {
+      'X-As-Blog': postingSlug
+      // The server SSE handler resolves the author from the relay header, not the post object
+      // apiFetch defaults to the blog header the site expects: the active blog currently subscribed to the SSE feed
+      // However, as part of allowing posting on non-active blogs, we need to override the header here so that the event matches the canonical author
+    },
     method: 'POST', body: {
       post_id: post.post_id,
       author_name: post.author_name || '',
@@ -108,11 +115,6 @@ export async function createPost(body, tagsInput, blog, options = {}) {
   if (!blog) {
     try {
       blog = getActiveBlog();
-      if (blog) {
-        authorUsername = blog.username;
-        authorDisplayName = blog.display_name || blog.username;
-        authorAvatar = blog.avatar_url || '';
-      }
     } catch {
       console.error('[TF-Composer] No valid blog passed or findable for posting');
       return null;
@@ -181,7 +183,7 @@ export async function createPost(body, tagsInput, blog, options = {}) {
   }
 
   // Store to IndexedDB (Single Gateway)
-  await BookStore.openDatabase(blog.id).then(() => BookStore.storePost(post));
+  await BookStore.openDatabase(userInfo.id).then(() => BookStore.storePost(post));
 
   // Register tags with server (non-blocking) - skip if hidden from search
   if (!options.hideFromSearch) {
@@ -190,8 +192,10 @@ export async function createPost(body, tagsInput, blog, options = {}) {
 
   // Notify followers via SSE relay (non-blocking)
   if (!options.hideFromSearch) {
-    sendPostEvent(post, 'new_post');
+    sendPostEvent(post, 'new_post', authorUsername);
   }
+
+  console.debug(`[TF-Composer] Successfully created post ${post.post_id}`, post, blog);
 
   return post;
 }

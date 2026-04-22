@@ -5,7 +5,7 @@
  * touches the database directly. Same Single Gateway pattern
  * as Carrion's message-store.js.
  *
- * Database: noterook-{userId} (v1)
+ * Database: noterook-{userId} (current: v3)
  *
  * Store: posts (keyPath: post_id)
  *   Indexes: created_at, author_id, tags (multiEntry), is_stapled, is_mine
@@ -14,6 +14,16 @@
  *   Indexes: target_post_id, target_addition_id
  *
  * Store: metadata (keyPath: key)
+ *
+ * Version history:
+ *   v1 - initial
+ *   v2 - phantom_tags store added
+ *   v3 - author field unification: normalize every post row to use
+ *        `author` as the single canonical root-author field, delete
+ *        the legacy `author_username` mirror and the shadow
+ *        `_author_username` / `_author_display` / `_author_avatar`
+ *        fields that were previously added by client-side normalizers.
+ *        See post-card.js and post-envelope.js for the full rationale.
  *
  * Requires: idb.min.js (via importmap or global)
  */
@@ -26,6 +36,12 @@ const METADATA_STORE = 'metadata';
 
 let _db = null;
 let _userId = null;
+// Memoized open-in-flight promise. Without this, two concurrent
+// openDatabase(userId) callers (e.g. site-init + book-view racing on a
+// cold page load) both call indexedDB.open and each resolves into _db,
+// orphaning one handle. The memo dedupes - the second caller awaits
+// the first's resolved promise instead of kicking off a parallel open.
+let _openPromise = null;
 
 function _dbName(userId) {
   return `noterook-${userId}`;
@@ -38,6 +54,10 @@ function _dbName(userId) {
  */
 export async function openDatabase(userId) {
   if (_db && _userId === userId) return _db;
+  // Concurrent call while an open is already in flight for the same
+  // user - reuse it instead of starting a second open that would
+  // leak the first handle.
+  if (_openPromise && _userId === userId) return _openPromise;
 
   // Close previous if switching users
   if (_db) {
@@ -47,18 +67,20 @@ export async function openDatabase(userId) {
 
   _userId = userId;
 
-  return new Promise((resolve, reject) => {
+  _openPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(_dbName(userId), DB_VERSION);
 
     // If another tab/SW holds an open connection at an older version,
-    // the upgrade is blocked.  Log a warning and wait — the other
+    // the upgrade is blocked.  Log a warning and wait - the other
     // connection's onversionchange handler should close it shortly.
     request.onblocked = () => {
-      console.warn('[TF-BookStore] DB upgrade blocked by another tab/SW — waiting for it to close');
+      console.warn('[TF-BookStore] DB upgrade blocked by another tab/SW - waiting for it to close');
     };
 
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
+      const tx = event.target.transaction;
+      const oldVersion = event.oldVersion || 0;
 
       // Posts store
       if (!db.objectStoreNames.contains(POSTS_STORE)) {
@@ -87,6 +109,47 @@ export async function openDatabase(userId) {
       if (!db.objectStoreNames.contains(METADATA_STORE)) {
         db.createObjectStore(METADATA_STORE, { keyPath: 'key' });
       }
+
+      // v3 migration: unify author fields.
+      // Collapses `author`/`author_username` to a single `author`
+      // field and deletes the `_author_username` /
+      // `_author_display` / `_author_avatar` shadow fields that
+      // pre-unification client normalizers used to add. Safe to
+      // re-run (idempotent): if a row is already in the new
+      // shape the writes are no-ops.
+      if (oldVersion < 3 && tx && db.objectStoreNames.contains(POSTS_STORE)) {
+        const store = tx.objectStore(POSTS_STORE);
+        const cursorReq = store.openCursor();
+        cursorReq.onsuccess = (e) => {
+          const cursor = e.target.result;
+          if (!cursor) return;
+          const row = cursor.value;
+          let mutated = false;
+          if (!row.author && row.author_username) {
+            row.author = row.author_username;
+            mutated = true;
+          }
+          for (const legacy of [
+            'author_username',
+            '_author_username',
+            '_author_display',
+            '_author_avatar',
+            // `stapled_from` was always equal to the root
+            // author's username; now lives in `author`.
+            'stapled_from',
+          ]) {
+            if (legacy in row) {
+              delete row[legacy];
+              mutated = true;
+            }
+          }
+          if (mutated) cursor.update(row);
+          cursor.continue();
+        };
+        cursorReq.onerror = () => {
+          console.warn('[TF-BookStore] v3 migration cursor error - rows will normalize on next write');
+        };
+      }
     };
 
     request.onsuccess = (event) => {
@@ -99,18 +162,52 @@ export async function openDatabase(userId) {
         const uid = _userId;
         _db.close();
         _db = null;
-        console.debug('[TF-BookStore] Closed DB for version upgrade — reopening');
+        console.debug('[TF-BookStore] Closed DB for version upgrade - reopening');
         if (uid) openDatabase(uid).catch(() => { });
       };
 
+      _openPromise = null;
       resolve(_db);
     };
 
     request.onerror = (event) => {
       console.error('[TF-BookStore] Failed to open database:', event.target.error);
+      _openPromise = null;
       reject(event.target.error);
     };
   });
+  return _openPromise;
+}
+
+/**
+ * Delete and recreate the database. Used as a recovery path when
+ * IndexedDB is corrupted. Posts will be re-imported from the server
+ * blob via syncFromBlob on the next book render.
+ *
+ * @param {number} userId
+ * @returns {Promise<IDBDatabase>}
+ */
+export async function resetDatabase(userId) {
+  if (_db) {
+    _db.close();
+    _db = null;
+  }
+  // Clear any in-flight open so the re-open after delete starts
+  // fresh instead of resolving into a handle against a DB that no
+  // longer exists.
+  _openPromise = null;
+
+  await new Promise((resolve, reject) => {
+    const req = indexedDB.deleteDatabase(_dbName(userId));
+    req.onsuccess = () => resolve();
+    req.onerror = (e) => reject(e.target.error);
+    req.onblocked = () => {
+      console.warn('[TF-BookStore] Delete blocked by another tab - waiting');
+    };
+  });
+
+  console.info('[TF-BookStore] Database deleted, recreating...');
+  return openDatabase(userId);
 }
 
 /**
@@ -176,8 +273,9 @@ export function getPost(postId) {
     request.onerror = (e) => reject(e.target.error);
   });
 }
+
 /**
- * Resolve a post by ID — tries IndexedDB first, then blob cache.
+ * Resolve a post by ID - tries IndexedDB first, then blob cache.
  *
  * Use this instead of getPost() when you need to find a post that may
  * belong to another user (e.g., clicking "add to" on someone else's
@@ -204,17 +302,43 @@ export async function resolvePost(postId, blobOwner, originalAuthor) {
   // 3. Blob cache (other users' posts we've viewed)
   const { default: BlobManager } = await import('./blob-manager.js');
 
+  // Diagnostic: record which steps miss so "addition via feed says
+  // Post not found, but the post is live" (missanomalocaris,
+  // Robot_Face) leaves a trail in the console when it happens.
+  const trace = [];
+
   if (blobOwner) {
     const cached = BlobManager.getCached(blobOwner);
     if (cached?.envelope?.posts) {
       const post = cached.envelope.posts.find(p => p.post_id === postId);
       if (post) return post;
+      trace.push(`blob-cache[${blobOwner}]:no-match (v=${cached.blob_version}, posts=${cached.envelope.posts.length})`);
+    } else {
+      trace.push(`blob-cache[${blobOwner}]:empty`);
     }
-    // Try fetching fresh
+    // Try fetching fresh. On the second attempt (below) we also
+    // invalidate so a stale-but-present cache can't shortcut the
+    // full-blob fetch.
     const result = await BlobManager.fetchBlobCached(blobOwner);
     if (result.envelope?.posts) {
       const post = result.envelope.posts.find(p => p.post_id === postId);
       if (post) return post;
+      trace.push(`fetchBlobCached[${blobOwner}]:no-match (method=${result.method}, posts=${result.envelope.posts.length})`);
+    } else {
+      trace.push(`fetchBlobCached[${blobOwner}]:${result.error || 'no-envelope'}`);
+    }
+    // Last chance on the blobOwner path: invalidate and re-fetch
+    // fresh from the server. Covers cases where the delta-endpoint
+    // path returned up_to_date against a locally-cached envelope
+    // that didn't actually have the post.
+    BlobManager.invalidateCache(blobOwner);
+    const fresh = await BlobManager.fetchBlob(blobOwner);
+    if (fresh.envelope?.posts) {
+      const post = fresh.envelope.posts.find(p => p.post_id === postId);
+      if (post) return post;
+      trace.push(`fetchBlob[${blobOwner}]:no-match (posts=${fresh.envelope.posts.length})`);
+    } else {
+      trace.push(`fetchBlob[${blobOwner}]:${fresh.error || 'no-envelope'}`);
     }
   }
 
@@ -224,10 +348,17 @@ export async function resolvePost(postId, blobOwner, originalAuthor) {
     if (result.envelope?.posts) {
       const post = result.envelope.posts.find(p => p.post_id === postId);
       if (post) return post;
+      trace.push(`fetchBlobCached[${originalAuthor}]:no-match`);
+    } else {
+      trace.push(`fetchBlobCached[${originalAuthor}]:${result.error || 'no-envelope'}`);
     }
   }
 
-  console.debug(`[TF-BookStore] resolvePost: ${postId} not found (owner=${blobOwner}, author=${originalAuthor})`);
+  console.warn(
+    `[TF-BookStore] resolvePost: ${postId} not found ` +
+    `(owner=${blobOwner || 'none'}, author=${originalAuthor || 'none'}) ` +
+    `trace=[${trace.join(' | ')}]`
+  );
   return null;
 }
 
@@ -235,7 +366,7 @@ export async function resolvePost(postId, blobOwner, originalAuthor) {
 // Posts delivered via SSE events aren't in IndexedDB or blob caches.
 // This in-memory cache bridges the gap so actions (staple, add-to)
 // work on SSE-delivered posts before the author's blob is published.
-// Capped and session-scoped — not persisted.
+// Capped and session-scoped - not persisted.
 
 const _ssePostCache = new Map();
 const SSE_POST_CACHE_MAX = 500;

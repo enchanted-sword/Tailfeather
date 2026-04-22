@@ -40,9 +40,10 @@ const COLOR_MAP = {
 // =========================================================================
 
 export class MarkdownProcessor {
-  constructor() {
+  constructor(options = {}) {
     this._trustedImageHosts = new Set();
     this._trustedStylesheetHosts = [];  // Array for wildcard matching
+    this._trustedMediaHosts = new Set();
     this._configured = false;
 
     // Load trusted hosts from data attributes on <body>
@@ -78,7 +79,7 @@ export class MarkdownProcessor {
         const hosts = JSON.parse(imgHosts);
         hosts.forEach(h => this._trustedImageHosts.add(h.toLowerCase()));
       } catch (e) {
-        console.warn('[TF-Markdown] Failed to parse trusted image hosts:', e);
+        console.warn('[Markdown] Failed to parse trusted image hosts:', e);
       }
     }
 
@@ -88,7 +89,18 @@ export class MarkdownProcessor {
       try {
         this._trustedStylesheetHosts = JSON.parse(cssHosts).map(h => h.toLowerCase());
       } catch (e) {
-        console.warn('[TF-Markdown] Failed to parse trusted stylesheet hosts:', e);
+        console.warn('[Markdown] Failed to parse trusted stylesheet hosts:', e);
+      }
+    }
+
+    // Media hosts (audio/video sources)
+    const mediaHosts = body.dataset.trustedMediaHosts;
+    if (mediaHosts) {
+      try {
+        const hosts = JSON.parse(mediaHosts);
+        hosts.forEach(h => this._trustedMediaHosts.add(h.toLowerCase()));
+      } catch (e) {
+        console.warn('[Markdown] Failed to parse trusted media hosts:', e);
       }
     }
   }
@@ -154,6 +166,28 @@ export class MarkdownProcessor {
     // 1. Preprocess custom syntax
     let processed = this._preprocessCustomSyntax(text);
 
+    // 1b. In shadow mode, hoist entire <style>...</style> blocks out
+    //     of the pipeline and replace with marker <span>s. Both
+    //     marked's HTML parser and DOMPurify have been observed to
+    //     mangle CSS that contains tokens resembling HTML tags -
+    //     e.g. `@property --scale { syntax: "<length> | <percentage>"; }`
+    //     terminates the style block early, breaking every rule that
+    //     follows (monorail's report). The markers pass through both
+    //     stages untouched and get spliced back in before link/image
+    //     processing, which still sees real <style> nodes and can
+    //     extract @import as usual.
+    const styleStubs = [];
+    if (shadowMode) {
+      processed = processed.replace(
+        /<style\b[^>]*>[\s\S]*?<\/style>/gi,
+        (match) => {
+          const i = styleStubs.length;
+          styleStubs.push(match);
+          return `<span class="__nr-style-stub-${i}__"></span>`;
+        },
+      );
+    }
+
     // 2. marked.parse()
     let html = marked.parse(processed);
 
@@ -162,6 +196,16 @@ export class MarkdownProcessor {
 
     // 4. DOMPurify
     html = this._sanitize(html, shadowMode);
+
+    // 4b. Restore hoisted <style> blocks before link/image processing
+    //     so _processLinksAndImages can still walk real <style> nodes
+    //     and rewrite @import into <link>.
+    if (styleStubs.length) {
+      html = html.replace(
+        /<span class="__nr-style-stub-(\d+)__"><\/span>/g,
+        (_m, i) => styleStubs[Number(i)] || '',
+      );
+    }
 
     // 5. Empty element cleanup
     html = this._cleanupEmpty(html);
@@ -189,7 +233,7 @@ export class MarkdownProcessor {
     const collapsibles = new Map();
 
     text = text.replace(
-      /^:::\s*(.+)$/gm,
+      /^\s*:::\s*(.+)$/gm,
       (match, title) => {
         const id = `!!COLLAPSIBLE_OPEN_${collapsibleId++}!!`;
         collapsibles.set(id, title.trim());
@@ -198,7 +242,7 @@ export class MarkdownProcessor {
     );
 
     text = text.replace(
-      /^:::$/gm,
+      /^\s*:::$/gm,
       () => '!!COLLAPSIBLE_CLOSE!!'
     );
 
@@ -209,6 +253,43 @@ export class MarkdownProcessor {
     // Must intercept before marked treats it as <strong>
     text = text.replace(/__([^_]+?)__/g, '<u>$1</u>');
 
+    // @user mention → markdown link to /book/<username>/. Matches
+    // only when the @ is at a word boundary (start of line or
+    // preceded by whitespace / open bracket), so email addresses
+    // like foo@bar.com don't trigger. Pattern mirrors Django's
+    // username validator (accounts/forms.py clean_username). The
+    // URL uses the lowercased form since usernames are
+    // canonicalized lowercase on signup; the display keeps the
+    // literal casing the user typed. Escape with \@ to opt out.
+    //
+    // Before running the regex we stub out CSS <style> blocks and
+    // code spans/blocks and restore them after. Without this, CSS
+    // at-rules like @keyframes, @media, @supports all get eaten
+    // by the mention pattern and rewritten as markdown links,
+    // which then parse as broken CSS and nuke every animation in
+    // the post body (fuckingterrify's report: "in-post CSS
+    // animations no longer work at all"). Also has the side
+    // benefit that literal `@name` inside a code span stays as
+    // text instead of getting auto-linkified.
+    const mentionStubs = [];
+    let mentionText = text.replace(
+      /<style[\s\S]*?<\/style>|```[\s\S]*?```|`[^`\n]+`/gi,
+      (match) => {
+        const i = mentionStubs.length;
+        mentionStubs.push(match);
+        return `\u0000MENTIONSTUB${i}\u0000`;
+      },
+    );
+    mentionText = mentionText.replace(
+      /(^|[\s(\[{])@([A-Za-z0-9][A-Za-z0-9_-]*)\b/g,
+      (_m, prefix, username) =>
+        `${prefix}[@${username}](/book/${username.toLowerCase()}/)`,
+    );
+    text = mentionText.replace(
+      /\u0000MENTIONSTUB(\d+)\u0000/g,
+      (_m, i) => mentionStubs[Number(i)],
+    );
+
     // Color syntax: {color:red}text{/color}
     text = text.replace(
       /\{color:(\w+)\}([\s\S]*?)\{\/color\}/gi,
@@ -217,6 +298,36 @@ export class MarkdownProcessor {
         if (!hex) return match; // Unknown color, leave as-is
         return `<span style="color: ${hex}">${content}</span>`;
       }
+    );
+
+    // Media embeds: [[audio:url]] / [[video:url]] → <audio/video src="url">
+    //
+    // Lightweight inline marker. The preprocess only transforms
+    // the token into the HTML element - it doesn't validate the
+    // URL. Everything downstream handles that:
+    //   - DOMPurify allowlists audio/video/source/track in
+    //     _sanitize (no autoplay attribute in the allowlist).
+    //   - _processLinksAndImages post-sanitize pass validates
+    //     src against trusted_media_hosts, strips autoplay /
+    //     autostart / data-autoplay, and forces controls.
+    //
+    // An untrusted or malformed URL survives the preprocess but
+    // renders as a visible "[Audio blocked]" placeholder so the
+    // author notices in preview. javascript:/data: schemes are
+    // blocked by the URL pattern below and by the sanitizer.
+    //
+    // URL pattern deliberately requires http(s):// and forbids
+    // `]` and whitespace inside the URL, so a bracket typo
+    // doesn't silently swallow the rest of the line. Users who
+    // need raw HTML <audio> / <video> tags can still write them -
+    // this is a convenience marker on top of that.
+    text = text.replace(
+      /\[\[(audio|video):(https?:\/\/[^\]\s]+)\]\]/gi,
+      (_m, kind, url) => {
+        const tag = kind.toLowerCase();
+        const safe = url.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        return `<${tag} src="${safe}"></${tag}>`;
+      },
     );
 
     return text;
@@ -253,6 +364,23 @@ export class MarkdownProcessor {
   // =====================================================================
 
   _sanitize(html, shadowMode) {
+    // NOTE: audio/video attribute allowlist deliberately EXCLUDES
+    // autoplay, autostart, loop-with-muted combinations, and any
+    // non-standard "start muted" attrs. Browsers still permit
+    // muted autoplay without user interaction, so letting autoplay
+    // through (even paired with muted) would let a post body
+    // launch background playback the moment a viewer scrolls
+    // into it. If a legitimate use case for auto-starting media
+    // shows up later, a gated opt-in viewer preference is the
+    // right place for it, not a post-body attribute. See
+    // _postprocessMedia below for the defence-in-depth strip.
+    const MEDIA_ATTRS = [
+      'src', 'controls', 'preload', 'loop', 'muted',
+      'poster',          // video - poster frame before playback
+      'playsinline',     // inline mobile playback
+      'crossorigin',     // cross-origin resource handling
+      'kind', 'srclang', 'label', 'default',  // <track>
+    ];
     if (shadowMode) {
       return DOMPurify.sanitize(html, {
         ALLOWED_TAGS: [
@@ -264,6 +392,8 @@ export class MarkdownProcessor {
           'details', 'summary', 'figure', 'figcaption',
           'div', 'span',
           'marquee', 'big', 'small', 'abbr',
+          // Media - host-validated in _postprocessMedia
+          'audio', 'video', 'source', 'track',
           // Shadow mode extras
           'style', 'link',
           'header', 'nav', 'section', 'article', 'footer', 'aside',
@@ -274,10 +404,17 @@ export class MarkdownProcessor {
           'loading', 'referrerpolicy',
           'colspan', 'rowspan', 'align', 'valign',
           'style', 'open', 'name',
+          // <ol> start attribute. Without this, lists that
+          // begin at a non-1 number (e.g. "5. Something")
+          // render as "1. Something" because DOMPurify strips
+          // the start attribute and the browser defaults to 1.
+          'start',
           // <link> attrs
           'crossorigin', 'type',
           // marquee
           'direction', 'behavior', 'scrollamount', 'scrolldelay', 'loop',
+          // <audio> / <video> / <source> / <track>
+          ...MEDIA_ATTRS,
         ],
         ALLOW_DATA_ATTR: false,
         FORCE_BODY: true,
@@ -294,10 +431,16 @@ export class MarkdownProcessor {
         'sup', 'sub', 'mark',
         'details', 'summary',
         'div', 'span',
+        // Media - host-validated in _postprocessMedia
+        'audio', 'video', 'source', 'track',
       ],
       ALLOWED_ATTR: [
         'href', 'target', 'rel', 'src', 'alt', 'title',
         'style', 'open',
+        // <ol start="N"> - preserves non-1 list starting numbers.
+        'start',
+        // <audio> / <video> / <source> / <track>
+        ...MEDIA_ATTRS,
       ],
       ALLOW_DATA_ATTR: false,
     });
@@ -323,20 +466,97 @@ export class MarkdownProcessor {
     const temp = document.createElement('div');
     temp.innerHTML = html;
 
-    // Process images - validate trust, add privacy attrs
+    // Process images - validate trust, add privacy attrs. Inline
+    // data: URIs (base64 images) are rejected as of the "books got
+    // huge" incident: embedding PNGs directly bloats the blob, and
+    // once a base64-laden post gets stapled around the network it
+    // bloats every stapler's book too. Render as a placeholder so
+    // the visible UX matches the underlying constraint.
     const images = temp.querySelectorAll('img');
     for (const img of images) {
       const src = img.getAttribute('src') || '';
-      if (this._isImageTrusted(src)) {
+      const isData = src.startsWith('data:');
+      if (!isData && this._isImageTrusted(src)) {
         img.setAttribute('referrerpolicy', 'no-referrer');
         img.setAttribute('loading', 'lazy');
-      } else if (src && !src.startsWith('data:')) {
-        // Untrusted image - replace with warning
+      } else if (src) {
         const warning = document.createElement('span');
         warning.className = 'untrusted-image-warning';
-        warning.textContent = `[Image blocked: untrusted host]`;
-        warning.title = src;
+        warning.textContent = isData
+          ? '[Image blocked: inline base64 not allowed]'
+          : '[Image blocked: untrusted host]';
+        warning.title = isData
+          ? 'Inline base64 images bloat the blob and propagate through staples. Host the image on a trusted image host and link to it instead.'
+          : src;
         img.replaceWith(warning);
+      }
+    }
+
+    // Process <audio> and <video> elements.
+    //
+    // Three guarantees this loop enforces:
+    //   1. autoplay is stripped UNCONDITIONALLY - even if
+    //      DOMPurify ever regresses its allowlist, and even if a
+    //      user tries to smuggle `autoplay=""` / `data-autoplay`
+    //      / muted-paired autoplay. No embed auto-starts on load.
+    //   2. All src attributes (element-level and nested <source>s)
+    //      must resolve to a host in the trusted-media allowlist.
+    //      An element with zero valid sources is replaced with a
+    //      visible placeholder so the author notices in preview.
+    //   3. controls is forced on so users can stop / scrub. A
+    //      controls-less embed that can't autoplay is useless,
+    //      and a controls-less one that somehow DID autoplay
+    //      would be hostile.
+    //
+    // The image path (above) rejects inline data: URIs for blob-
+    // bloat reasons; the same argument applies to audio/video
+    // doubly, so data: srcs are rejected here too.
+    const mediaElements = temp.querySelectorAll('audio, video');
+    for (const media of mediaElements) {
+      // Kill autoplay + every near-synonym browsers respect.
+      // muted-autoplay is still autoplay; strip both rather
+      // than relying on the vendor tag to keep them paired.
+      media.removeAttribute('autoplay');
+      media.removeAttribute('autostart');  // non-standard but some engines honour
+      media.removeAttribute('data-autoplay');
+
+      // Force controls. No controls + no autoplay = no playback,
+      // which is the wrong failure mode for the viewer.
+      media.setAttribute('controls', '');
+
+      // Validate element-level src (when provided as attribute
+      // rather than a <source> child).
+      const directSrc = media.getAttribute('src') || '';
+      let hasValidSource = false;
+      if (directSrc) {
+        if (directSrc.startsWith('data:') || !this._isMediaTrusted(directSrc)) {
+          media.removeAttribute('src');
+        } else {
+          hasValidSource = true;
+        }
+      }
+
+      // Validate <source> children. Removing the bad ones
+      // rather than the whole <audio>/<video> keeps the
+      // fallback "your browser doesn't support X" text intact.
+      const sources = media.querySelectorAll('source');
+      for (const s of sources) {
+        const ssrc = s.getAttribute('src') || '';
+        if (!ssrc || ssrc.startsWith('data:') || !this._isMediaTrusted(ssrc)) {
+          s.remove();
+        } else {
+          hasValidSource = true;
+        }
+      }
+
+      if (!hasValidSource) {
+        const warning = document.createElement('span');
+        warning.className = 'untrusted-media-warning';
+        warning.textContent = media.tagName === 'VIDEO'
+          ? '[Video blocked: untrusted host]'
+          : '[Audio blocked: untrusted host]';
+        warning.title = directSrc || 'no valid <source> found';
+        media.replaceWith(warning);
       }
     }
 
@@ -348,6 +568,99 @@ export class MarkdownProcessor {
         link.setAttribute('target', '_blank');
         link.setAttribute('rel', 'noopener noreferrer nofollow');
       }
+    }
+
+    // Scrub CSS url(data:...) from inline style attributes and
+    // <style> tag contents. The <img src="data:..."> path is
+    // covered above; this catches the background-image and
+    // similar bypasses where the base64 payload lives in a
+    // stylesheet rather than an element's src. sock + milja
+    // reported pinned posts using <div style="background-image:
+    // url('data:...')"> to smuggle inline images through the
+    // write-time strip.
+    const CSS_DATA_URL = /url\(\s*(["']?)\s*data:[^)]*\1\s*\)/gi;
+    const styled = temp.querySelectorAll('[style]');
+    for (const el of styled) {
+      const s = el.getAttribute('style') || '';
+      if (CSS_DATA_URL.test(s)) {
+        el.setAttribute('style', s.replace(CSS_DATA_URL, 'url(about:blank)'));
+        CSS_DATA_URL.lastIndex = 0;
+      }
+    }
+    const styleTags = temp.querySelectorAll('style');
+    for (const st of styleTags) {
+      const txt = st.textContent || '';
+      if (CSS_DATA_URL.test(txt)) {
+        st.textContent = txt.replace(CSS_DATA_URL, 'url(about:blank)');
+        CSS_DATA_URL.lastIndex = 0;
+      }
+    }
+
+    // Linkify bare URLs in text nodes. Covers the "bio link isn't
+    // clickable" case (Dolly Molly) where marked's GFM autolink
+    // missed a plain-text https://... URL. Skips text already
+    // inside <a>, <code>, <pre>, and <style> so we don't double-
+    // wrap existing links or munge code/CSS content.
+    //
+    // The regex matches greedily to the first whitespace/angle
+    // bracket; trailing sentence punctuation is peeled off after
+    // the match so "...molly/." and "example.com," drop the
+    // trailing character, BUT query-string '?' and real URL
+    // punctuation inside the URL (e.g. https://site/path?a=1&b=2)
+    // are preserved. Balanced parens get the GFM treatment: a
+    // single ')' at the end is peeled only if there's no matching
+    // '(' in the URL body.
+    const URL_RE = /(https?:\/\/[^\s<>"]+)/g;
+    const TRAILING_PUNCT = /[.,;:!?'"\]}]$/;
+    const walker = document.createTreeWalker(temp, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    let tn;
+    while ((tn = walker.nextNode())) {
+      if (tn.parentElement?.closest('a, code, pre, style')) continue;
+      if (URL_RE.test(tn.textContent)) textNodes.push(tn);
+      URL_RE.lastIndex = 0;
+    }
+    for (const node of textNodes) {
+      const text = node.textContent;
+      const frag = document.createDocumentFragment();
+      let lastIdx = 0;
+      URL_RE.lastIndex = 0;
+      let m;
+      while ((m = URL_RE.exec(text)) !== null) {
+        let url = m[0];
+        let trailing = '';
+        // Peel trailing punctuation that's almost certainly
+        // sentence-structure rather than URL-structure.
+        while (url.length > 8 && TRAILING_PUNCT.test(url)) {
+          trailing = url.slice(-1) + trailing;
+          url = url.slice(0, -1);
+        }
+        // Unbalanced close-paren: peel only when the URL has
+        // no matching '(' (so "(see https://ex.com)" → link
+        // "https://ex.com", but "https://ex.com/path(v1)"
+        // keeps the ')').
+        while (url.length > 8 && url.endsWith(')')
+          && (url.match(/\(/g)?.length || 0) < (url.match(/\)/g)?.length || 0)) {
+          trailing = ')' + trailing;
+          url = url.slice(0, -1);
+        }
+
+        if (m.index > lastIdx) {
+          frag.appendChild(document.createTextNode(text.slice(lastIdx, m.index)));
+        }
+        const a = document.createElement('a');
+        a.href = url;
+        a.textContent = url;
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer nofollow');
+        frag.appendChild(a);
+        if (trailing) frag.appendChild(document.createTextNode(trailing));
+        lastIdx = m.index + m[0].length;
+      }
+      if (lastIdx < text.length) {
+        frag.appendChild(document.createTextNode(text.slice(lastIdx)));
+      }
+      node.replaceWith(frag);
     }
 
     // Process <link> tags (shadow mode only) - validate stylesheet hosts
@@ -372,20 +685,38 @@ export class MarkdownProcessor {
       }
 
       // Process @import inside <style> tags → convert to <link>
+      //
+      // Two separate injections for each trusted @import:
+      //
+      //   1. A <link> in-scope (next to the user's <style>) so
+      //      the imported rules cascade normally into the
+      //      shadow DOM.
+      //   2. A duplicate <link> mirrored into document.head so
+      //      any @font-face rules in the imported sheet land
+      //      at document scope. Chrome + Firefox do not let
+      //      @font-face declared inside a shadow root apply to
+      //      that root's content; they only honour font faces
+      //      declared at document level. Mirroring upward is
+      //      the workaround. iykury + april both hit this when
+      //      @import'ing Google Fonts.
+      //
+      // _importedToHead dedupes per-session so we don't re-
+      // inject the same stylesheet N times as the user scrolls.
       const styleTags = temp.querySelectorAll('style');
       for (const style of styleTags) {
         const { css, links: importLinks } = this._extractImports(style.textContent || '');
         style.textContent = css;
 
-        // Insert validated <link> elements before the <style>
         for (const importHref of importLinks) {
-          if (this._isStylesheetTrusted(importHref)) {
-            const linkEl = document.createElement('link');
-            linkEl.rel = 'stylesheet';
-            linkEl.href = importHref;
-            linkEl.crossOrigin = 'anonymous';
-            style.parentNode.insertBefore(linkEl, style);
-          }
+          if (!this._isStylesheetTrusted(importHref)) continue;
+
+          const linkEl = document.createElement('link');
+          linkEl.rel = 'stylesheet';
+          linkEl.href = importHref;
+          linkEl.crossOrigin = 'anonymous';
+          style.parentNode.insertBefore(linkEl, style);
+
+          _injectIntoDocumentHead(importHref);
         }
       }
     }
@@ -399,10 +730,14 @@ export class MarkdownProcessor {
 
   _isImageTrusted(src) {
     if (!src) return false;
-    // Allow raster data URIs (png, jpeg, gif, webp, avif, bmp).
-    // Block data:image/svg+xml - SVGs can reference external resources
-    // or contain scripts in non-img contexts. Defense in depth.
-    if (src.startsWith('data:image/') && !src.startsWith('data:image/svg')) return true;
+    // data: URIs used to be allowed here as a "nice little goof"
+    // for inline PNGs. They aren't, anymore: base64 payloads in
+    // post bodies bloat the blob and then get duplicated through
+    // every staple, so a casually-restapled post full of inline
+    // images blew up several users' books past the blob cap.
+    // Callers that still want data: images (avatar validation)
+    // have their own permissive check.
+    if (src.startsWith('data:')) return false;
     if (src.startsWith('/')) return true; // Same-origin
 
     try {
@@ -411,6 +746,42 @@ export class MarkdownProcessor {
 
       // Exact match or subdomain match
       for (const trusted of this._trustedImageHosts) {
+        if (hostname === trusted || hostname.endsWith('.' + trusted)) {
+          return true;
+        }
+      }
+    } catch (e) {
+      // Invalid URL
+    }
+
+    return false;
+  }
+
+  /**
+   * True iff ``src`` resolves to a host in the trusted-media allowlist
+   * (or is same-origin). Mirrors _isImageTrusted; kept separate so the
+   * two allowlists can diverge (a host safe to hotlink an image from
+   * isn't automatically safe to stream media from - different bandwidth
+   * and TOS posture on most CDNs).
+   *
+   * data: URIs are rejected for the same blob-bloat reason images
+   * reject them. A single base64 audio clip in a post body can easily
+   * clear a few MB, and the blob replicates via staples.
+   */
+  _isMediaTrusted(src) {
+    if (!src) return false;
+    if (src.startsWith('data:')) return false;
+    if (src.startsWith('/')) return true; // Same-origin
+
+    try {
+      const url = new URL(src);
+      // Only http(s) sources. ftp:// / file:// / javascript:
+      // slip past the hostname check otherwise.
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        return false;
+      }
+      const hostname = url.hostname.toLowerCase();
+      for (const trusted of this._trustedMediaHosts) {
         if (hostname === trusted || hostname.endsWith('.' + trusted)) {
           return true;
         }
@@ -465,24 +836,6 @@ export class MarkdownProcessor {
   // Shadow DOM mounting
   // =====================================================================
 
-  static _shadowEventHandler(e) {
-    const link = e.target.closest('a');
-    if (!link) return;
-
-    const href = link.getAttribute('href');
-    if (!href) return;
-
-    e.preventDefault();
-
-    if (href.startsWith('/') || href.startsWith(window.location.origin)) {
-      // Internal link — navigate normally
-      window.location.href = href;
-    } else {
-      // External link — open in new tab
-      window.open(href, '_blank', 'noopener,noreferrer');
-    }
-  }
-
   _mountShadow(html, hostElement) {
     const shadow = hostElement.attachShadow({ mode: 'closed' });
 
@@ -505,8 +858,36 @@ export class MarkdownProcessor {
     content.innerHTML = html;
     shadow.appendChild(content);
 
+    // When images inside the closed shadow finish loading, dispatch a
+    // synthetic event on the host so collapse logic can re-measure height.
+    const imgs = content.querySelectorAll('img');
+    for (const img of imgs) {
+      if (!img.complete) {
+        img.addEventListener('load', () => {
+          hostElement.dispatchEvent(new Event('shadow-image-load'));
+        }, { once: true });
+      }
+    }
+
     // Handle link clicks inside closed shadow DOM
-    shadow.addEventListener('click', MarkdownProcessor._shadowEventHandler);
+    // Lyra note: the current (22-04-2026) NR markdown.js *incorrectly* uses an arrow function here
+    shadow.addEventListener('click', function (e) {
+      const link = e.target.closest('a');
+      if (!link) return;
+
+      const href = link.getAttribute('href');
+      if (!href) return;
+
+      e.preventDefault();
+
+      if (href.startsWith('/') || href.startsWith(window.location.origin)) {
+        // Internal link - navigate normally
+        window.location.href = href;
+      } else {
+        // External link - open in new tab
+        window.open(href, '_blank', 'noopener,noreferrer');
+      }
+    });
 
     return shadow;
   }
@@ -517,12 +898,13 @@ export class MarkdownProcessor {
 // =========================================================================
 
 const BASE_SHADOW_STYLES = `
-/* Reset — shadow DOM inherits nothing by default */
+/* Reset - shadow DOM inherits nothing by default */
 :host {
     display: block;
     overflow: hidden;
     overflow-wrap: break-word;
     word-break: break-word;
+    contain: paint;
 }
 
 .shadow-content {
@@ -616,7 +998,7 @@ hr {
     margin: 1em 0;
 }
 
-/* Images — default to 50% to prevent giant images dominating posts.
+/* Images - default to 50% to prevent giant images dominating posts.
    Authors can override with inline styles or <style> in shadow mode. */
 img {
     max-width: 50%;
