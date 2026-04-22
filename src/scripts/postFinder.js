@@ -155,6 +155,7 @@ const keywordSearch = async (keywords, start = 0) => {
   cursorStatus.enableAutoSync();
 
   while (dumped < searchableIndices.size) {
+    console.log(lowerBound)
     const storeEntries = new Set(await promisifyIDBRequest(tx.objectStore('searchStore').getAll(IDBKeyRange.lowerBound(lowerBound, true), BATCH_SIZE)));
 
     for (const searchable of storeEntries.values()) {
@@ -170,7 +171,7 @@ const keywordSearch = async (keywords, start = 0) => {
         ++i;
       }
       ++cursorStatus.index;
-      lowerBound = searchable.id;
+      lowerBound = searchable.post_id;
     }
 
     dumped += BATCH_SIZE;
@@ -306,7 +307,6 @@ const renderResult = post => {
     const [opaqueSlice] = additions.length ? additions.slice(-1) : [post];
     const { author, author_name, body, tags, created_at, author_avatar } = opaqueSlice;
     const d = new Date(created_at);
-    console.log(author, resolveAvatar(author, author_avatar))
 
     return noact({
       className: 'postFinder-result',
@@ -345,7 +345,7 @@ const renderResult = post => {
           className: 'post-body post-body-collapsed postFinder-post',
           innerHTML: getProcessor().renderStrict(body)
         },
-        tags.length ? {
+        tags?.length ? {
           className: 'postFinder-tags',
           children: formatTags(tags.join(','))
         } : null,
