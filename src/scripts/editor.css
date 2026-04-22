@@ -5,7 +5,7 @@
 }
 
 #tf-editor-dialogue {
-  z-index: 200;
+  z-index: 10001;
   position: fixed;
   width: 100vw;
   height: 100vh;

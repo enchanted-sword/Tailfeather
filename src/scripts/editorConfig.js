@@ -9,7 +9,7 @@ const uri = 'https://noterook.net';
 const DEFAULT_CONTENT = '<!-- Write the post your heart desires! -->';
 const DEFAULT_CSS = '/* You can write CSS here */';
 const DEFAULT_PREVIEW = '<!-- Start writing a post to have it preview here! -->';
-const MAX_LENGTH = 100000;
+let MAX_LENGTH = 100000;
 
 const handleTheme = theme => theme === 'abyss' ? ({ cssClass: 'abyss-theme', isDark: true }) : `ace/theme/${theme}`;
 function updateTags({ target: { value } }) {
@@ -59,8 +59,19 @@ const initEditor = ({ blog, userBlogs, defaultContent, defaultCss, theme, nrThem
 
   const [_, qualifier, qualifierId] = /\?(.+)=(.+)$/.exec(location.search) || [];
 
-  if (qualifier === 'additionToPost') submitButton.textContent = 'Add';
-  else if (qualifier === 'answerToAsk') submitButton.textContent = 'Add';
+  switch (qualifier) {
+    case 'additionToPost':
+      submitButton.textContent = 'Add';
+      break;
+    case 'answerToAsk':
+      submitButton.textContent = 'Answer';
+      break;
+    case 'asking':
+      submitButton.textContent = 'Send';
+      MAX_LENGTH = 10000; // 10kb limit for asks
+      document.querySelector('.tf-composer-controls').classList.add('tf-composer-controls--ask');
+      break;
+  }
 
   function switchActive(newBlog) {
     activeBlog = newBlog;
@@ -115,13 +126,14 @@ const initEditor = ({ blog, userBlogs, defaultContent, defaultCss, theme, nrThem
   const preview = document.getElementById('postPreview-body');
   const charCount = document.getElementById('composer-char-count');
 
-  if (defaultContent) updateBody();
+  updateBody();
 
   submitButton.addEventListener('click', function () {
     const composerContent = getFullText();
     const hideFromSearch = document.getElementById('composer-hide-search').checked;
+    const askAnon = document.getElementById('ask-anonymous').checked;
     const tagString = document.getElementById('composer-tags').value;
-    window.parent.postMessage({ composerContent, hideFromSearch, tagString, qualifier, qualifierId, blog: activeBlog }, uri);
+    window.parent.postMessage({ composerContent, hideFromSearch, askAnon, tagString, qualifier, qualifierId, blog: activeBlog }, uri);
   });
 
   const tagInput = document.getElementById('composer-tags');

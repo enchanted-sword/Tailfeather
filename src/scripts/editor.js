@@ -10,6 +10,7 @@ import { mutationManager } from './utils/mutation.js';
 const customClass = 'tailfeather-editor';
 const chainAdditionFormSelector = '.inline-addition-form';
 const answerFormSelector = '.ask-answer-form';
+const askFormSelector = '.ask-modal-form';
 const uri = browser.runtime.getURL('');
 
 let defaultContent, defaultCss, theme, keybinding, nrTheme, trustedImageHosts, trustedMediaHosts, trustedStylesheetHosts;
@@ -31,7 +32,7 @@ const listener = event => {
     }, uri);
   }
   else if (typeof event.data === 'object' && 'composerContent' in event.data) {
-    const { composerContent, hideFromSearch, tagString, qualifier, qualifierId, blog } = event.data;
+    const { composerContent, hideFromSearch, askAnon, tagString, qualifier, qualifierId, blog } = event.data;
     if (qualifier === 'additionToPost') {
       const form = document.querySelector(`article[data-post-id="${qualifierId}"] .inline-addition-form`);
       form.querySelector('.chain-addition-textarea').value = composerContent;
@@ -43,6 +44,13 @@ const listener = event => {
       form.querySelector('.ask-answer-body').value = composerContent;
       form.querySelector('.inline-tags-input').value = tagString;
       form.querySelector('.ask-answer-send').click();
+      closeEditor({ type: 'click' });
+    } else if (qualifier === 'asking') {
+      const form = document.querySelector(`[data-ask-uuid="${qualifierId}"]`);
+      form.querySelector('.ask-modal-body').value = composerContent;
+      const anonCheckbox = form.querySelector('[type="checkbox"][name="anonymous"]');
+      if (anonCheckbox) anonCheckbox.checked = askAnon;
+      form.querySelector('.ask-modal-send').click();
       closeEditor({ type: 'click' });
     } else {
       createPost(composerContent, tagString, blog, { hideFromSearch }).then(post => {
@@ -95,6 +103,7 @@ const addChainAdditionFormControls = forms => forms.forEach(form => {
   const postId = form.querySelector('[data-post-id]')?.dataset.postId;
   form.querySelector('.chain-addition-form-controls').prepend(noact({
     className: customClass + ' btn-primary-sm',
+    type: 'button',
     onclick: function () {
       openEditorIFrame(`?additionToPost=${postId}`)
     },
@@ -112,8 +121,28 @@ const addAnswerFormControls = forms => forms.forEach(form => {
   const askId = form.closest('[data-ask-id]')?.dataset.askId;
   form.querySelector('.ask-answer-controls').prepend(noact({
     className: customClass + ' btn-primary-sm',
+    type: 'button',
     onclick: function () {
       openEditorIFrame(`?answerToAsk=${askId}`)
+    },
+    children: [
+      {
+        tag: 'span',
+        children: 'Open in custom editor'
+      },
+      svgIcon('commandline', 20, 20)
+    ]
+  }))
+});
+
+const addAskFormControls = forms => forms.forEach(form => {
+  const askUuid = crypto.randomUUID();
+  form.dataset.askUuid = askUuid;
+  form.querySelector('.ask-modal-controls').prepend(noact({
+    className: customClass + ' btn-primary-sm',
+    type: 'button',
+    onclick: function () {
+      openEditorIFrame(`?asking=${askUuid}`)
     },
     children: [
       {
@@ -141,10 +170,13 @@ export const main = async () => {
   }));
   mutationManager.start(chainAdditionFormSelector, addChainAdditionFormControls);
   mutationManager.start(answerFormSelector, addAnswerFormControls);
+  mutationManager.start(askFormSelector, addAskFormControls);
 };
 
 export const clean = async () => {
   mutationManager.stop(addChainAdditionFormControls);
+  mutationManager.stop(addAnswerFormControls);
+  mutationManager.stop(addAskFormControls);
   window.removeEventListener('message', listener);
   document.querySelectorAll(`.${customClass}`).forEach(s => s.remove());
 };
