@@ -5,6 +5,12 @@
   "preferences": {
     "enabled": false,
     "options": {
+      "lowerContent": {
+        "value": true,
+        "name": "Floating post buttons",
+        "tooltip": "Places the post button(s) along the bottom of the viewport",
+        "type": "toggle"
+      },
       "align": {
         "value": "left",
         "name": "Navigation style",

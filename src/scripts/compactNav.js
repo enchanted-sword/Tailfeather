@@ -85,7 +85,7 @@ const handleBlogSwitcher = mutations => {
 const switcherObserver = new MutationObserver(handleBlogSwitcher);
 
 export const main = async () => {
-  const { align } = await getOptions('compactNav');
+  const { align, lowerContent } = await getOptions('compactNav');
 
   const label = document.getElementById('blog-switcher-label');
   if (label) replaceIcon(label);
@@ -98,9 +98,11 @@ export const main = async () => {
   align === 'left' ? navContainer.prepend(dropdown) : navContainer.append(dropdown);
   mergeIntoDropdown(dropdown.querySelector('.tf-compactNav-list'));
 
-  const lowerContent = newLowerContent(align);
-  navContainer.append(lowerContent);
-  mergeIntoLower(lowerContent);
+  if (lowerContent) {
+    const lowerContainer = newLowerContent(align);
+    navContainer.append(lowerContainer);
+    mergeIntoLower(lowerContainer);
+  }
 
   document.querySelector('.nav-links').prepend(document.getElementById('blog-switcher'));
 
