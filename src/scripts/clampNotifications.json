@@ -1,9 +1,0 @@
-{
-  "name": "clampNotifications",
-  "title": "Fix Notification Dropdown Position",
-  "description": "Adjusts the positioning of the notification dropdown on narrow screens",
-  "preferences": {
-    "enabled": false
-  },
-  "js": true
-}
