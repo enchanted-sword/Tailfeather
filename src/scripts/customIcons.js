@@ -28,6 +28,7 @@ const navIconReplace = (nav, selector, icon) => iconReplace(nav.querySelector(se
 // that's a first
 export const handleNavIcons = () => {
   const container = document.querySelector(`.nav-container:not([${customAttribute}])`);
+  if (!container) return;
   container.setAttribute(customAttribute, '');
 
   navIconReplace(container, '.nav-links [href="/feed/"]', 'home'); // prevents the selector from catching the logo instead
