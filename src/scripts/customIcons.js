@@ -55,9 +55,7 @@ const run = ({ postIcons, navIcons }) => {
   if (postIcons) mutationManager.start(iconSelector, handleIcons);
   else mutationManager.stop(handleIcons);
 
-  if (navIcons) {
-
-  }
+  if (navIcons) navIconReplace();
 };
 
 export const update = options => run(options);
