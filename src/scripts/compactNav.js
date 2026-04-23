@@ -64,18 +64,22 @@ const mergeIntoLower = container => {
   container.append(...lowerItems);
 };
 
+const replaceIcon = label => {
+  const activeSlug = label.textContent.replace(/^@/, '');
+  const avatarUrl = listBlogs().find(({ username }) => username === activeSlug)?.avatar_url || getCachedAvatar(activeSlug);
+  label.replaceChildren(noact({
+    className: 'tf-compactNav-blogIcon',
+    title: label.textContent,
+    width: 24,
+    height: 24,
+    src: avatarUrl
+  }))
+};
+
 const handleBlogSwitcher = mutations => {
-  mutations.filter(({ type, target, addedNodes }) => type === 'childList' && target.matches('#blog-switcher-label') && Array.from(addedNodes).every(({ nodeName }) => nodeName === '#text')).map(({ target }) => {
-    const activeSlug = target.textContent.replace(/^@/, '');
-    const avatarUrl = listBlogs().find(({ username }) => username === activeSlug)?.avatar_url || getCachedAvatar(activeSlug);
-    target.replaceChildren(noact({
-      className: 'tf-compactNav-blogIcon',
-      title: target.textContent,
-      width: 24,
-      height: 24,
-      src: avatarUrl
-    }))
-  })
+  mutations
+    .filter(({ type, target, addedNodes }) => type === 'childList' && target.matches('#blog-switcher-label') && Array.from(addedNodes).every(({ nodeName }) => nodeName === '#text'))
+    .map(({ target }) => replaceIcon(target));
 };
 
 const switcherObserver = new MutationObserver(handleBlogSwitcher);
@@ -83,6 +87,8 @@ const switcherObserver = new MutationObserver(handleBlogSwitcher);
 export const main = async () => {
   const { align } = await getOptions('compactNav');
 
+  const label = document.getElementById('blog-switcher-label');
+  if (label) replaceIcon(label);
   switcherObserver.observe(document.getElementById('blog-switcher'), { childList: true, subtree: true });
 
   handleNavIcons();
