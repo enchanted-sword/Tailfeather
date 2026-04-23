@@ -116,7 +116,7 @@ main {
   flex: initial;
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-surface);
+  background: var(--bg-surface);
   border-radius: .5rem;
   border: 1px solid var(--border);
   height: 100%;

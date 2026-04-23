@@ -28,7 +28,7 @@
   }
 
   .site-header {
-    background-color: var(--bg);
+    background: var(--bg);
   }
 
   :is(.nav-links > a, .nav-links .nav-logout, .notif-bell):hover,
@@ -43,7 +43,7 @@
 
   .prealpha-banner {
     color: color-mix(in srgb, var(--white-on-dark), transparent 35%);
-    background-color: color-mix(in srgb, var(--white-on-dark), transparent 93%);
+    background: color-mix(in srgb, var(--white-on-dark), transparent 93%);
   }
 
   .chain-addition-textarea {
@@ -78,7 +78,7 @@
   }
 
   .site-header {
-    background-color: var(--bg);
+    background: var(--bg);
   }
 
   .post-author-name {
@@ -102,7 +102,7 @@
   }
 
   .site-header {
-    background-color: var(--bg);
+    background: var(--bg);
   }
 
   .post-author-name {
@@ -131,7 +131,7 @@
   }
 
   .site-header {
-    background-color: var(--bg);
+    background: var(--bg);
   }
 
   .post-author-name {
@@ -160,7 +160,7 @@
   }
 
   .site-header {
-    background-color: var(--bg-cherry);
+    background: var(--bg-cherry);
   }
 
   :is(.logo, .nav-links > a, .nav-links .nav-logout, .notif-bell, .tf-compactNav-icon) {

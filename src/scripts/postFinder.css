@@ -77,7 +77,8 @@ body[data-tf-custom-icons] .nav-links .postFinder-icon {
   min-width: 360px;
   max-width: calc(100vw - 3rem);
   border-radius: var(--radius);
-  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
   padding: 0.75rem;
   color: var(--text);
   display: flex;

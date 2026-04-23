@@ -12,7 +12,7 @@ const outlineStyles = `.sticker-emoji,
 .sticker-tray-btn {
   filter: drop-shadow(white 1px 1px 0px) drop-shadow(white -1px -1px 0px) drop-shadow(white -1px 1px 0px) drop-shadow(white 1px -1px 0px) drop-shadow(0 1px 2px rgba(0,0,0,0.3));
 }
-:is([data-theme="light"], [data-theme="hc-light"], [tf-theme="preset-fruit"], [tf-theme="preset-lcc"]) :is(.sticker-emoji, .sticker-tray-btn) {
+:is([data-theme="light"], [data-theme="hc-light"], [tf-theme="preset-fruit"]) :is(.sticker-emoji, .sticker-tray-btn) {
   filter: drop-shadow(black 1px 1px 0px) drop-shadow(black -1px -1px 0px) drop-shadow(black -1px 1px 0px) drop-shadow(black 1px -1px 0px) drop-shadow(0 1px 2px rgba(0,0,0,0.3));
 }`;
 const opacityStyles = `.sticker-layer {
