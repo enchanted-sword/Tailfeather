@@ -254,61 +254,6 @@ export function stashPasswordForBlogKeys(password) {
 }
 
 /**
- * Enumerate the caller's blogs, derive + cache a private key for
- * every sideblog (non-null signing_key_salt) whose key isn't
- * already in localStorage. Consumes and wipes the stashed password
- * from sessionStorage. No-op if no password is stashed (e.g. page
- * load of an already-authenticated session).
- *
- * Call after login / ensurePublicKeyPublished completes.
- */
-export async function ensureBlogKeys() {
-  let password = null;
-  try {
-    password = sessionStorage.getItem(STORAGE_KEY_PASSWORD_TMP);
-  } catch { /* disabled */ }
-
-  if (!password) {
-    // No password available - we can still check for missing
-    // keys and warn the user, but can't derive.
-    return { derived: 0, missing: 0, password: false };
-  }
-
-  let blogs = [];
-  try {
-    const resp = await fetch('/api/v1/blogs/mine/', {
-      credentials: 'same-origin',
-    });
-    if (!resp.ok) throw new Error(`blogs fetch ${resp.status}`);
-    blogs = await resp.json() || [];
-  } catch (err) {
-    console.warn('[Signing] ensureBlogKeys: blog list fetch failed:', err);
-    return { derived: 0, missing: 0, password: true };
-  }
-
-  let derived = 0;
-  for (const blog of blogs) {
-    if (!blog.signing_key_salt) continue;  // legacy blog uses account key
-    if (loadBlogPrivateKey(blog.username)) continue;  // already cached
-
-    try {
-      const priv = await deriveSigningKey(password, blog.signing_key_salt);
-      const pub = await getPublicKey(priv);
-      storeBlogKey(blog.username, priv, pub);
-      derived++;
-      console.debug(`[Signing] Derived + cached key for @${blog.username}`);
-    } catch (err) {
-      console.error(`[Signing] Failed to derive key for @${blog.username}:`, err);
-    }
-  }
-
-  // Wipe the stash. The password should never outlive its purpose.
-  try { sessionStorage.removeItem(STORAGE_KEY_PASSWORD_TMP); } catch { /* */ }
-
-  return { derived, missing: 0, password: true };
-}
-
-/**
  * Load the private key from localStorage.
  * @returns {Uint8Array|null}
  */

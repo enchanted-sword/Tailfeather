@@ -31,11 +31,13 @@ module.exports = {
     "culori": "readonly",
     "poline": "readonly",
     "nobleEd25519": "readonly",
+    "luxon": "readonly",
     "$": "readonly"
   },
   "rules": {
     "no-case-declarations": "off",
     "no-unused-vars": "off",
-    "no-useless-escape": "off"
+    "no-useless-escape": "off",
+    "no-control-regex": "off"
   }
 }

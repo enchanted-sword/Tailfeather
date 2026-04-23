@@ -7,18 +7,18 @@
  *
  * Pipeline:
  * 1. Preprocess custom syntax (colors, collapsibles, underline, blockquote fix)
- * 2. marked.parse() — GFM markdown to HTML
- * 3. Postprocess collapsibles — replace placeholders with <details>
- * 4. DOMPurify.sanitize() — XSS prevention (config varies by context)
+ * 2. marked.parse() - GFM markdown to HTML
+ * 3. Postprocess collapsibles - replace placeholders with <details>
+ * 4. DOMPurify.sanitize() - XSS prevention (config varies by context)
  * 5. Empty element cleanup
- * 6. Shadow DOM processing (shadow mode) — @import → <link>, host validation
- * 7. External link & image processing — privacy attrs, trust list enforcement
+ * 6. Shadow DOM processing (shadow mode) - @import → <link>, host validation
+ * 7. External link & image processing - privacy attrs, trust list enforcement
  *
  * Requires: marked.min.js, purify.min.js (loaded before this module)
  */
 
 // =========================================================================
-// Color map — WCAG-accessible, no black (invisible on dark themes)
+// Color map - WCAG-accessible, no black (invisible on dark themes)
 // =========================================================================
 
 const COLOR_MAP = {
@@ -715,8 +715,6 @@ export class MarkdownProcessor {
           linkEl.href = importHref;
           linkEl.crossOrigin = 'anonymous';
           style.parentNode.insertBefore(linkEl, style);
-
-          _injectIntoDocumentHead(importHref);
         }
       }
     }
