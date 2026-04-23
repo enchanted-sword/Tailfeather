@@ -155,7 +155,6 @@ const keywordSearch = async (keywords, start = 0) => {
   cursorStatus.enableAutoSync();
 
   while (dumped < searchableIndices.size) {
-    console.log(lowerBound)
     const storeEntries = new Set(await promisifyIDBRequest(tx.objectStore('searchStore').getAll(IDBKeyRange.lowerBound(lowerBound, true), BATCH_SIZE)));
 
     for (const searchable of storeEntries.values()) {
@@ -367,7 +366,7 @@ const renderResult = post => {
 };
 
 const renderResults = async (hits, replace = true) => {
-  console.info('[PostFinder] Hits:', hits);
+  console.debug(`[PostFinder] Recieved ${hits.length} hits`);
 
   if (!hits.length) {
     if (replace) resultSection.replaceChildren('Zero results found');
