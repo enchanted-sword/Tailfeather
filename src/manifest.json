@@ -73,7 +73,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "ctf-cblunarii@proton.me",
+      "id": "tf-cblunarii@proton.me",
       "strict_min_version": "140.0",
       "data_collection_permissions": {
         "required": [
