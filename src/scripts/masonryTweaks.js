@@ -72,7 +72,7 @@ const handleColumns = cols => {
   postFunction.start(sortPosts, `:not([${customAttribute}])`);
 };
 
-const run = ({ autoBreakpoint, expandedMasonry }) => {
+const run = ({ expandedMasonry }) => {
   columnCount = expandedMasonry;
   document.querySelectorAll(`[${customAttribute}]`).forEach(s => s.removeAttribute(customAttribute));
   mutationManager.start(`:not(${customAttribute})>${columnSelector}`, handleColumns);
