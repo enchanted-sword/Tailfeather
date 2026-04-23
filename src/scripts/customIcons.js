@@ -20,10 +20,26 @@ const iconMap = {
 const iconReplace = (el, icon) => {
   el.title = el.textContent;
   el.ariaLabel = el.textContent;
-  el.append(svgIcon(icon, 24, 24, customClass));
+  el.prepend(svgIcon(icon, 24, 24, customClass));
 };
 
 const navIconReplace = (nav, selector, icon) => iconReplace(nav.querySelector(selector), icon);
+
+// that's a first
+export const handleNavIcons = () => {
+  const container = document.querySelector(`.nav-container:not(${customAttribute})`);
+  container.setAttribute(customAttribute, '');
+
+  navIconReplace(container, '.nav-links [href="/feed/"]', 'home'); // prevents the selector from catching the logo instead
+  navIconReplace(container, '[href="/everyone/"]', 'globe');
+  navIconReplace(container, '[href="/search/"]', 'search');
+  navIconReplace(container, '[href*="/book/"]', 'book');
+  navIconReplace(container, '[href="/following/"]', 'users');
+  navIconReplace(container, '[href="/followers/"]', 'usergroup');
+  navIconReplace(container, '[href="/accounts/profile/edit/"]', 'wrench');
+  navIconReplace(container, '#nav-new-post', 'brush');
+  navIconReplace(container, '.nav-logout', 'logout');
+};
 
 const handleIcons = icons => icons.forEach(icon => {
   let identifier;
@@ -40,16 +56,7 @@ const run = ({ postIcons, navIcons }) => {
   else mutationManager.stop(handleIcons);
 
   if (navIcons) {
-    const navLinks = document.querySelector('.nav-links');
-    navIconReplace(navLinks, '[href="/feed/"]', 'home');
-    navIconReplace(navLinks, '[href="/everyone/"]', 'globe');
-    navIconReplace(navLinks, '[href="/search/"]', 'search');
-    navIconReplace(navLinks, '[href*="/book/"]', 'book');
-    navIconReplace(navLinks, '[href="/following/"]', 'users');
-    navIconReplace(navLinks, '[href="/followers/"]', 'usergroup');
-    navIconReplace(navLinks, '[href="/accounts/profile/edit/"]', 'wrench');
-    navIconReplace(navLinks, '#nav-new-post', 'brush');
-    navIconReplace(navLinks, '.nav-logout', 'logout');
+
   }
 };
 

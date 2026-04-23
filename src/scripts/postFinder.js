@@ -658,7 +658,7 @@ export const main = async () => {
   postIndices = new Set(await promisifyIDBRequest(tx.objectStore('postStore').getAllKeys()));
   searchableIndices = new Set(await promisifyIDBRequest(tx.objectStore('searchStore').getAllKeys()));
 
-  document.querySelector('.nav-links [href="/search/"]').insertAdjacentElement('afterend', navButton);
+  document.querySelector('.nav-container [href="/search/"]').insertAdjacentElement('afterend', navButton);
   document.querySelector('.site-header').insertAdjacentElement('afterend', indexStatus);
   document.body.append(searchWindow);
   document.addEventListener('keydown', closeDialog);

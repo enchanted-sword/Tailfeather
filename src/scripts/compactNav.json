@@ -1,9 +1,27 @@
 {
   "name": "compactNav",
-  "title": "Compact Navigation Header",
-  "description": "Makes the navigation header more compact on narrow screens. Pairs well with Custom Icons.",
+  "title": "Compact Navigation",
+  "description": "Overhauls the navigation UI to better suit smaller screens",
   "preferences": {
-    "enabled": false
+    "enabled": false,
+    "options": {
+      "align": {
+        "value": "left",
+        "name": "Navigation style",
+        "type": "select",
+        "options": [
+          {
+            "value": "left",
+            "name": "Left-handed"
+          },
+          {
+            "value": "right",
+            "name": "Right-handed"
+          }
+        ]
+      }
+    }
   },
+  "js": true,
   "css": true
 }

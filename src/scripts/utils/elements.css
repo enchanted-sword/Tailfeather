@@ -1,10 +1,14 @@
+/* global styles */
+
+/* custom icons (used for both customIcons and compactNav) */
+
 .tailfeather-icons {
   width: 1.5rem;
   height: 1.5rem;
 }
 
-:is(a, button):has(.tailfeather-icons) {
-  text-indent: -9999px;
+:is(.nav-links, .post-actions) :is(a, button):has(.tailfeather-icons) {
+  font-size: 0;
   display: flex;
 }
 
@@ -34,13 +38,12 @@
   fill: currentColor;
 }
 
-#nav-new-post {
-  display: inline-flex;
-  align-items: center;
+#nav-new-post:has(.tailfeather-icons) {
+  font-size: 0;
   padding: 0.25rem 0.9rem;
 }
 
-.nav-logout-form:has(.tailfeather-icons) {
+.nav-links .nav-logout-form:has(.tailfeather-icons) {
   display: inline-flex;
   align-items: center;
   padding: .25rem;

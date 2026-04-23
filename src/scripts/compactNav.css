@@ -1,31 +1,128 @@
-@media (max-width: 768px) {
-  .nav-container {
-    gap: 1rem;
+.nav-container {
+  gap: .75rem;
+}
+
+.nav-container .logo {
+  display: none;
+}
+
+.nav-links:last-child {
+  padding-right: .25rem;
+}
+
+.connection-status {
+  min-width: none;
+}
+
+.tf-compactNav-menu {
+  position: relative;
+}
+
+.nav-container[data-tf-compact-nav] .nav-links {
+  flex-grow: initial;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.nav-container[data-tf-compact-nav] .blog-switcher {
+  display: inline-flex;
+  align-items: center;
+
+  .blog-switcher-toggle {
+    border: none;
+    padding: 0;
   }
 
-  .nav-container .logo {
-    text-indent: -9999px;
-    width: 2rem;
-    overflow: hidden;
-    position: relative;
-    flex-shrink: 0;
-
-    &::before {
-      display: block;
-      width: 2rem;
-      height: 2rem;
-      content: "";
-      position: absolute;
-      background: center / 2rem no-repeat url(https://noterook.net/static/icons/icon-192x192.png);
-    }
+  .blog-switcher-label {
+    height: 1.5rem;
   }
 
-  .nav-links {
-    flex-wrap: wrap;
-    justify-content: flex-end;
+  .blog-switcher-chev {
+    display: none;
+  }
+}
+
+.nav-container[data-tf-compact-nav="left"] .blog-switcher-menu {
+  left: 0
+}
+
+.tf-compactNav-blogIcon {
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+.tf-compactNav-icon {
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  transition: color 0.15s;
+  box-sizing: content-box;
+  height: 1.5rem;
+  width: 1.5rem;
+  padding: .25rem;
+}
+
+.tf-compactNav-icon:hover {
+  color: var(--text);
+}
+
+.tf-compactNav-list {
+  position: absolute;
+  top: 2.5rem;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-width: 16rem;
+  width: fit-content;
+  font-size: .875rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  >* {
+    width: 100%;
+    padding: .5rem;
   }
 
-  .connection-status {
-    min-width: none;
+  >*:hover {
+    background: var(--accent-dim);
   }
+
+  :is(a, button):has(.tailfeather-icons),
+  .postFinder-button {
+    text-indent: unset;
+    font-size: .875rem;
+    display: flex;
+    gap: .25rem;
+  }
+
+  .postFinder-icon {
+    display: block;
+  }
+
+  .nav-logout {
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+.tf-compactNav-lower {
+  transform: scale(1.5);
+  transform-origin: bottom left;
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.tf-compactNav-lower[data-align="right"] {
+  transform-origin: bottom right;
+  right: 1rem;
+  justify-content: flex-end;
 }

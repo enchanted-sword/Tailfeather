@@ -48,6 +48,9 @@
         "lib/prism.js",
         "lib/purify.min.js",
         "lib/luxon.min.js"
+      ],
+      "css": [
+        "scripts/utils/elements.css"
       ]
     }
   ],
@@ -70,7 +73,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "tf-cblunarii@proton.me",
+      "id": "ctf-cblunarii@proton.me",
       "strict_min_version": "140.0",
       "data_collection_permissions": {
         "required": [

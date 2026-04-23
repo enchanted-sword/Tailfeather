@@ -31,13 +31,13 @@
     background-color: var(--bg);
   }
 
-  :is(.nav-links > a, .nav-logout, .notif-bell):hover,
+  :is(.nav-container > a, .nav-logout, .notif-bell):hover,
   :is(.logo, .book-header, .feed-header, .everyone-header),
   body {
     color: var(--white-on-dark);
   }
 
-  :is(.connection-status--connected, .everyone-subtitle, .prealpha-banner, .feed-last-activity, .nav-links > a, .nav-logout, .notif-bell) {
+  :is(.connection-status--connected, .everyone-subtitle, .prealpha-banner, .feed-last-activity, .nav-container > a, .nav-logout, .notif-bell) {
     color: color-mix(in srgb, var(--white-on-dark), transparent 35%);
   }
 
@@ -157,16 +157,16 @@
     background-color: var(--bg-cherry);
   }
 
-  :is(.logo, .nav-links > a, .nav-logout, .notif-bell) {
+  :is(.logo, .nav-container > a, .nav-logout, .notif-bell) {
     color: var(--white-on-dark);
   }
 
-  .nav-links .blog-switcher-toggle {
+  .nav-container .blog-switcher-toggle {
     border: 1px solid color-mix(in srgb, var(--white-on-dark), transparent 35%);
     color: color-mix(in srgb, var(--white-on-dark), transparent 35%);
   }
 
-  .nav-links .blog-switcher-toggle:hover {
+  .nav-container .blog-switcher-toggle:hover {
     color: var(--white-on-dark);
   }
 
@@ -174,7 +174,7 @@
     color: color-mix(in srgb, var(--white-on-dark), transparent 35%);
   }
 
-  :is(.nav-links > a, .nav-logout, .notif-bell):hover {
+  :is(.nav-container > a, .nav-logout, .notif-bell):hover {
     color: var(--accent);
   }
 }
