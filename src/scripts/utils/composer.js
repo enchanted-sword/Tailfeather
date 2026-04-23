@@ -17,7 +17,11 @@ export function generatePostId() {
   const timestamp = Date.now().toString(16);
   const random = crypto.getRandomValues(new Uint8Array(8));
   const hex = Array.from(random, b => b.toString(16).padStart(2, '0')).join('');
-  return `tf-${timestamp}-${hex}`; // Custom prefix shouldn't break anything and might provide helpful insight
+
+  // Custom prefix shouldn't break anything and might provide helpful insight
+  // *slightly* worried this might mess up alphanumeric sorting of IndexedDB indices as it pertains to PostFinder
+  // but tests seem to show it doesn't mess up the expected ordering
+  return `tf-${timestamp}-${hex}`;
 }
 
 const _DATA_IMAGE_MARKER = '[Image blocked: Inline base64 disallowed]';
