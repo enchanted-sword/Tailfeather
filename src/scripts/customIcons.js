@@ -27,7 +27,7 @@ const navIconReplace = (nav, selector, icon) => iconReplace(nav.querySelector(se
 
 // that's a first
 export const handleNavIcons = () => {
-  const container = document.querySelector(`.nav-container:not(${customAttribute})`);
+  const container = document.querySelector(`.nav-container:not([${customAttribute}])`);
   container.setAttribute(customAttribute, '');
 
   navIconReplace(container, '.nav-links [href="/feed/"]', 'home'); // prevents the selector from catching the logo instead
@@ -55,7 +55,7 @@ const run = ({ postIcons, navIcons }) => {
   if (postIcons) mutationManager.start(iconSelector, handleIcons);
   else mutationManager.stop(handleIcons);
 
-  if (navIcons) navIconReplace();
+  if (navIcons) handleNavIcons();
 };
 
 export const update = options => run(options);
