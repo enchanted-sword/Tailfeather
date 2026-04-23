@@ -45,6 +45,14 @@
           {
             "value": "fruit",
             "name": "Fruit"
+          },
+          {
+            "value": "smith",
+            "name": "Impedance"
+          },
+          {
+            "value": "suzi",
+            "name": "Reef"
           }
         ]
       },

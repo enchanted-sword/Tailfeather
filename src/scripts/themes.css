@@ -188,3 +188,69 @@
     color: var(--accent);
   }
 }
+
+[tf-theme="preset-smith"] {
+  &:root body {
+    --bg: #370575;
+    --bg-surface: -20% 5% no-repeat url('https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Smith_chart3.svg/960px-Smith_chart3.svg.png'), linear-gradient(#5f1b7d, #1a1d2e);
+    --bg-elevated: #482a4a;
+    --text: #e9dde4;
+    --text-muted: #e597e0;
+    --text-dim: #c263bc;
+    --accent: #f40998;
+    --accent-hover: #cd1284;
+    --accent-dim: rgba(244, 9, 152, 0.15);
+    --border: #7107ad;
+    --border-light: #a11efb;
+
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Smith_chart3.svg/960px-Smith_chart3.svg.png'), linear-gradient(195deg, #7902a9, #b63c04, #B30442, #3d1937);
+    background-repeat: no-repeat;
+    background-position: 50% 20%;
+    background-attachment: fixed;
+    background-blend-mode: multiply, normal;
+  }
+
+  book-header {
+    background: var(--bg-surface);
+    padding: 1.5rem 1.25rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  .book-header h2,
+  .post-author-name {
+    color: var(--text);
+  }
+
+  .book-header,
+  .post-card,
+  header.site-header,
+  .notif-dropdown {
+    background-blend-mode: color-dodge, normal;
+    font-family: var(--font);
+  }
+}
+
+[tf-theme="preset-suzi"] {
+  &:root body {
+    --text: rgb(249, 255, 255);
+    --text-muted: rgb(157, 211, 218);
+    --text-dim: rgb(99, 177, 192);
+    --text-author: rgb(23, 227, 208);
+    --border: rgb(65, 134, 131);
+    --border-light: rgb(99, 149, 160);
+    --bg: rgb(21, 47, 52);
+    --bg-surface: linear-gradient(15deg, rgb(10, 73, 80), rgb(26, 94, 106), rgb(17, 119, 100));
+    --bg-elevated: rgb(21, 68, 78);
+    --bg-input: rgb(34, 64, 71);
+    --accent: rgb(23, 227, 169);
+    --accent-hover: rgb(12, 184, 135);
+    --accent-dim: color-mix(in srgb, rgb(83, 187, 212) 15%, transparent);
+
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/2/2e/Underwater_world.jpg');
+    background-attachment: fixed;
+    background-position: center;
+    background-blend-mode: color-dodge;
+    backdrop-filter: blur(3px);
+  }
+}
