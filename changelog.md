@@ -1,3 +1,38 @@
+# v1.3.0
+
+## General
+
+- Improved post pickup methods
+- All features should now work with sideblogs
+- Removed some outdated features
+- Fixed some custom elements using `--bg-surface` as a background colour instead of a background
+
+## New feature! Masonry Tweaks
+
+- Allows up to 8 masonry columns instead of just the usual 2
+
+## New feature! Custom Timestamps
+
+- Custom formatted timestamps for posts
+
+## New feature! Compact Navigation
+
+- Overhauls the navigation UI to better suit smaller screens
+
+## Post Finder
+
+- Fixed searches aborting when searching through a database larger than 10 000 indices
+
+## Custom Editor
+
+- Now supports posting from any sideblog, active or not
+- Added support for sending asks
+
+## Custom Themes
+
+- Fixed blog switcher contrast on Fruit theme
+- Added two new preset themes: Impedance and Reef
+
 # v1.2.0
 
 ## General
