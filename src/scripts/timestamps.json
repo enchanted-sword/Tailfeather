@@ -10,6 +10,10 @@
     {
       "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat#using_options",
       "text": "Intl.DateTimeFormat documentation"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Swatch_Internet_Time",
+      "text": ".beat time"
     }
   ],
   "preferences": {
@@ -36,6 +40,11 @@
         "type": "text",
         "name": "Format overrides",
         "tooltip": "Overrides for the DateTime configuration"
+      },
+      "beats": {
+        "value": false,
+        "type": "toggle",
+        "name": "Use .beat timestamps"
       }
     }
   },
