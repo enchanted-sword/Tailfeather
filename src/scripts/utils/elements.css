@@ -7,12 +7,12 @@
   height: 1.5rem;
 }
 
-:is(.nav-links, .post-actions) :is(a, button):has(.tailfeather-icons) {
+:is(.nav-row, .post-actions) :is(a, button):has(.tailfeather-icons) {
   font-size: 0;
   display: flex;
 }
 
-.nav-links:has(.tailfeather-icons) {
+.nav-container:has(.tailfeather-icons) :is(.nav-row-left, .nav-row-right) {
   gap: 1rem;
 
   .tailfeather-icons {
@@ -41,10 +41,4 @@
 #nav-new-post:has(.tailfeather-icons) {
   font-size: 0;
   padding: 0.25rem 0.9rem;
-}
-
-.nav-links .nav-logout-form:has(.tailfeather-icons) {
-  display: inline-flex;
-  align-items: center;
-  padding: .25rem;
 }
