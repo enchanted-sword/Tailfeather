@@ -7,7 +7,7 @@
   height: 1.5rem;
 }
 
-:is(.nav-row, .post-actions) :is(a, button):has(.tailfeather-icons) {
+:is(.nav-row-left, .nav-row-right, .post-actions) :is(a, button):has(.tailfeather-icons) {
   font-size: 0;
   display: flex;
 }

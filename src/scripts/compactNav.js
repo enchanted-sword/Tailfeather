@@ -43,16 +43,54 @@ const newLowerContent = align => noact({
   dataset: { align }
 });
 
+const mergeIntoLinks = container => {
+  const linkItems = [
+    document.getElementById('blog-switcher'),
+    document.querySelector('.nav-links [href="/feed/"]'),
+    document.querySelector('[href="/everyone/"]'),
+    document.querySelector('[href="/search/"]'),
+    document.querySelector('[href^="/book/"]'),
+    document.getElementById('nav-inbox'),
+    document.getElementById('nav-new-post'),
+    document.getElementById('tf-nav-new-post'),
+    document.getElementById('notif-bell-wrap')
+  ].filter(s => !!s);
+  linkItems.forEach(s => s.setAttribute(customAttribute, ''));
+  container.append(...linkItems);
+};
+
 const mergeIntoDropdown = container => {
   const dropdownItems = [
     document.getElementById('connection-status'),
-    document.querySelector('.nav-links [href="/following/"]'),
+    ...noact([
+      {
+        href: '/following/',
+        ariaLabel: 'Following',
+        title: 'Following',
+        children: [
+          svgIcon('users', 24, 24, 'tailfeather-icons'),
+          'Following'
+        ]
+      },
+      {
+        href: '/followers/',
+        ariaLabel: 'Followers',
+        title: 'Followers',
+        children: [
+          svgIcon('usergroup', 24, 24, 'tailfeather-icons'),
+          'Followers'
+        ]
+      }
+    ]),
+    document.querySelector('.nav-support'),
+    /* document.querySelector('.nav-links [href="/following/"]'),
     document.querySelector('.nav-links [href="/followers/"]'),
     document.querySelector('.nav-links [href="/accounts/profile/edit/"]'),
-    document.querySelector('.nav-logout-form')
+    document.querySelector('.nav-logout-form') */
   ].filter(s => !!s);
   dropdownItems.forEach(s => s.setAttribute(customAttribute, ''));
   container.append(...dropdownItems);
+  console.log(container.children)
 };
 
 const mergeIntoLower = container => {
@@ -95,16 +133,20 @@ export const main = async () => {
   const navContainer = document.querySelector('.nav-container');
   navContainer.setAttribute(customAttribute, align)
   const dropdown = newDropdownNav();
-  align === 'left' ? navContainer.prepend(dropdown) : navContainer.append(dropdown);
   mergeIntoDropdown(dropdown.querySelector('.tf-compactNav-list'));
+
+  const navLinks = document.querySelector('.nav-links');
+  mergeIntoLinks(navLinks);
+
+  align === 'left' ?
+    navContainer.replaceChildren(dropdown, navLinks)
+    : navContainer.replaceChildren(navLinks, dropdown);
 
   if (lowerContent) {
     const lowerContainer = newLowerContent(align);
     navContainer.append(lowerContainer);
     mergeIntoLower(lowerContainer);
   }
-
-  document.querySelector('.nav-links').prepend(document.getElementById('blog-switcher'));
 
   document.addEventListener('click', toggleMenu);
 };

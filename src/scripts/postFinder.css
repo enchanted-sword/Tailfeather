@@ -10,7 +10,7 @@
   display: none;
 }
 
-.nav-row:has(.tailfeather-icons, .tf-nav-iconified:not(.postFinder-button)) {
+.nav-links:has(.tailfeather-icons, .tf-nav-iconified:not(.postFinder-button)) {
   .postFinder-button {
     font-size: 0;
   }
@@ -20,7 +20,7 @@
   }
 }
 
-body[data-tf-custom-icons] .nav-row .postFinder-icon {
+body[data-tf-custom-icons] .nav-links .postFinder-icon {
   width: 18px;
   height: 18px;
 }

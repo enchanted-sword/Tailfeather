@@ -35,7 +35,7 @@ export const handleNavIcons = () => {
   navIconReplace(container, '.nav-links [href="/feed/"]', 'home'); // prevents the selector from catching the logo instead
   navIconReplace(container, '[href="/everyone/"]', 'globe');
   navIconReplace(container, '[href="/search/"]', 'search');
-  navIconReplace(container, '[href*="/book/"]', 'book');
+  navIconReplace(container, '[href^="/book/"]', 'book');
   // navIconReplace(container, '[href="/following/"]', 'users');
   // navIconReplace(container, '[href="/followers/"]', 'usergroup');
   // navIconReplace(container, '[href="/accounts/profile/edit/"]', 'wrench');
