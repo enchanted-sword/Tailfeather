@@ -54,10 +54,6 @@ const addTimestamps = timeElements => timeElements.forEach(timeElement => {
     tag: 'time',
     className: `${customClass} ${inheritedClasses}`,
     title: DateTime.fromISO(iso).toLocaleString(DateTime.DATETIME_FULL),
-    dataset: {
-      relative: timeElement.textContext,
-      title: timeElement.title
-    },
     datetime: iso,
     children: formatTimestamp(iso),
   });
@@ -67,13 +63,15 @@ const addTimestamps = timeElements => timeElements.forEach(timeElement => {
 
 const revertTimestamps = () => {
   document.querySelectorAll(`.${customClass}`).forEach(timeElement => {
+    const dateTime = DateTime.fromISO(timeElement.datetime);
     timeElement.replaceWith(noact({
       tag: 'span',
       className: timeElement.classList.value.replace(customClass, ''),
-      title: timeElement.dataset.title,
+      title: dateTime.toLocaleString(DateTime.DATETIME_MED),
+      datetime: timeElement.datetime,
       dataset: { ts: timeElement.datetime },
-      children: timeElement.dataset.relative
-    }))
+      children: dateTime.toRelative()
+    }));
   });
 }
 
