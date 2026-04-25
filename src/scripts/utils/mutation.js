@@ -209,8 +209,8 @@ export const mutationManager = Object.freeze({ // Interface wrapper for both the
    */
   stop(func) {
     if (this.listeners.has(func)) this.listeners.delete(func);
-    if (this.lightManager.listeners.has(func)) this.listeners.delete(func);
-    if (this.shadowManager.listeners.has(func)) this.listeners.delete(func);
+    if (this.lightManager.listeners.has(func)) this.lightManager.listeners.delete(func);
+    if (this.shadowManager.listeners.has(func)) this.shadowManager.listeners.delete(func);
     if (!this.listeners.length) removeNavigationListener(this._shadowManaging);
   },
 
