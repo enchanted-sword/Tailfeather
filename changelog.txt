@@ -1,3 +1,14 @@
+v1.3.1
+
+General
+
+- Fixed styling related to the new header layout
+- Fixed the mutation manager not removing listeners from its underlying managers
+
+Custom Timestamps
+
+- Added the option to display timestamps in .beat time
+
 v1.3.0
 
 General
