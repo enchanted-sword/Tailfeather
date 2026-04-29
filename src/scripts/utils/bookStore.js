@@ -24,15 +24,24 @@
  *        `_author_username` / `_author_display` / `_author_avatar`
  *        fields that were previously added by client-side normalizers.
  *        See post-card.js and post-envelope.js for the full rationale.
+ *   v4 - :slugmystery: (fragments)
  *
- * Requires: idb.min.js (via importmap or global)
+ * ~~Requires: idb.min.js (via importmap or global)~~
+ * ^ or does it?
  */
 
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const POSTS_STORE = 'posts';
 const TOMBSTONES_STORE = 'tombstones';
 const PHANTOM_TAGS_STORE = 'phantom_tags';
 const METADATA_STORE = 'metadata';
+// Fragment storage v1 (DESIGN-fragment-storage.md). Stores live
+// alongside POSTS_STORE during the migration window; blob-sync and
+// reconcile populate them on every v2 round-trip. Phase 4 retires
+// POSTS_STORE after the renderer migration moves reads onto these.
+const ROOT_FRAGMENTS_STORE = 'root_fragments';
+const ADDITION_FRAGMENTS_STORE = 'addition_fragments';
+const CHAIN_TIPS_STORE = 'chain_tips';
 
 let _db = null;
 let _userId = null;
@@ -108,6 +117,46 @@ export async function openDatabase(userId) {
       // Metadata store
       if (!db.objectStoreNames.contains(METADATA_STORE)) {
         db.createObjectStore(METADATA_STORE, { keyPath: 'key' });
+      }
+
+      // Fragment-based posts (DB v4). Three new stores added
+      // alongside POSTS_STORE during the migration window:
+      //
+      //   ROOT_FRAGMENTS     - one row per signed root post
+      //   ADDITION_FRAGMENTS - one row per signed addition; the
+      //                        by_post_id index supports the hot
+      //                        "every addition on this root" path
+      //                        for chain rendering and verification
+      //   CHAIN_TIPS         - the composite-as-display-artifact
+      //                        pointer ({post_id, chain[], stapler_tags,
+      //                        stapled_at, _blob_owner, ...}). Keyed
+      //                        on the COMPOSITE post_id (which equals
+      //                        the root post_id for plain originals).
+      //
+      // No data migration runs here on purpose; the stores fill
+      // passively from blob-sync round-trips and reconcile data
+      // payloads. Phase 4 retires POSTS_STORE entirely once
+      // renderers have moved off it. Indexes mirror the access
+      // patterns POSTS_STORE has today so query callers can swap
+      // with no shape change.
+      if (!db.objectStoreNames.contains(ROOT_FRAGMENTS_STORE)) {
+        const rootStore = db.createObjectStore(ROOT_FRAGMENTS_STORE, { keyPath: 'post_id' });
+        rootStore.createIndex('created_at', 'created_at');
+        rootStore.createIndex('author', 'author');
+        rootStore.createIndex('tags', 'tags', { multiEntry: true });
+      }
+      if (!db.objectStoreNames.contains(ADDITION_FRAGMENTS_STORE)) {
+        const addStore = db.createObjectStore(ADDITION_FRAGMENTS_STORE, { keyPath: 'addition_id' });
+        addStore.createIndex('by_post_id', 'post_id');
+        addStore.createIndex('author', 'author');
+        addStore.createIndex('created_at', 'created_at');
+      }
+      if (!db.objectStoreNames.contains(CHAIN_TIPS_STORE)) {
+        const tipStore = db.createObjectStore(CHAIN_TIPS_STORE, { keyPath: 'post_id' });
+        tipStore.createIndex('root_post_id', 'root_post_id');
+        tipStore.createIndex('_blob_owner', '_blob_owner');
+        tipStore.createIndex('is_pinned', 'is_pinned');
+        tipStore.createIndex('stapled_at', 'stapled_at');
       }
 
       // v3 migration: unify author fields.
@@ -770,14 +819,264 @@ export async function migrateCleanDeletedIds() {
 export function clearAll() {
   return new Promise((resolve, reject) => {
     const db = _getDb();
-    const tx = db.transaction([POSTS_STORE, TOMBSTONES_STORE, PHANTOM_TAGS_STORE, METADATA_STORE], 'readwrite');
+    const tx = db.transaction([
+      POSTS_STORE, TOMBSTONES_STORE, PHANTOM_TAGS_STORE, METADATA_STORE,
+      ROOT_FRAGMENTS_STORE, ADDITION_FRAGMENTS_STORE, CHAIN_TIPS_STORE,
+    ], 'readwrite');
     tx.objectStore(POSTS_STORE).clear();
     tx.objectStore(TOMBSTONES_STORE).clear();
     tx.objectStore(PHANTOM_TAGS_STORE).clear();
     tx.objectStore(METADATA_STORE).clear();
+    tx.objectStore(ROOT_FRAGMENTS_STORE).clear();
+    tx.objectStore(ADDITION_FRAGMENTS_STORE).clear();
+    tx.objectStore(CHAIN_TIPS_STORE).clear();
     tx.oncomplete = () => resolve();
     tx.onerror = (e) => reject(e.target.error);
   });
+}
+
+// =========================================================================
+// Fragment storage (DB v4) - DESIGN-fragment-storage.md
+// =========================================================================
+// Three stores backing the fragment-based post model. Roots and
+// additions are immutable signed blocks; chain-tips are mutable book-
+// state pointers describing "this composite exists in my book." The
+// composite is a display artifact assembled from these pieces by
+// renderers, not a stored object.
+//
+// As of the renderer-migration-deferred state: blob-sync writes
+// fragments + tips on every v2 blob round-trip; reconcile v2 data
+// payloads also persist through here. Local actions (staple, add,
+// delete) still write composites to POSTS_STORE only - the staple-
+// manager fragment-write step lives in the renderer-migration
+// follow-up commit. Renderers read POSTS_STORE through the
+// materialized envelope.posts view; the fragment stores fill
+// passively until Phase 4 retires POSTS_STORE.
+
+/**
+ * Insert or update a single root fragment.
+ * @param {object} root - { post_id, author, body, tags, created_at, signature, ... }
+ */
+export function storeRootFragment(root) {
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(ROOT_FRAGMENTS_STORE, 'readwrite');
+    tx.objectStore(ROOT_FRAGMENTS_STORE).put(root);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+export function storeRootFragments(roots) {
+  if (!roots?.length) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(ROOT_FRAGMENTS_STORE, 'readwrite');
+    const store = tx.objectStore(ROOT_FRAGMENTS_STORE);
+    for (const r of roots) store.put(r);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+export function getRootFragment(postId) {
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(ROOT_FRAGMENTS_STORE, 'readonly');
+    const req = tx.objectStore(ROOT_FRAGMENTS_STORE).get(postId);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+export function getAllRootFragments() {
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(ROOT_FRAGMENTS_STORE, 'readonly');
+    const req = tx.objectStore(ROOT_FRAGMENTS_STORE).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+export function deleteRootFragment(postId) {
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(ROOT_FRAGMENTS_STORE, 'readwrite');
+    tx.objectStore(ROOT_FRAGMENTS_STORE).delete(postId);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/**
+ * Insert or update a single addition fragment.
+ * @param {object} addition - { addition_id, post_id, author, body, tags, created_at, signature, ... }
+ */
+export function storeAdditionFragment(addition) {
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(ADDITION_FRAGMENTS_STORE, 'readwrite');
+    tx.objectStore(ADDITION_FRAGMENTS_STORE).put(addition);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+export function storeAdditionFragments(additions) {
+  if (!additions?.length) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(ADDITION_FRAGMENTS_STORE, 'readwrite');
+    const store = tx.objectStore(ADDITION_FRAGMENTS_STORE);
+    for (const a of additions) store.put(a);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+export function getAdditionFragment(additionId) {
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(ADDITION_FRAGMENTS_STORE, 'readonly');
+    const req = tx.objectStore(ADDITION_FRAGMENTS_STORE).get(additionId);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/**
+ * Fetch every addition belonging to the given root post, in
+ * created_at order. Uses the by_post_id index so this scales with the
+ * number of additions on the chain rather than the size of the store.
+ */
+export function getAdditionsForPost(postId) {
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(ADDITION_FRAGMENTS_STORE, 'readonly');
+    const idx = tx.objectStore(ADDITION_FRAGMENTS_STORE).index('by_post_id');
+    const req = idx.getAll(IDBKeyRange.only(postId));
+    req.onsuccess = () => {
+      const out = (req.result || []).slice();
+      out.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+      resolve(out);
+    };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+export function getAllAdditionFragments() {
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(ADDITION_FRAGMENTS_STORE, 'readonly');
+    const req = tx.objectStore(ADDITION_FRAGMENTS_STORE).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+export function deleteAdditionFragment(additionId) {
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(ADDITION_FRAGMENTS_STORE, 'readwrite');
+    tx.objectStore(ADDITION_FRAGMENTS_STORE).delete(additionId);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/**
+ * Insert or update a chain-tip reference.
+ * @param {object} tip - { post_id, chain[], root_post_id, stapler_tags,
+ *                         stapled_at, _blob_owner, is_pinned, ... }
+ */
+export function storeChainTip(tip) {
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(CHAIN_TIPS_STORE, 'readwrite');
+    tx.objectStore(CHAIN_TIPS_STORE).put(tip);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+export function storeChainTips(tips) {
+  if (!tips?.length) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(CHAIN_TIPS_STORE, 'readwrite');
+    const store = tx.objectStore(CHAIN_TIPS_STORE);
+    for (const t of tips) store.put(t);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+export function getChainTip(postId) {
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(CHAIN_TIPS_STORE, 'readonly');
+    const req = tx.objectStore(CHAIN_TIPS_STORE).get(postId);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+export function getAllChainTips() {
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(CHAIN_TIPS_STORE, 'readonly');
+    const req = tx.objectStore(CHAIN_TIPS_STORE).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/**
+ * Find every chain-tip that references a given fragment id (root or
+ * addition). Used by the tombstone application path to invalidate
+ * composites whose constituent fragments have been pulled.
+ */
+export async function getChainTipsReferencing(fragmentId) {
+  const tips = await getAllChainTips();
+  return tips.filter((tip) => {
+    if (tip.post_id === fragmentId) return true;
+    if (tip.root_post_id === fragmentId) return true;
+    return Array.isArray(tip.chain) && tip.chain.includes(fragmentId);
+  });
+}
+
+export function deleteChainTip(postId) {
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction(CHAIN_TIPS_STORE, 'readwrite');
+    tx.objectStore(CHAIN_TIPS_STORE).delete(postId);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/**
+ * Atomically write a fragment-shaped batch: roots + additions + tips
+ * in a single transaction. Used by the v2 blob-sync path so a partial
+ * failure can't leave a chain-tip referencing fragments that didn't
+ * land.
+ */
+export function storeFragmentBatch({ roots = [], additions = [], tips = [] } = {}) {
+  if (!roots.length && !additions.length && !tips.length) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const tx = _getDb().transaction([
+      ROOT_FRAGMENTS_STORE, ADDITION_FRAGMENTS_STORE, CHAIN_TIPS_STORE,
+    ], 'readwrite');
+    const rootStore = tx.objectStore(ROOT_FRAGMENTS_STORE);
+    for (const r of roots) rootStore.put(r);
+    const addStore = tx.objectStore(ADDITION_FRAGMENTS_STORE);
+    for (const a of additions) addStore.put(a);
+    const tipStore = tx.objectStore(CHAIN_TIPS_STORE);
+    for (const t of tips) tipStore.put(t);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/** Total counts across the three fragment stores. Diagnostics only. */
+export async function fragmentStoreSizes() {
+  const db = _getDb();
+  const counts = await Promise.all(
+    [ROOT_FRAGMENTS_STORE, ADDITION_FRAGMENTS_STORE, CHAIN_TIPS_STORE].map(
+      (name) => new Promise((resolve, reject) => {
+        const tx = db.transaction(name, 'readonly');
+        const req = tx.objectStore(name).count();
+        req.onsuccess = () => resolve(req.result || 0);
+        req.onerror = (e) => reject(e.target.error);
+      }),
+    ),
+  );
+  return { roots: counts[0], additions: counts[1], chain_tips: counts[2] };
 }
 
 /**
