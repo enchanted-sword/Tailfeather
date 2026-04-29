@@ -1,3 +1,10 @@
+v1.3.2
+
+General
+
+- Quick fixes for some breaking changes
+- Data wrangling is currently broken but we have an appointment in half an hour so we're not about to dig into that in earnest right at the moment
+
 v1.3.1
 
 General
