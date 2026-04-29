@@ -176,8 +176,42 @@ export class MarkdownProcessor {
     //     stages untouched and get spliced back in before link/image
     //     processing, which still sees real <style> nodes and can
     //     extract @import as usual.
+    //
+    //     CODE-BLOCK GUARD: pre-hoist fenced code blocks to opaque
+    //     placeholders BEFORE running the <style> regex so that a
+    //     literal `<style>` shown inside a triple-backtick block
+    //     stays inside the block instead of being silently lifted
+    //     out (puppydog's report - "<style> tags inside a code
+    //     block kinda doesn't work"). Without this, the regex eats
+    //     the tag and marked sees only the placeholder span, which
+    //     gets HTML-escaped inside the resulting <pre><code>; the
+    //     stub-restore pass then can't match the escaped form, so
+    //     the code block renders the placeholder text instead of
+    //     the user's literal CSS.
     const styleStubs = [];
+    const codeStubs = [];
     if (shadowMode) {
+      // Fenced code blocks (``` or ~~~). Multiline DOTALL via
+      // [\s\S] - the ^ anchors require the multiline flag.
+      processed = processed.replace(
+        /^(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n\1[ \t]*$/gm,
+        (match) => {
+          const i = codeStubs.length;
+          codeStubs.push(match);
+          return `\n\n!!CODE_FENCE_STUB_${i}!!\n\n`;
+        },
+      );
+      // Inline code spans (single, double, etc. backtick runs).
+      // Marked allows ``code with `` inside``; mirror that by
+      // matching the opening run and the same-length closing run.
+      processed = processed.replace(
+        /(`+)([^`\n]|[^`\n][\s\S]*?[^`\n])\1(?!`)/g,
+        (match) => {
+          const i = codeStubs.length;
+          codeStubs.push(match);
+          return `!!CODE_FENCE_STUB_${i}!!`;
+        },
+      );
       processed = processed.replace(
         /<style\b[^>]*>[\s\S]*?<\/style>/gi,
         (match) => {
@@ -186,6 +220,16 @@ export class MarkdownProcessor {
           return `<span class="__nr-style-stub-${i}__"></span>`;
         },
       );
+      // Restore the code blocks before marked sees the text so
+      // marked still renders them as proper <pre><code> elements.
+      // The <style> hoist has already taken its bite out of the
+      // non-code regions by this point.
+      if (codeStubs.length) {
+        processed = processed.replace(
+          /!!CODE_FENCE_STUB_(\d+)!!/g,
+          (_m, i) => codeStubs[Number(i)] || '',
+        );
+      }
     }
 
     // 2. marked.parse()
@@ -683,40 +727,6 @@ export class MarkdownProcessor {
         // Add crossorigin for CORS
         link.setAttribute('crossorigin', 'anonymous');
       }
-
-      // Process @import inside <style> tags → convert to <link>
-      //
-      // Two separate injections for each trusted @import:
-      //
-      //   1. A <link> in-scope (next to the user's <style>) so
-      //      the imported rules cascade normally into the
-      //      shadow DOM.
-      //   2. A duplicate <link> mirrored into document.head so
-      //      any @font-face rules in the imported sheet land
-      //      at document scope. Chrome + Firefox do not let
-      //      @font-face declared inside a shadow root apply to
-      //      that root's content; they only honour font faces
-      //      declared at document level. Mirroring upward is
-      //      the workaround. iykury + april both hit this when
-      //      @import'ing Google Fonts.
-      //
-      // _importedToHead dedupes per-session so we don't re-
-      // inject the same stylesheet N times as the user scrolls.
-      const styleTags = temp.querySelectorAll('style');
-      for (const style of styleTags) {
-        const { css, links: importLinks } = this._extractImports(style.textContent || '');
-        style.textContent = css;
-
-        for (const importHref of importLinks) {
-          if (!this._isStylesheetTrusted(importHref)) continue;
-
-          const linkEl = document.createElement('link');
-          linkEl.rel = 'stylesheet';
-          linkEl.href = importHref;
-          linkEl.crossOrigin = 'anonymous';
-          style.parentNode.insertBefore(linkEl, style);
-        }
-      }
     }
 
     return temp.innerHTML;
@@ -818,18 +828,6 @@ export class MarkdownProcessor {
     return false;
   }
 
-  _extractImports(css) {
-    const links = [];
-    const cleaned = css.replace(
-      /@import\s+(?:url\(['"]?([^'")]+)['"]?\)|['"]([^'"]+)['"]);?\s*/gi,
-      (match, url1, url2) => {
-        links.push(url1 || url2);
-        return '';
-      }
-    );
-    return { css: cleaned, links };
-  }
-
   // =====================================================================
   // Shadow DOM mounting
   // =====================================================================
@@ -861,14 +859,13 @@ export class MarkdownProcessor {
     const imgs = content.querySelectorAll('img');
     for (const img of imgs) {
       if (!img.complete) {
-        img.addEventListener('load', () => {
+        img.addEventListener('load', function () {
           hostElement.dispatchEvent(new Event('shadow-image-load'));
         }, { once: true });
       }
     }
 
     // Handle link clicks inside closed shadow DOM
-    // Lyra note: the current (22-04-2026) NR markdown.js *incorrectly* uses an arrow function here
     shadow.addEventListener('click', function (e) {
       const link = e.target.closest('a');
       if (!link) return;
