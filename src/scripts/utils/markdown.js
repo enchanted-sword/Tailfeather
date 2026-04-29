@@ -79,7 +79,7 @@ export class MarkdownProcessor {
         const hosts = JSON.parse(imgHosts);
         hosts.forEach(h => this._trustedImageHosts.add(h.toLowerCase()));
       } catch (e) {
-        console.warn('[Markdown] Failed to parse trusted image hosts:', e);
+        console.warn('[TF-Markdown] Failed to parse trusted image hosts:', e);
       }
     }
 
@@ -89,7 +89,7 @@ export class MarkdownProcessor {
       try {
         this._trustedStylesheetHosts = JSON.parse(cssHosts).map(h => h.toLowerCase());
       } catch (e) {
-        console.warn('[Markdown] Failed to parse trusted stylesheet hosts:', e);
+        console.warn('[TF-Markdown] Failed to parse trusted stylesheet hosts:', e);
       }
     }
 
@@ -100,7 +100,7 @@ export class MarkdownProcessor {
         const hosts = JSON.parse(mediaHosts);
         hosts.forEach(h => this._trustedMediaHosts.add(h.toLowerCase()));
       } catch (e) {
-        console.warn('[Markdown] Failed to parse trusted media hosts:', e);
+        console.warn('[TF-Markdown] Failed to parse trusted media hosts:', e);
       }
     }
   }
