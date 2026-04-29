@@ -90,7 +90,6 @@ const mergeIntoDropdown = container => {
   ].filter(s => !!s);
   dropdownItems.forEach(s => s.setAttribute(customAttribute, ''));
   container.append(...dropdownItems);
-  console.log(container.children)
 };
 
 const mergeIntoLower = container => {
