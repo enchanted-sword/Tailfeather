@@ -22,6 +22,15 @@ function _getFromCache(username) {
       if (raw) {
         const entry = JSON.parse(raw);
         if (entry?.envelope && typeof entry.blob_version === 'number') {
+          // Back-fill the legacy posts view on rehydration.
+          // A v2 envelope cached during a build that ran
+          // before _materializeLegacyPostsView existed (or
+          // an earlier tab that crashed mid-pipeline) would
+          // have only the fragment arrays - any consumer
+          // reading envelope.posts would see undefined.
+          // Idempotent: no-op on v1 envelopes and on v2
+          // envelopes that already carry posts.
+          //_materializeLegacyPostsView(entry.envelope);
           _blobCache.set(username, entry);
           return entry;
         }
@@ -61,11 +70,11 @@ function _scanSessionKeys() {
 _scanSessionKeys();
 
 /**
- * Fetch another user's blob from the server (uncached).
- *
- * @param {string} username
- * @returns {Promise<{envelope?: object, error?: string}>}
- */
+     * Fetch another user's blob from the server (uncached).
+     *
+     * @param {string} username
+     * @returns {Promise<{envelope?: object, error?: string}>}
+     */
 async function _fetchBlob(username) {
   try {
     const response = await fetch(`/api/v1/book/${encodeURIComponent(username)}/`);
@@ -80,14 +89,16 @@ async function _fetchBlob(username) {
     const jsonString = new TextDecoder().decode(blobBinary);
     const envelope = JSON.parse(jsonString);
 
+    //_materializeLegacyPostsView(envelope);
+
     // Cache with version from response header
     const entry = { envelope, blob_version: blobVersion };
     _blobCache.set(username, entry);
-    // _persistToSession(username, entry);
+    //_persistToSession(username, entry);
 
     return { envelope };
   } catch (e) {
-    console.error('[TF-BlobManager] Fetch error:', e);
+    console.error('[BlobManager] Fetch error:', e);
     return { error: e.message };
   }
 }
@@ -95,67 +106,61 @@ async function _fetchBlob(username) {
 /**
  * Fetch a blob only if it has changed since our cached version.
  *
- * 1. Check in-memory cache for a previous fetch
- * 2. Hit the lightweight /meta/ endpoint for current blob_version
- * 3. If version matches cache, return cached envelope (no download)
- * 4. If version differs, try fetching deltas (small incremental update)
- * 5. If deltas unavailable (window exceeded), fetch the full blob
+ * Strategy: skip the meta round-trip entirely and go straight to
+ * the deltas endpoint. The server returns one of:
+ *   - `up_to_date: true` → our cache is current, no download.
+ *   - `deltas: [...]`     → apply them to the cached envelope.
+ *   - 410 Gone            → cache is too old; fall back to full fetch.
+ *
+ * This collapses the old meta-then-delta pipeline into a single
+ * network call for the two common cases (no change / small change)
+ * and only hits the network twice for the rare stale-cache case.
  *
  * @param {string} username
  * @returns {Promise<{envelope?: object, error?: string, cached: boolean}>}
  */
-const _META_TTL_MS = 30_000; // skip meta check if verified within 30s
+
+const _META_TTL_MS = 30_000; // skip network check if verified within 30s
 const _lastVerified = new Map(); // username → timestamp
 
 export async function fetchBlobCached(username) {
   const cached = _getFromCache(username);
 
-  // If we have a cached version, check meta to see if it changed
-  if (cached) {
-    // Skip the meta round-trip if we verified recently
+  if (cached && cached.blob_version > 0) {
     const lastCheck = _lastVerified.get(username) || 0;
     if (Date.now() - lastCheck < _META_TTL_MS) {
       return { envelope: cached.envelope, cached: true, method: 'cache-hit' };
     }
 
-    const { meta } = await _fetchBlobMeta(username);
+    const deltaResult = await _fetchDeltas(username, cached.blob_version);
 
-    // Meta succeeded and version matches - return cache, no download
-    if (meta && cached.blob_version === meta.blob_version) {
+    // Up-to-date: server confirmed no change, cache is valid.
+    if (deltaResult.up_to_date) {
       _lastVerified.set(username, Date.now());
       return { envelope: cached.envelope, cached: true, method: 'cache-hit' };
     }
 
-    // Version changed - try deltas first (much smaller than full blob)
-    if (meta && cached.blob_version > 0) {
-      const deltaResult = await _fetchDeltas(username, cached.blob_version);
-      if (deltaResult.deltas && deltaResult.deltas.length > 0) {
-        const updated = _applyDeltas(cached.envelope, deltaResult.deltas);
-        updated.post_count = updated.posts.filter(p => !p.is_stapled).length;
-        const updatedEntry = {
-          envelope: updated,
-          blob_version: deltaResult.current_version,
-        };
-        _blobCache.set(username, updatedEntry);
-        // _persistToSession(username, updatedEntry); We let the site handle storage; we're just working in cache memory and object stores 
-        let totalAdded = 0, totalEdited = 0, totalDeleted = 0;
-        for (const d of deltaResult.deltas) {
-          totalAdded += d.added?.length || 0;
-          totalEdited += d.edited?.length || 0;
-          totalDeleted += d.deleted?.length || 0;
-        }
-        _lastVerified.set(username, Date.now());
-        return { envelope: updated, cached: true, method: 'delta' };
-      }
-      // Deltas unavailable (410 or empty) - fall through to full fetch
+    // Deltas available: apply and return.
+    if (deltaResult.deltas && deltaResult.deltas.length > 0) {
+      const updated = _applyDeltas(cached.envelope, deltaResult.deltas);
+      updated.post_count = updated.posts.filter(p => !p.is_stapled).length;
+      const updatedEntry = {
+        envelope: updated,
+        blob_version: deltaResult.current_version,
+      };
+      _blobCache.set(username, updatedEntry);
+      //_persistToSession(username, updatedEntry);
+      _lastVerified.set(username, Date.now());
+      return { envelope: updated, cached: true, method: 'delta' };
     }
+    // Error or 410 - fall through to full fetch below.
   }
 
-  // No cache or version changed - fetch full blob
-  // (fetchBlob reads X-Blob-Version from response and caches automatically)
+  // No cache, or delta window exceeded - fetch full blob.
+  // fetchBlob reads X-Blob-Version from the response and caches.
   const result = await _fetchBlob(username);
   if (result.envelope) _lastVerified.set(username, Date.now());
-  return { ...result, cached: false, method: 'full-blob', username };
+  return { ...result, cached: false, method: 'full-blob' };
 }
 
 /**
@@ -231,26 +236,4 @@ function _applyDeltas(envelope, deltas) {
     posts: Array.from(postMap.values()),
     published_at: new Date().toISOString(),
   };
-}
-
-/**
- * Fetch blob metadata (lightweight, no blob download).
- *
- * @param {string} username
- * @returns {Promise<{meta?: object, error?: string}>}
- */
-async function _fetchBlobMeta(username) {
-  try {
-    const response = await fetch(`/api/v1/book/${encodeURIComponent(username)}/meta/`);
-
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      return { error: data.error || `HTTP ${response.status}` };
-    }
-
-    const meta = await response.json();
-    return { meta };
-  } catch (e) {
-    return { error: e.message };
-  }
 }
