@@ -155,7 +155,7 @@ function _unwrapTags(tagsElement) {
  */
 export function getPostShallow(article) {
   if (!_thrallCache.has(article)) {
-    const { postId, author, stickerKey, originalAuthor, chainVersion, chainTip, tags: tagStr } = article.dataset;
+    const { postId, rootPostId, author, stickerKey, originalAuthor, chainVersion, chainTip, tags: tagStr } = article.dataset;
     const tags = parseTags(tagStr);
     let chain = [];
 
@@ -174,6 +174,7 @@ export function getPostShallow(article) {
     const is_transparent_staple = ![originalAuthor, ...chain.map(({ author }) => author)].includes(author);
     _thrallCache.set(article, {
       post_id: postId,
+      root_post_id: rootPostId,
       author,
       root_author: originalAuthor || author,
       chain_tip: chainTip,

@@ -1,0 +1,10 @@
+{
+  "name": "deduplicate",
+  "title": "Deduplicate Post Chains",
+  "description": "Shows only the most recent versions of long addition chains (per page load)",
+  "preferences": {
+    "enabled": false
+  },
+  "js": true,
+  "css": true
+}

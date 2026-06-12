@@ -15,5 +15,6 @@
   "masonryTweaks",
   "timestamps",
   "horizontalNav",
-  "notifications"
+  "notifications",
+  "deduplicate"
 ]
