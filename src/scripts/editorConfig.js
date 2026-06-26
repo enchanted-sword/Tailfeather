@@ -114,7 +114,7 @@ function renderDraftsPanel(drafts) {
       ]
     };
   })));
-};
+}
 
 function switchActive(newBlog) {
   activeBlog = newBlog;
@@ -194,7 +194,7 @@ function pad(n) {
 function localDateTime(ms) {
   const d = new Date(ms);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-};
+}
 
 function updateScheduleHint() {
   if (scheduleToggle?.checked && scheduleAt?.value) {
@@ -204,7 +204,7 @@ function updateScheduleHint() {
   } else {
     scheduleHint.style.display = 'none';
   }
-};
+}
 
 // initEditor could technically handle its own option handling and skip having the main window
 // pass feature options entirely, but that would require it to be async, so might as well not
@@ -398,14 +398,14 @@ function initEditor({ blog, userBlogs, defaultContent: _content, defaultCss: _cs
   scheduleAt.addEventListener('change', updateScheduleHint);
 
   window.parent.postMessage('listDrafts', uri); // seed the count on init
-};
+}
 
 function listener(event) {
   if (event.origin !== uri) return;
   if (typeof event.data === 'object' && 'blog' in event.data) initEditor(event.data);
   else if (typeof event.data === 'object' && 'drafts' in event.data) renderDraftsPanel(event.data.drafts);
   else if (typeof event.data === 'object' && 'loadDraft' in event.data) loadDraft(event.data.loadDraft);
-};
+}
 
 window.addEventListener('message', listener);
 

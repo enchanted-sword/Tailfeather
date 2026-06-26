@@ -445,13 +445,13 @@
                   });
                   break;
                 } case 'listInput': {
-                  async function saveState() {
+                  const saveState = async () => {
                     const values = [...document.querySelectorAll(`#ui-feature-${name}-${key}-values .ui-listInput-valueWrapper label`)].map(entry => entry.innerText);
                     let { preferences } = await browser.storage.local.get('preferences');
                     preferences[name].options[key] = values;
                     browser.storage.local.set({ preferences });
-                  }
-                  function newItem(text) {
+                  };
+                  const newItem = text => {
                     return noact({
                       className: `ui-listInput-valueWrapper`,
                       id: `ui-feature-${name}-${key}-value-${encodeURIComponent(text)}`,
@@ -472,11 +472,13 @@
                         }
                       ]
                     });
-                  }
+                  };
+
                   let values = preference.options[key] ?? option.options ?? [];
                   if (typeof values === 'string') {
                     values = values.split('\n').map(value => value.trim());
                   }
+
                   wrapper = noact({
                     className: 'ui-inputWrapper',
                     children: [

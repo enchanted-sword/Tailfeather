@@ -154,7 +154,7 @@ async function listener(event) {
       });
     }
   }
-};
+}
 
 function closeEditor(event) {
   if (event.type === 'keydown' && event.key === 'Escape' || event.type === 'click') {
