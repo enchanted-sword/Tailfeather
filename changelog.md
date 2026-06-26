@@ -1,3 +1,23 @@
+# v1.7.0
+
+## Push Notifications
+
+- New preference menu input
+- Added followed tag notifications
+- Various bugfixes
+
+## Sticker Tweaks
+
+- Changed emoji font for sticker undo tray
+
+## Custom Editor
+
+- Added support for drafts, queuing, scheduling, and default tags
+
+## Masonry Tweaks
+
+- Posts are now sorted into columns with respect to offset height
+
 # v1.6.1
 
 ## General
